@@ -8,7 +8,7 @@ import './index.css';
 function initializeTheme() {
   const defaultTheme = themeVariants['ocean-light'];
   
-  // Set CSS variables on document body
+  // Set CSS variables on document body for all theme colors
   Object.entries(defaultTheme.colors).forEach(([key, value]) => {
     document.body.style.setProperty(`--color-${key}`, value);
   });
@@ -20,6 +20,16 @@ function initializeTheme() {
   Object.entries(defaultTheme.gradients).forEach(([key, value]) => {
     document.body.style.setProperty(`--gradient-${key}`, value);
   });
+  
+  // Also set the CSS custom properties that components might be using directly
+  document.body.style.setProperty('--background', defaultTheme.colors.background);
+  document.body.style.setProperty('--foreground', defaultTheme.colors.textPrimary);
+  document.body.style.setProperty('--primary', defaultTheme.colors.primary);
+  document.body.style.setProperty('--primary-foreground', defaultTheme.colors.surface);
+  document.body.style.setProperty('--secondary', defaultTheme.colors.backgroundSecondary);
+  document.body.style.setProperty('--border', defaultTheme.colors.border);
+  document.body.style.setProperty('--input', 'transparent');
+  document.body.style.setProperty('--ring', defaultTheme.colors.primary);
   
   // Apply theme class to body
   document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '').concat(' theme-ocean-light').trim();
