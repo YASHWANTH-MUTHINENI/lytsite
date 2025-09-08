@@ -10,6 +10,8 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
     const template = formData.get('template') as string || 'universal-file-template';
     const authorName = formData.get('authorName') as string;
     const authorEmail = formData.get('authorEmail') as string;
+    const password = formData.get('password') as string || undefined;
+    const expiryDate = formData.get('expiryDate') as string || undefined;
 
     if (!files.length || !title) {
       return Response.json({ 
@@ -58,7 +60,9 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
       createdAt: Date.now(),
       views: 0,
       authorName,
-      authorEmail
+      authorEmail,
+      password: password || undefined,
+      expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined
     };
 
     // Store project metadata in KV

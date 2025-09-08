@@ -5,6 +5,9 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
+import { PasswordProtectionModal } from "./PasswordProtectionModal";
+import { ExpiryModal } from "./ExpiryModal";
+import QRCode from 'qrcode';
 import { 
   Upload, 
   X, 
@@ -28,7 +31,10 @@ import {
   Video,
   ExternalLink,
   Copy,
-  Eye
+  Eye,
+  Shield,
+  Clock,
+  QrCode
 } from "lucide-react";
 
 interface MinimalUploadModalProps {
@@ -121,6 +127,13 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
   // Additional state for Cloudflare integration
   const [generatedUrl, setGeneratedUrl] = useState<string>('');
   const [projectSlug, setProjectSlug] = useState<string>('');
+  
+  // Password and expiry state
+  const [password, setPassword] = useState<string>('');
+  const [expiryDate, setExpiryDate] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showExpiryModal, setShowExpiryModal] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   
   // Destructure form data for easier access
   const { title, description, authorName } = formData;
@@ -225,6 +238,17 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     }
   };
 
+  // Password and expiry handlers
+  const handlePasswordSave = async (newPassword: string) => {
+    setPassword(newPassword);
+    setShowPasswordModal(false);
+  };
+
+  const handleExpirySave = async (newExpiryDate: string | null) => {
+    setExpiryDate(newExpiryDate);
+    setShowExpiryModal(false);
+  };
+
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
     
@@ -243,6 +267,14 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
       formData.append('description', description);
       formData.append('template', selectedTemplate);
       formData.append('authorName', authorName);
+      
+      // Add password and expiry if set
+      if (password) {
+        formData.append('password', password);
+      }
+      if (expiryDate) {
+        formData.append('expiryDate', expiryDate);
+      }
       
       // Upload progress simulation (real progress tracking would require chunked uploads)
       const progressInterval = setInterval(() => {
@@ -264,6 +296,22 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
         // Store the generated URL for success step
         setGeneratedUrl(result.url);
         setProjectSlug(result.slug || '');
+        
+        // Generate QR code
+        try {
+          const qrDataUrl = await QRCode.toDataURL(result.url, {
+            width: 256,
+            margin: 2,
+            color: {
+              dark: '#1f2937',
+              light: '#ffffff',
+            },
+          });
+          setQrCodeDataUrl(qrDataUrl);
+        } catch (qrError) {
+          console.error('QR code generation failed:', qrError);
+        }
+        
         setStep('success');
       } else {
         throw new Error(result.error || 'Upload failed');
@@ -595,6 +643,50 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                   />
                 </div>
 
+                {/* Security & Expiry Options */}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium text-slate-900 mb-4">Security & Access Settings</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowPasswordModal(true)}
+                      className="h-12 flex items-center justify-center space-x-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>{password ? 'Password Set' : 'Add Password'}</span>
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowExpiryModal(true)}
+                      className="h-12 flex items-center justify-center space-x-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>{expiryDate ? 'Expiry Set' : 'Set Expiry'}</span>
+                    </Button>
+                  </div>
+                  
+                  {password && (
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-sm text-green-800 flex items-center">
+                        <Shield className="w-4 h-4 mr-1" />
+                        Password protection enabled
+                      </p>
+                    </div>
+                  )}
+                  
+                  {expiryDate && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800 flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        Expires: {new Date(expiryDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Smart Preview */}
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                   <h4 className="font-medium text-blue-900 mb-2 flex items-center">
@@ -686,6 +778,24 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                 </div>
               )}
               
+              {/* QR Code Display */}
+              {qrCodeDataUrl && (
+                <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 max-w-xs mx-auto">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-3">
+                      <QrCode className="w-4 h-4 mr-2 text-slate-600" />
+                      <p className="text-sm font-medium text-slate-700">QR Code</p>
+                    </div>
+                    <img 
+                      src={qrCodeDataUrl} 
+                      alt="QR Code for Lytsite" 
+                      className="w-32 h-32 mx-auto mb-3 rounded-lg"
+                    />
+                    <p className="text-xs text-slate-500">Scan to access on mobile</p>
+                  </div>
+                </div>
+              )}
+              
               <div className="bg-slate-50 rounded-xl p-4 mb-8">
                 <h4 className="font-medium text-slate-900 mb-2">Your site includes:</h4>
                 <div className="text-sm text-slate-600 space-y-1">
@@ -744,6 +854,22 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
           )}
         </CardContent>
       </Card>
+      
+      {/* Password Protection Modal */}
+      <PasswordProtectionModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={handlePasswordSave}
+        currentPassword={password}
+      />
+      
+      {/* Expiry Modal */}
+      <ExpiryModal
+        isOpen={showExpiryModal}
+        onClose={() => setShowExpiryModal(false)}
+        onSave={handleExpirySave}
+        currentExpiry={expiryDate || undefined}
+      />
     </div>
   );
 }

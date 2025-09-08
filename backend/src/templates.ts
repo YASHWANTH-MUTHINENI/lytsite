@@ -23,6 +23,103 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 
     const project: ProjectData = JSON.parse(projectJson);
     
+    // Check if project has expired
+    if (project.expiryDate && Date.now() > project.expiryDate) {
+      return new Response(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Link Expired</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div class="max-w-md mx-auto text-center p-8">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Link Expired</h1>
+            <p class="text-gray-600 mb-4">This Lytsite has expired and is no longer accessible.</p>
+            <p class="text-sm text-gray-500">Contact the owner for a new link if needed.</p>
+          </div>
+        </body>
+        </html>
+      `, { 
+        status: 410,
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+    
+    // Check if password protection is enabled
+    if (project.password) {
+      const providedPassword = url.searchParams.get('password');
+      
+      if (!providedPassword || providedPassword !== project.password) {
+        return new Response(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Password Protected</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <script src="https://cdn.tailwindcss.com"></script>
+          </head>
+          <body class="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div class="max-w-md mx-auto p-8">
+              <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="text-center mb-6">
+                  <div class="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                  </div>
+                  <h1 class="text-2xl font-bold text-gray-900 mb-2">Password Required</h1>
+                  <p class="text-gray-600">This Lytsite is password protected.</p>
+                </div>
+                
+                <form onsubmit="handlePasswordSubmit(event)" class="space-y-4">
+                  <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Enter Password</label>
+                    <input 
+                      type="password" 
+                      id="password" 
+                      name="password" 
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                      placeholder="Enter password"
+                    >
+                  </div>
+                  <button 
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-md transition"
+                  >
+                    Access Site
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            <script>
+              function handlePasswordSubmit(event) {
+                event.preventDefault();
+                const password = event.target.password.value;
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('password', password);
+                window.location.href = currentUrl.toString();
+              }
+            </script>
+          </body>
+          </html>
+        `, { 
+          status: 401,
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+    }
+    
     // Increment view count
     project.views++;
     await env.LYTSITE_KV.put(`project:${slug}`, JSON.stringify(project));
