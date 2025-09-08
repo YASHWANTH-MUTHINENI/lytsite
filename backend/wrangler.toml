@@ -1,0 +1,28 @@
+name = "lytsite-backend"
+main = "src/worker.ts"
+compatibility_date = "2024-09-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+[[kv_namespaces]]
+binding = "LYTSITE_KV"
+id = "db777c41abe84ba1813134377bc23808"
+preview_id = "db777c41abe84ba1813134377bc23808"
+
+[[r2_buckets]]
+binding = "LYTSITE_STORAGE"
+bucket_name = "lytsite-files"
+preview_bucket_name = "lytsite-files-preview"
+
+[env.production]
+name = "lytsite-backend-prod"
+vars = { ENVIRONMENT = "production" }
+
+[[env.production.kv_namespaces]]
+binding = "LYTSITE_KV"
+id = "db777c41abe84ba1813134377bc23808"
+
+[[env.production.r2_buckets]]
+binding = "LYTSITE_STORAGE"
+bucket_name = "lytsite-files-prod"

@@ -5,7 +5,21 @@ import BlockRouter, { getFileType, getMultipleFileTypes, FileMetadata } from "./
 import FooterBlock from "./blocks/FooterBlock";
 import ThemeSwitcher from "./ui/ThemeSwitcher";
 
+interface TemplateData {
+  title: string;
+  subLine: string;
+  tagLine: string;
+  heroImage?: string | null;
+  files: FileMetadata[];
+  contactInfo: {
+    email: string;
+    website: string;
+    linkedin: string;
+  };
+}
+
 interface UniversalFileTemplateProps {
+  data?: TemplateData; // Optional - falls back to mockData if not provided
   onNavigate: (page: string) => void;
 }
 
@@ -71,9 +85,12 @@ const mockData = {
   }
 };
 
-export default function UniversalFileTemplate({ onNavigate }: UniversalFileTemplateProps) {
+export default function UniversalFileTemplate({ data, onNavigate }: UniversalFileTemplateProps) {
+  // Use provided data or fall back to mockData for testing
+  const templateData = data || mockData;
+  
   // Determine the primary file type for the template
-  const detectedFileType = getMultipleFileTypes(mockData.files);
+  const detectedFileType = getMultipleFileTypes(templateData.files);
   const primaryFileType = detectedFileType === 'mixed' ? 'gallery' : detectedFileType;
   
   const handleDownload = () => {
@@ -82,7 +99,7 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
   };
 
   const handleGetInTouch = () => {
-    window.location.href = `mailto:${mockData.contactInfo.email}`;
+    window.location.href = `mailto:${templateData.contactInfo.email}`;
   };
 
   const handleDownloadAll = () => {
@@ -95,15 +112,15 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
     switch (primaryFileType) {
       case 'gallery':
         return {
-          totalImages: mockData.files.length,
-          size: mockData.files.reduce((total, file) => {
+          totalImages: templateData.files.length,
+          size: templateData.files.reduce((total, file) => {
             const sizeNum = parseFloat(file.size);
             return total + sizeNum;
           }, 0).toFixed(1) + " MB",
           format: "Multiple Images"
         };
       case 'pdf':
-        const pdfFile = mockData.files.find(f => f.type === 'application/pdf');
+        const pdfFile = templateData.files.find(f => f.type === 'application/pdf');
         return {
           size: pdfFile?.size || "0 MB",
           format: "PDF Document",
@@ -114,7 +131,7 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
           ]
         };
       case 'video':
-        const videoFile = mockData.files.find(f => f.type?.startsWith('video/'));
+        const videoFile = templateData.files.find(f => f.type?.startsWith('video/'));
         return {
           size: videoFile?.size || "0 MB",
           format: "Video",
@@ -123,7 +140,7 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
         };
       case 'archive':
         return {
-          size: mockData.files.reduce((total, file) => {
+          size: templateData.files.reduce((total, file) => {
             const sizeNum = parseFloat(file.size);
             return total + sizeNum;
           }, 0).toFixed(1) + " MB",
@@ -133,7 +150,7 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
         };
       case 'document':
         return {
-          size: mockData.files[0]?.size || "0 MB",
+          size: templateData.files[0]?.size || "0 MB",
           format: "Text Document",
           lines: 245,
           words: 2840,
@@ -158,25 +175,25 @@ export default function UniversalFileTemplate({ onNavigate }: UniversalFileTempl
 
         {/* Universal 3-Input Hero Block */}
         <HeroBlock
-          title={mockData.title}
-          subLine={mockData.subLine}
-          tagLine={mockData.tagLine}
+          title={templateData.title}
+          subLine={templateData.subLine}
+          tagLine={templateData.tagLine}
         />
 
         {/* Specialized File Block - Core content */}
         <BlockRouter
           fileType={primaryFileType}
-          title={mockData.title}
-          description={mockData.tagLine}
-          files={mockData.files}
+          title={templateData.title}
+          description={templateData.tagLine}
+          files={templateData.files}
           onDownload={handleDownload}
           metadata={getMetadata()}
         />
 
         {/* Footer Block - Always on bottom */}
         <FooterBlock
-          creatorName={mockData.tagLine.includes('•') ? mockData.tagLine.split('•')[1].trim() : 'Creator'}
-          contactInfo={mockData.contactInfo}
+          creatorName={templateData.tagLine.includes('•') ? templateData.tagLine.split('•')[1].trim() : 'Creator'}
+          contactInfo={templateData.contactInfo}
           primaryCTA={{
             text: "Get in touch",
             action: handleGetInTouch

@@ -25,7 +25,10 @@ import {
   FileArchiveIcon,
   FileCodeIcon,
   FileAudioIcon,
-  Video
+  Video,
+  ExternalLink,
+  Copy,
+  Eye
 } from "lucide-react";
 
 interface MinimalUploadModalProps {
@@ -33,6 +36,18 @@ interface MinimalUploadModalProps {
   onClose: () => void;
   onSuccess: (templateId: string) => void;
 }
+
+interface UploadResult {
+  success: boolean;
+  slug?: string;
+  url?: string;
+  error?: string;
+}
+
+// Backend API configuration
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev' 
+  : 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev'; // Use same URL for both dev and prod
 
 // Enhanced file type icons with more comprehensive support
 const getFileIcon = (fileName: string, mimeType?: string) => {
@@ -102,6 +117,13 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     description: '',
     authorName: '' // Optional - can be auto-filled from user profile
   });
+  
+  // Additional state for Cloudflare integration
+  const [generatedUrl, setGeneratedUrl] = useState<string>('');
+  const [projectSlug, setProjectSlug] = useState<string>('');
+  
+  // Destructure form data for easier access
+  const { title, description, authorName } = formData;
 
   const templates = [
     { 
@@ -209,24 +231,58 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setStep('success');
-          setIsUploading(false);
-          return 100;
-        }
-        return prev + 10;
+    try {
+      // Create FormData with files and metadata
+      const formData = new FormData();
+      
+      uploadedFiles.forEach(file => {
+        formData.append('files', file);
       });
-    }, 200);
-
-    // Here you would implement actual Cloudflare R2 upload for multiple files
-    // const uploadResults = await Promise.all(uploadedFiles.map(file => uploadToCloudflare(file, formData)));
+      
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('template', selectedTemplate);
+      formData.append('authorName', authorName);
+      
+      // Upload progress simulation (real progress tracking would require chunked uploads)
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 15, 90));
+      }, 300);
+      
+      // Make upload request to Cloudflare Worker
+      const response = await fetch(`${API_BASE}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result: UploadResult = await response.json();
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      if (result.success && result.url) {
+        // Store the generated URL for success step
+        setGeneratedUrl(result.url);
+        setProjectSlug(result.slug || '');
+        setStep('success');
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleComplete = () => {
+    if (generatedUrl) {
+      // Open generated Lytsite in new tab
+      window.open(generatedUrl, '_blank');
+    }
+    
     const templateRoute = getTemplateRoute(selectedTemplate);
     onSuccess(templateRoute);
     onClose();
@@ -603,18 +659,41 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Site Created Successfully!</h3>
-              <p className="text-slate-600 mb-8 max-w-md mx-auto">
-                Your professional file sharing page is ready. Share the link with anyone to give them instant access to your content.
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Lytsite Created Successfully!</h3>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                Your professional file sharing site is live! Share the link to give anyone instant access to your content.
               </p>
+              
+              {generatedUrl && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-slate-700 mb-1">Your Lytsite URL:</p>
+                      <p className="text-sm text-blue-600 font-mono break-all">{generatedUrl}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedUrl);
+                        // You could add a toast notification here
+                      }}
+                      className="ml-3"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               <div className="bg-slate-50 rounded-xl p-4 mb-8">
                 <h4 className="font-medium text-slate-900 mb-2">Your site includes:</h4>
                 <div className="text-sm text-slate-600 space-y-1">
-                  <p>📄 Interactive file preview</p>
-                  <p>📊 Download and view analytics</p>
+                  <p>📄 Interactive file preview & download</p>
+                  <p>📊 Built-in analytics & view tracking</p>
                   <p>🔗 Professional shareable link</p>
-                  <p>📱 Mobile-optimized viewing</p>
+                  <p>📱 Mobile-responsive design</p>
+                  <p>🌐 Global CDN distribution</p>
                 </div>
               </div>
               
@@ -622,16 +701,41 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                 <Button 
                   onClick={handleComplete}
                   size="lg"
-                  className="w-full"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                 >
-                  View Your Site
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Your Lytsite
                 </Button>
                 
+                {generatedUrl && (
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      const shareData = {
+                        title: title || 'My Lytsite',
+                        text: description || 'Check out my professional file sharing site',
+                        url: generatedUrl,
+                      };
+                      
+                      if (navigator.share && navigator.canShare(shareData)) {
+                        navigator.share(shareData);
+                      } else {
+                        // Fallback: copy to clipboard
+                        navigator.clipboard.writeText(generatedUrl);
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Share Link
+                  </Button>
+                )}
+                
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={resetModal}
-                  className="w-full"
+                  className="w-full text-slate-600"
                 >
                   Create Another Site
                 </Button>

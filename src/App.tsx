@@ -9,8 +9,9 @@ import CaseStudyTemplate from './components/case-study-template';
 import PitchTemplate from './components/pitch-template';
 import UniversalFileTemplate from './components/universal-file-template';
 import HeroBlockExamples from './components/hero-block-examples';
+import BackendDataTest from './components/backend-data-test';
 
-type Page = 'homepage' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples';
+type Page = 'homepage' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples' | 'backend-data-test';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('homepage');
@@ -39,6 +40,8 @@ export default function App() {
         return <PitchTemplate onNavigate={handleNavigate} />;
       case 'universal-file-template':
         return <UniversalFileTemplate onNavigate={handleNavigate} />;
+      case 'backend-data-test':
+        return <BackendDataTest onNavigate={handleNavigate} />;
       case 'hero-examples':
         return <HeroBlockExamples />;
       default:

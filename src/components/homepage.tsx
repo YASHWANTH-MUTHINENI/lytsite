@@ -60,22 +60,44 @@ export default function Homepage({ onNavigate }: HomepageProps) {
             <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">How it works</a>
             <a href="#templates" className="text-slate-600 hover:text-slate-900 transition-colors">Templates</a>
             <a href="#feedback" className="text-slate-600 hover:text-slate-900 transition-colors">Feedback</a>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onNavigate('backend-data-test')}
+              className="text-orange-600 hover:text-orange-700 font-medium"
+            >
+              🧪 Backend Test
+            </Button>
             <Button variant="outline" size="sm">Sign In</Button>
           </nav>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-12 md:py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 md:mb-6 leading-tight">
-            Stop sending plain files.{" "}
+  <section className="relative min-h-screen h-screen overflow-hidden flex items-stretch">
+        {/* Background Video */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-25 z-0 bg-black"
+          style={{ minHeight: '600px' }}
+        >
+          <source src="/blue-yellow-video.mp4" type="video/mp4" />
+        </video>
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 z-10 pointer-events-none"></div>
+        {/* Hero Content Top-Left */}
+  <div className="relative z-20 flex flex-col items-start justify-start p-8 sm:p-12 md:p-16 lg:p-20 max-w-xl w-full mt-8 ml-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-3 md:mb-4 leading-tight">
+            Stop sending plain files.<br />
             <span className="text-ocean-gradient">Start sharing experiences.</span>
           </h1>
-          <p className="text-lg sm:text-xl text-slate-600 mb-6 md:mb-8 max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-base sm:text-lg md:text-xl text-slate-700 mb-4 md:mb-6 max-w-lg">
             Lytsite instantly turns your PDFs, images, and docs into sleek, professional mini-sites — designed to impress, ready to share anywhere.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8" onClick={handleTryItFree}>
               Try It Free
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -83,17 +105,6 @@ export default function Homepage({ onNavigate }: HomepageProps) {
             <Button variant="outline" size="lg" onClick={() => onNavigate('universal-file-template')}>
               See Demo
             </Button>
-          </div>
-          
-          {/* Hero Image */}
-          <div className="relative mx-auto max-w-4xl">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
-              <ImageWithFallback 
-                src="https://images.unsplash.com/photo-1748665194498-21a7e3d8ff19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB3b3Jrc3BhY2UlMjBsYXB0b3B8ZW58MXx8fHwxNzU3MjI3Mjc3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                alt="Modern workspace with laptop"
-                className="w-full h-96 object-cover"
-              />
-            </div>
           </div>
         </div>
       </section>
