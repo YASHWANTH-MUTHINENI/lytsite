@@ -22,7 +22,7 @@ export interface FileMetadata {
 }
 
 interface BlockRouterProps {
-  fileType: 'gallery' | 'pdf' | 'video' | 'archive' | 'document';
+  fileType: 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'mixed';
   title: string;
   description?: string;
   files?: FileMetadata[];
@@ -72,12 +72,8 @@ export const getMultipleFileTypes = (files: FileMetadata[]): 'gallery' | 'pdf' |
     return Array.from(types)[0];
   }
   
-  // If mixed types, prioritize based on most common or most media-rich
-  if (types.has('gallery')) return 'gallery';
-  if (types.has('video')) return 'video';
-  if (types.has('pdf')) return 'pdf';
-  if (types.has('archive')) return 'archive';
-  return 'document';
+  // For mixed types, return 'mixed' to handle them separately
+  return 'mixed';
 };
 
 export default function BlockRouter({ 
@@ -201,6 +197,46 @@ export default function BlockRouter({
           onDownload={onDownload}
           metadata={metadata}
         />
+      );
+      
+    case 'mixed':
+      // Handle mixed file types by separating them and rendering appropriate blocks
+      if (!files) return null;
+      
+      const imageFiles = files.filter(file => getFileType(file.name, file.type) === 'gallery');
+      const nonImageFiles = files.filter(file => getFileType(file.name, file.type) !== 'gallery');
+      
+      return (
+        <div className="space-y-8">
+          {/* Render image gallery if there are images */}
+          {imageFiles.length > 0 && (
+            <BlockRouter
+              fileType="gallery"
+              title={imageFiles.length === files.length ? title : `${title} - Images`}
+              description={description}
+              files={imageFiles}
+              onDownload={onDownload}
+              metadata={metadata}
+            />
+          )}
+          
+          {/* Render individual blocks for non-image files */}
+          {nonImageFiles.map((file, index) => {
+            const fileType = getFileType(file.name, file.type);
+            return (
+              <div key={`${fileType}-${index}-${file.name}`}>
+                <BlockRouter
+                  fileType={fileType}
+                  title={file.name}
+                  description={file.description}
+                  files={[file]}
+                  onDownload={onDownload}
+                  metadata={metadata}
+                />
+              </div>
+            );
+          })}
+        </div>
       );
       
     case 'document':
