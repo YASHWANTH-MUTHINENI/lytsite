@@ -1,0 +1,15 @@
+{
+  "title": "Test Project",
+  "subLine": "A demo project for testing",
+  "tagLine": "Created with Lytsite",
+  "createdAt": "2024-01-15T00:00:00.000Z",
+  "views": 0,
+  "files": [
+    {
+      "name": "sample.txt",
+      "size": "1.2 KB",
+      "url": "https://example.com/sample.txt",
+      "type": "text"
+    }
+  ]
+}

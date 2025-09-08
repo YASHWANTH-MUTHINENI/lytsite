@@ -21,18 +21,7 @@ export default function HeroBlock({
     >
       {/* Background Elements */}
       <div className="absolute inset-0">
-        {/* Styled Background - no image */}
-        <>
-          {/* Animated Background Elements */}
-          <div 
-            className="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-8 blur-3xl animate-pulse"
-            style={{ backgroundColor: theme.colors.primary }}
-          />
-          <div 
-            className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-8 blur-3xl animate-pulse"
-            style={{ backgroundColor: theme.colors.accent, animationDelay: '2s' }}
-          />
-        </>
+        {/* Clean background - no animations */}
       </div>
 
       {/* Content */}

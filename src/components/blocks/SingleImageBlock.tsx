@@ -112,7 +112,11 @@ export default function SingleImageBlock({
               size="sm"
               onClick={() => setIsLiked(!isLiked)}
               className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
-              style={{ borderColor: theme.colors.border }}
+              style={{ 
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+                color: theme.colors.textPrimary
+              }}
             >
               <Heart 
                 className={`w-4 h-4 mr-2 transition-colors ${isLiked ? 'fill-current' : ''}`}
@@ -125,9 +129,13 @@ export default function SingleImageBlock({
               variant="outline"
               size="sm"
               className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
-              style={{ borderColor: theme.colors.border }}
+              style={{ 
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+                color: theme.colors.textPrimary
+              }}
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-4 h-4 mr-2" style={{ color: theme.colors.textSecondary }} />
               Share
             </Button>
 

@@ -131,9 +131,13 @@ export default function FooterBlock({
                 size="lg"
                 className="px-8 py-4 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
                 onClick={secondaryCTA.action}
-                style={{ borderColor: theme.colors.border }}
+                style={{ 
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surface,
+                  color: theme.colors.textPrimary
+                }}
               >
-                <Download className="w-5 h-5 mr-3" />
+                <Download className="w-5 h-5 mr-3" style={{ color: theme.colors.textSecondary }} />
                 {secondaryCTA.text}
               </Button>
             )}
@@ -156,7 +160,11 @@ export default function FooterBlock({
                       }
                     }}
                     title={link.label}
-                    style={{ borderColor: theme.colors.border }}
+                    style={{ 
+                      borderColor: theme.colors.border,
+                      backgroundColor: theme.colors.surface,
+                      color: theme.colors.textPrimary
+                    }}
                   >
                     <Icon className="w-5 h-5" style={{ color: theme.colors.textSecondary }} />
                   </Button>
@@ -195,10 +203,11 @@ export default function FooterBlock({
                 }}
                 style={{ 
                   borderColor: theme.colors.primary,
+                  backgroundColor: theme.colors.surface,
                   color: theme.colors.primary
                 }}
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
+                <ExternalLink className="w-4 h-4 mr-2" style={{ color: theme.colors.primary }} />
                 Try Lytsite Free
               </Button>
             </div>
