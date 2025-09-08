@@ -1,0 +1,645 @@
+import React, { useState, useRef } from "react";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Badge } from "./ui/badge";
+import { 
+  Upload, 
+  X, 
+  FileText, 
+  Image, 
+  PlayCircle, 
+  Archive,
+  CheckCircle,
+  ArrowRight,
+  Zap,
+  Sparkles,
+  User,
+  Calendar,
+  Presentation,
+  ChevronLeft,
+  FileIcon,
+  FileVideoIcon,
+  FileArchiveIcon,
+  FileCodeIcon,
+  FileAudioIcon,
+  Video
+} from "lucide-react";
+
+interface MinimalUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (templateId: string) => void;
+}
+
+// Enhanced file type icons with more comprehensive support
+const getFileIcon = (fileName: string, mimeType?: string) => {
+  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+  
+  // Image files
+  if (mimeType?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension)) {
+    return <Image className="w-8 h-8 text-green-500" />;
+  }
+  
+  // Video files
+  if (mimeType?.startsWith('video/') || ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'].includes(extension)) {
+    return <Video className="w-8 h-8 text-blue-500" />;
+  }
+  
+  // Audio files
+  if (mimeType?.startsWith('audio/') || ['mp3', 'wav', 'flac', 'aac', 'ogg'].includes(extension)) {
+    return <FileAudioIcon className="w-8 h-8 text-purple-500" />;
+  }
+  
+  // Document files
+  if (['pdf'].includes(extension)) {
+    return <FileText className="w-8 h-8 text-red-500" />;
+  }
+  
+  if (['doc', 'docx', 'txt', 'rtf'].includes(extension)) {
+    return <FileText className="w-8 h-8 text-blue-500" />;
+  }
+  
+  if (['ppt', 'pptx'].includes(extension)) {
+    return <PlayCircle className="w-8 h-8 text-orange-500" />;
+  }
+  
+  // Archive files
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) {
+    return <FileArchiveIcon className="w-8 h-8 text-purple-500" />;
+  }
+  
+  // Code files
+  if (['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'cpp', 'c', 'php'].includes(extension)) {
+    return <FileCodeIcon className="w-8 h-8 text-green-600" />;
+  }
+  
+  // Default file icon
+  return <FileIcon className="w-8 h-8 text-slate-500" />;
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: MinimalUploadModalProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [step, setStep] = useState<'upload' | 'template' | 'details' | 'success'>('upload');
+  const [selectedTemplate, setSelectedTemplate] = useState('universal');
+  
+  // Minimal form data - only 2-3 inputs required
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    authorName: '' // Optional - can be auto-filled from user profile
+  });
+
+  const templates = [
+    { 
+      id: 'universal', 
+      name: 'Universal Template', 
+      description: 'Works with any file type - recommended for most users',
+      icon: <FileText className="w-5 h-5" />,
+      color: 'ocean',
+      recommended: true
+    },
+    { 
+      id: 'client-delivery', 
+      name: 'Client Delivery', 
+      description: 'Professional file delivery with project details',
+      icon: <FileText className="w-5 h-5" />,
+      color: 'blue'
+    },
+    { 
+      id: 'photo-gallery', 
+      name: 'Photo Gallery', 
+      description: 'Beautiful image galleries with lightbox viewing',
+      icon: <Image className="w-5 h-5" />,
+      color: 'emerald'
+    },
+    { 
+      id: 'portfolio-resume', 
+      name: 'Portfolio Resume', 
+      description: 'Personal brand showcase and professional portfolio',
+      icon: <User className="w-5 h-5" />,
+      color: 'purple'
+    },
+    { 
+      id: 'event-template', 
+      name: 'Event', 
+      description: 'Event pages with schedules and registration',
+      icon: <Calendar className="w-5 h-5" />,
+      color: 'orange'
+    },
+    { 
+      id: 'pitch-template', 
+      name: 'Pitch Deck', 
+      description: 'Investment and business presentations',
+      icon: <Presentation className="w-5 h-5" />,
+      color: 'red'
+    }
+  ];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files) as File[];
+    if (files.length > 0) {
+      handleFileSelect(files);
+    }
+  };
+
+  const handleFileSelect = (files: File | File[]) => {
+    const fileArray = Array.isArray(files) ? files : [files];
+    setUploadedFiles(prev => [...prev, ...fileArray]);
+    
+    // Auto-populate title from first file (smart default)
+    if (fileArray.length > 0 && !formData.title) {
+      const firstFile = fileArray[0];
+      const nameWithoutExtension = firstFile.name.replace(/\.[^/.]+$/, "");
+      const smartTitle = nameWithoutExtension
+        .replace(/[-_]/g, ' ')
+        .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+      
+      setFormData(prev => ({
+        ...prev,
+        title: smartTitle
+      }));
+    }
+    
+    setStep('template');
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(Array.from(files) as File[]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (uploadedFiles.length === 0) return;
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setStep('success');
+          setIsUploading(false);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
+
+    // Here you would implement actual Cloudflare R2 upload for multiple files
+    // const uploadResults = await Promise.all(uploadedFiles.map(file => uploadToCloudflare(file, formData)));
+  };
+
+  const handleComplete = () => {
+    const templateRoute = getTemplateRoute(selectedTemplate);
+    onSuccess(templateRoute);
+    onClose();
+  };
+
+  const getTemplateRoute = (templateId: string) => {
+    if (templateId === 'universal') return 'universal-file-template';
+    return templateId;
+  };
+
+  const resetModal = () => {
+    setUploadedFiles([]);
+    setStep('upload');
+    setSelectedTemplate('universal');
+    setFormData({ title: '', description: '', authorName: '' });
+    setUploadProgress(0);
+    setIsUploading(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto">
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Create Professional Site</h2>
+              <p className="text-slate-600">Upload your file and create a beautiful sharing page in seconds</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {step === 'upload' && (
+            <div className="p-6">
+              {/* Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${
+                  isDragging 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-slate-300 hover:border-slate-400'
+                }`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                <div className="max-w-sm mx-auto">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors ${
+                    isDragging ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
+                  }`}>
+                    <Upload className="w-8 h-8" />
+                  </div>
+                  
+                  <h3 className={`text-xl font-semibold mb-2 transition-colors ${
+                    isDragging ? 'text-primary' : 'text-slate-900'
+                  }`}>
+                    {isDragging ? 'Drop them now!' : 'Drop your files here'}
+                  </h3>
+                  <p className={`text-slate-600 mb-6 transition-colors ${
+                    isDragging ? 'text-primary/80' : 'text-slate-600'
+                  }`}>
+                    {isDragging 
+                      ? 'Release to upload multiple files' 
+                      : 'All file types supported • Multiple files welcome • Beautiful presentation guaranteed'
+                    }
+                  </p>
+                  
+                  <Button 
+                    onClick={() => fileInputRef.current?.click()}
+                    size="lg"
+                    className="mb-4"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Files
+                  </Button>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    accept="*/*"
+                    onChange={handleFileInputChange}
+                  />
+                  
+                  <p className="text-xs text-slate-500">
+                    All file types supported • Multiple files welcome • Beautiful presentation guaranteed
+                  </p>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="grid md:grid-cols-3 gap-4 mt-8">
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <Zap className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h4 className="font-medium text-slate-900 mb-1">Instant Processing</h4>
+                  <p className="text-sm text-slate-600">Files are automatically optimized for web viewing</p>
+                </div>
+                
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="w-5 h-5 text-green-600" />
+                  </div>
+                  <h4 className="font-medium text-slate-900 mb-1">Smart Defaults</h4>
+                  <p className="text-sm text-slate-600">Professional styling applied automatically</p>
+                </div>
+                
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <h4 className="font-medium text-slate-900 mb-1">Ready to Share</h4>
+                  <p className="text-sm text-slate-600">Get a professional URL instantly</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 'template' && uploadedFiles.length > 0 && (
+            <div className="p-6">
+              {/* Files Preview */}
+              <div className="mb-6">
+                <h4 className="font-medium text-slate-900 mb-3">
+                  Uploaded Files ({uploadedFiles.length})
+                </h4>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-2 bg-slate-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        {getFileIcon(file.name, file.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                        <p className="text-xs text-slate-600">
+                          {formatFileSize(file.size)} • {file.type || 'Unknown type'}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Ready
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                {uploadedFiles.length > 1 && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    Total: {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Choose your template style</h3>
+                <p className="text-slate-600 mb-4">Select how you want your content to be presented</p>
+              </div>
+
+              {/* Template Selection */}
+              <div className="space-y-3 mb-6">
+                {templates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                      selectedTemplate === template.id
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        template.color === 'ocean' ? 'bg-ocean-100 text-ocean-700' :
+                        template.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                        template.color === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
+                        template.color === 'purple' ? 'bg-purple-100 text-purple-700' :
+                        template.color === 'orange' ? 'bg-orange-100 text-orange-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {template.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-medium text-slate-900">{template.name}</h4>
+                          {template.recommended && (
+                            <Badge className="bg-primary text-white">
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              Recommended
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600">{template.description}</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 transition-colors ${
+                        selectedTemplate === template.id
+                          ? 'border-primary bg-primary'
+                          : 'border-slate-300'
+                      }`}>
+                        {selectedTemplate === template.id && (
+                          <CheckCircle className="w-3 h-3 text-white m-0.5" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep('upload')}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                
+                <Button 
+                  onClick={() => setStep('details')}
+                  size="lg"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'details' && uploadedFiles.length > 0 && (
+            <div className="p-6">
+              {/* Files Summary */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-slate-900">
+                    Your Files ({uploadedFiles.length})
+                  </h4>
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Ready
+                  </Badge>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <p className="text-sm text-slate-600">
+                    {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} • {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
+                  </p>
+                  {uploadedFiles.length <= 3 && (
+                    <div className="mt-2 space-y-1">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="w-4 h-4">{getFileIcon(file.name, file.type)}</div>
+                          <span className="text-xs text-slate-600 truncate">{file.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {uploadedFiles.length > 3 && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      {uploadedFiles.slice(0, 2).map(f => f.name).join(', ')} and {uploadedFiles.length - 2} more...
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Minimal Form - Only 2-3 Required Fields */}
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="title" className="text-base font-medium text-slate-900">
+                    Title <span className="text-red-500">*</span>
+                  </Label>
+                  <p className="text-sm text-slate-600 mb-2">This will be the main heading on your page</p>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Q4 Business Review 2024"
+                    className="text-base"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="description" className="text-base font-medium text-slate-900">
+                    Description <span className="text-red-500">*</span>
+                  </Label>
+                  <p className="text-sm text-slate-600 mb-2">Brief description of what viewers will find</p>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="e.g., Comprehensive quarterly performance analysis and strategic outlook for 2025"
+                    rows={3}
+                    className="text-base resize-none"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="authorName" className="text-base font-medium text-slate-900">
+                    Your Name <span className="text-slate-400">(Optional)</span>
+                  </Label>
+                  <p className="text-sm text-slate-600 mb-2">Will be displayed as the author</p>
+                  <Input
+                    id="authorName"
+                    value={formData.authorName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, authorName: e.target.value }))}
+                    placeholder="e.g., Sarah Chen"
+                    className="text-base"
+                  />
+                </div>
+
+                {/* Smart Preview */}
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Smart Features Included
+                  </h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <p>✓ Automatic file preview generation</p>
+                    <p>✓ Professional styling and layout</p>
+                    <p>✓ Download tracking and analytics</p>
+                    <p>✓ Responsive design for all devices</p>
+                    <p>✓ Shareable link generation</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected Template Info */}
+              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 mb-6">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Selected: {templates.find(t => t.id === selectedTemplate)?.name}
+                </h4>
+                <div className="text-sm text-blue-800 space-y-1">
+                  <p>✓ Professional styling and layout</p>
+                  <p>✓ Download tracking and analytics</p>
+                  <p>✓ Responsive design for all devices</p>
+                  <p>✓ Shareable link generation</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep('template')}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Change Template
+                </Button>
+                
+                <Button 
+                  onClick={handleUpload}
+                  disabled={!formData.title || !formData.description || isUploading}
+                  size="lg"
+                >
+                  {isUploading ? (
+                    <>Processing... {uploadProgress}%</>
+                  ) : (
+                    <>
+                      Create Site
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'success' && (
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Site Created Successfully!</h3>
+              <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                Your professional file sharing page is ready. Share the link with anyone to give them instant access to your content.
+              </p>
+              
+              <div className="bg-slate-50 rounded-xl p-4 mb-8">
+                <h4 className="font-medium text-slate-900 mb-2">Your site includes:</h4>
+                <div className="text-sm text-slate-600 space-y-1">
+                  <p>📄 Interactive file preview</p>
+                  <p>📊 Download and view analytics</p>
+                  <p>🔗 Professional shareable link</p>
+                  <p>📱 Mobile-optimized viewing</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleComplete}
+                  size="lg"
+                  className="w-full"
+                >
+                  View Your Site
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={resetModal}
+                  className="w-full"
+                >
+                  Create Another Site
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

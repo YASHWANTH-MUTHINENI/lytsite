@@ -1,0 +1,192 @@
+/* Theme-aware CSS Variables and Utilities */
+
+/* Base theme variables - will be overridden by ThemeProvider */
+:root {
+  /* Colors will be set dynamically by ThemeProvider */
+  --color-background: #ffffff;
+  --color-backgroundSecondary: #f8fafc;
+  --color-backgroundTertiary: #f1f5f9;
+  --color-textPrimary: #0f172a;
+  --color-textSecondary: #334155;
+  --color-textMuted: #64748b;
+  --color-primary: #0ea5e9;
+  --color-primaryHover: #0284c7;
+  --color-primaryLight: #e0f2fe;
+  --color-accent: #06b6d4;
+  --color-accentHover: #0891b2;
+  --color-accentLight: #cffafe;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --color-border: #e2e8f0;
+  --color-borderLight: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-surfaceHover: #f8fafc;
+  --color-overlay: rgba(15, 23, 42, 0.8);
+  --color-overlayLight: rgba(15, 23, 42, 0.1);
+
+  /* Shadows will be set dynamically by ThemeProvider */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Gradients will be set dynamically by ThemeProvider */
+  --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  --gradient-hero: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+  --gradient-surface: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Theme utility classes */
+.theme-bg {
+  background-color: var(--color-background);
+}
+
+.theme-bg-secondary {
+  background-color: var(--color-backgroundSecondary);
+}
+
+.theme-bg-tertiary {
+  background-color: var(--color-backgroundTertiary);
+}
+
+.theme-text {
+  color: var(--color-textPrimary);
+}
+
+.theme-text-secondary {
+  color: var(--color-textSecondary);
+}
+
+.theme-text-muted {
+  color: var(--color-textMuted);
+}
+
+.theme-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.theme-primary-text {
+  color: var(--color-primary);
+}
+
+.theme-accent {
+  background-color: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.theme-accent-text {
+  color: var(--color-accent);
+}
+
+.theme-border {
+  border-color: var(--color-border);
+}
+
+.theme-shadow {
+  box-shadow: var(--shadow-md);
+}
+
+.theme-shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.theme-gradient-hero {
+  background: var(--gradient-hero);
+}
+
+.theme-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.theme-gradient-surface {
+  background: var(--gradient-surface);
+}
+
+/* Block-specific theme utilities */
+.hero-block {
+  background: var(--gradient-hero);
+  color: var(--color-textPrimary);
+}
+
+.hero-block .theme-title {
+  color: var(--color-textPrimary);
+}
+
+.hero-block .theme-subtitle {
+  color: var(--color-textSecondary);
+}
+
+.file-block {
+  background-color: var(--color-backgroundSecondary);
+}
+
+.file-block .file-card {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.file-block .file-card:hover {
+  background-color: var(--color-surfaceHover);
+  box-shadow: var(--shadow-lg);
+}
+
+.footer-block {
+  background-color: var(--color-surface);
+  border-top-color: var(--color-border);
+}
+
+/* Interactive elements */
+.theme-button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  border: none;
+}
+
+.theme-button-primary:hover {
+  background-color: var(--color-primaryHover);
+}
+
+.theme-button-secondary {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.theme-button-secondary:hover {
+  background-color: var(--color-surfaceHover);
+  border-color: var(--color-primary);
+}
+
+/* Responsive theme adjustments */
+@media (prefers-color-scheme: dark) {
+  /* This will be overridden by ThemeProvider, but provides fallback */
+  :root {
+    --color-background: #0f172a;
+    --color-backgroundSecondary: #1e293b;
+    --color-textPrimary: #f8fafc;
+    --color-textSecondary: #cbd5e1;
+  }
+}
+
+/* Animation utilities with theme awareness */
+.theme-transition {
+  transition: all 0.2s ease-in-out;
+}
+
+.theme-transition-colors {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* Focus states with theme colors */
+.theme-focus:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.theme-focus-ring:focus {
+  box-shadow: 0 0 0 3px var(--color-primaryLight);
+}
