@@ -5,8 +5,6 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
-import { PasswordProtectionModal } from "./PasswordProtectionModal";
-import { ExpiryModal } from "./ExpiryModal";
 import QRCode from 'qrcode';
 import { 
   Upload, 
@@ -131,8 +129,6 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
   // Password and expiry state
   const [password, setPassword] = useState<string>('');
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showExpiryModal, setShowExpiryModal] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   
   // Destructure form data for easier access
@@ -236,17 +232,6 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     if (files && files.length > 0) {
       handleFileSelect(Array.from(files) as File[]);
     }
-  };
-
-  // Password and expiry handlers
-  const handlePasswordSave = async (newPassword: string) => {
-    setPassword(newPassword);
-    setShowPasswordModal(false);
-  };
-
-  const handleExpirySave = async (newExpiryDate: string | null) => {
-    setExpiryDate(newExpiryDate);
-    setShowExpiryModal(false);
   };
 
   const handleUpload = async () => {
@@ -354,7 +339,7 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto scrollbar-hide">
         <CardContent className="p-0">
           {/* Header */}
           <div className="p-6 border-b border-slate-200 flex items-center justify-between">
@@ -462,7 +447,7 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                 <h4 className="font-medium text-slate-900 mb-3">
                   Uploaded Files ({uploadedFiles.length})
                 </h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
                   {uploadedFiles.map((file, index) => (
                     <div key={index} className="flex items-center space-x-3 p-2 bg-slate-50 rounded-lg">
                       <div className="flex-shrink-0">
@@ -564,183 +549,199 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
           )}
 
           {step === 'details' && uploadedFiles.length > 0 && (
-            <div className="p-6">
-              {/* Files Summary */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-slate-900">
-                    Your Files ({uploadedFiles.length})
-                  </h4>
-                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Ready
+            <div className="p-8 pb-12">
+              {/* Files Summary - Enhanced */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Files Ready for Upload
+                    </h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} • {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
+                    <CheckCircle className="w-4 h-4 mr-1.5" />
+                    Ready to Share
                   </Badge>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-sm text-slate-600">
-                    {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} • {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
-                  </p>
-                  {uploadedFiles.length <= 3 && (
-                    <div className="mt-2 space-y-1">
+                
+                {/* File List - Improved */}
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                  {uploadedFiles.length <= 4 ? (
+                    <div className="space-y-3">
                       {uploadedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className="w-4 h-4">{getFileIcon(file.name, file.type)}</div>
-                          <span className="text-xs text-slate-600 truncate">{file.name}</span>
+                        <div key={index} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100">
+                          <div className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg">
+                            {getFileIcon(file.name, file.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                            <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  )}
-                  {uploadedFiles.length > 3 && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      {uploadedFiles.slice(0, 2).map(f => f.name).join(', ')} and {uploadedFiles.length - 2} more...
-                    </p>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-sm text-slate-600">
+                        {uploadedFiles.slice(0, 2).map(f => f.name).join(', ')}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        +{uploadedFiles.length - 2} more files
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Minimal Form - Only 2-3 Required Fields */}
+              {/* Form Fields - Enhanced */}
               <div className="space-y-6">
-                <div>
-                  <Label htmlFor="title" className="text-base font-medium text-slate-900">
-                    Title <span className="text-red-500">*</span>
-                  </Label>
-                  <p className="text-sm text-slate-600 mb-2">This will be the main heading on your page</p>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g., Q4 Business Review 2024"
-                    className="text-base"
-                  />
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Title Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-sm font-semibold text-slate-900 flex items-center">
+                      Site Title <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="e.g., Q4 Business Review 2024"
+                      className="h-11 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                    />
+                  </div>
+
+                  {/* Description Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-sm font-semibold text-slate-900 flex items-center">
+                      Description <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Brief description of what viewers will find..."
+                      rows={3}
+                      className="text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500 resize-none"
+                    />
+                  </div>
+
+                  {/* Author Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="authorName" className="text-sm font-semibold text-slate-900">
+                      Author Name <span className="text-slate-400 text-xs">(Optional)</span>
+                    </Label>
+                    <Input
+                      id="authorName"
+                      value={formData.authorName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, authorName: e.target.value }))}
+                      placeholder="Your name or organization"
+                      className="h-11 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="description" className="text-base font-medium text-slate-900">
-                    Description <span className="text-red-500">*</span>
-                  </Label>
-                  <p className="text-sm text-slate-600 mb-2">Brief description of what viewers will find</p>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="e.g., Comprehensive quarterly performance analysis and strategic outlook for 2025"
-                    rows={3}
-                    className="text-base resize-none"
-                  />
+                {/* Security & Access - Enhanced */}
+                <div className="pt-6 border-t border-slate-200">
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-slate-900 mb-1">Security & Access</h4>
+                    <p className="text-xs text-slate-600">Optional settings to control access to your site</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Password Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium text-slate-700 flex items-center">
+                        <Shield className="w-4 h-4 mr-1.5 text-slate-500" />
+                        Password Protection
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Leave empty for public access"
+                        className="h-10 text-sm border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      />
+                    </div>
+
+                    {/* Expiry Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="expiryDate" className="text-sm font-medium text-slate-700 flex items-center">
+                        <Clock className="w-4 h-4 mr-1.5 text-slate-500" />
+                        Expiry Date
+                      </Label>
+                      <Input
+                        id="expiryDate"
+                        type="datetime-local"
+                        value={expiryDate || ''}
+                        onChange={(e) => setExpiryDate(e.target.value || null)}
+                        min={new Date().toISOString().slice(0, 16)}
+                        className="h-10 text-sm border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Security Status Indicators */}
+                  {(password || expiryDate) && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {password && (
+                        <div className="inline-flex items-center px-2.5 py-1 bg-cyan-50 border border-cyan-200 rounded-full text-xs text-cyan-800">
+                          <Shield className="w-3 h-3 mr-1" />
+                          Password Protected
+                        </div>
+                      )}
+                      {expiryDate && (
+                        <div className="inline-flex items-center px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs text-amber-800">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Expires: {new Date(expiryDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor="authorName" className="text-base font-medium text-slate-900">
-                    Your Name <span className="text-slate-400">(Optional)</span>
-                  </Label>
-                  <p className="text-sm text-slate-600 mb-2">Will be displayed as the author</p>
-                  <Input
-                    id="authorName"
-                    value={formData.authorName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, authorName: e.target.value }))}
-                    placeholder="e.g., Sarah Chen"
-                    className="text-base"
-                  />
-                </div>
-
-                {/* Security & Expiry Options */}
-                <div className="border-t pt-6">
-                  <h4 className="font-medium text-slate-900 mb-4">Security & Access Settings</h4>
-                  <div className="grid grid-cols-2 gap-3">
+                {/* Action Buttons */}
+                <div className="pt-6 border-t border-slate-200 bg-white">
+                  <div className="flex items-center justify-between">
                     <Button
-                      type="button"
                       variant="outline"
-                      onClick={() => setShowPasswordModal(true)}
-                      className="h-12 flex items-center justify-center space-x-2"
+                      onClick={() => setStep('template')}
+                      className="px-6 h-11 border-slate-300 text-slate-700 hover:bg-slate-50"
                     >
-                      <Shield className="w-4 h-4" />
-                      <span>{password ? 'Password Set' : 'Add Password'}</span>
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Change Template
                     </Button>
                     
                     <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowExpiryModal(true)}
-                      className="h-12 flex items-center justify-center space-x-2"
+                      onClick={handleUpload}
+                      disabled={!formData.title.trim() || !formData.description.trim() || isUploading}
+                      size="lg"
+                      style={{
+                        background: isUploading || (!formData.title.trim() || !formData.description.trim()) 
+                          ? '#9ca3af' 
+                          : 'linear-gradient(to right, #06b6d4, #2563eb)',
+                        color: 'white',
+                        border: 'none'
+                      }}
+                      className="px-8 h-11 text-white font-semibold shadow-lg relative z-10 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Clock className="w-4 h-4" />
-                      <span>{expiryDate ? 'Expiry Set' : 'Set Expiry'}</span>
+                      {isUploading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Creating Site...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 mr-2" />
+                          Create Site
+                        </>
+                      )}
                     </Button>
                   </div>
-                  
-                  {password && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-800 flex items-center">
-                        <Shield className="w-4 h-4 mr-1" />
-                        Password protection enabled
-                      </p>
-                    </div>
-                  )}
-                  
-                  {expiryDate && (
-                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <p className="text-sm text-yellow-800 flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        Expires: {new Date(expiryDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
                 </div>
-
-                {/* Smart Preview */}
-                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Smart Features Included
-                  </h4>
-                  <div className="text-sm text-blue-800 space-y-1">
-                    <p>✓ Automatic file preview generation</p>
-                    <p>✓ Professional styling and layout</p>
-                    <p>✓ Download tracking and analytics</p>
-                    <p>✓ Responsive design for all devices</p>
-                    <p>✓ Shareable link generation</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected Template Info */}
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 mb-6">
-                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Selected: {templates.find(t => t.id === selectedTemplate)?.name}
-                </h4>
-                <div className="text-sm text-blue-800 space-y-1">
-                  <p>✓ Professional styling and layout</p>
-                  <p>✓ Download tracking and analytics</p>
-                  <p>✓ Responsive design for all devices</p>
-                  <p>✓ Shareable link generation</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setStep('template')}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Change Template
-                </Button>
-                
-                <Button 
-                  onClick={handleUpload}
-                  disabled={!formData.title || !formData.description || isUploading}
-                  size="lg"
-                >
-                  {isUploading ? (
-                    <>Processing... {uploadProgress}%</>
-                  ) : (
-                    <>
-                      Create Site
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
               </div>
             </div>
           )}
@@ -854,22 +855,6 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
           )}
         </CardContent>
       </Card>
-      
-      {/* Password Protection Modal */}
-      <PasswordProtectionModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-        onSave={handlePasswordSave}
-        currentPassword={password}
-      />
-      
-      {/* Expiry Modal */}
-      <ExpiryModal
-        isOpen={showExpiryModal}
-        onClose={() => setShowExpiryModal(false)}
-        onSave={handleExpirySave}
-        currentExpiry={expiryDate || undefined}
-      />
     </div>
   );
 }
