@@ -183,7 +183,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEwLjE3ODYgMjEgOS4yNjc4NiAyMC41OTIxIDguNTM4MDNDMjAuMjQ3NiA3LjkyMDgxIDE5LjYxMjUgNy41NDM5IDE4Ljg2NDEgNy4yNzI0OUMxOC4wMTU1IDYuOTYxNTMgMTUuOTk5NiA2Ljk2MTUzIDEyIDYuOTYxNTNDOC4wMDA0NCA2Ljk2MTUzIDUuOTg0NDggNi45NjE1MyA1LjEzNTkyIDcuMjcyNDlDNC4zODc1NCA3LjU0MzkgMy43NTI0NCA3LjkyMDgxIDMuNDA3OSA4LjUzODAzQzMgOS4yNjc4NiAzIDEwLjE3ODYgMyAxMlYxM0MzIDE0LjgyMTQgMyAxNS43MzIxIDMuNDA3OSAxNi40NjJDMy43NTI0NCAxNy4wNzkyIDQuMzg3NTQgMTcuNDU2MSA1LjEzNTkyIDE3LjcyNzVDNS45ODQ0OCAxOC4wMzg1IDguMDAwNDQgMTguMDM4NSAxMiAxOC4wMzg1QzE1Ljk5OTYgMTguMDM4NSAxOC4wMTU1IDE4LjAzODUgMTguODY0MSAxNy43Mjc1QzE5LjYxMjUgMTcuNDU2MSAyMC4yNDc2IDE3LjA3OTIgMjAuNTkyMSAxNi40NjJDMjEgMTUuNzMyMSAyMSAxNC44MjE0IDIxIDEzVjEyWiIgZmlsbD0iIzMzNzNkYyIvPgo8cGF0aCBkPSJNMTMgMTFIMTYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHA+PC9zdmc+Cg==" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=6">
 </head>
 <body class="min-h-screen bg-slate-50">
   <div id="root">
@@ -203,7 +203,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   </script>
 
   <!-- Load React bundle -->
-  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=5"></script>
+  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=6"></script>
 </body>
 </html>`;
 }
