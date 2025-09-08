@@ -1,7 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import UniversalFileTemplate from './components/universal-file-template';
+import { themeVariants } from './styles/themes';
 import './index.css';
+
+// Initialize theme CSS variables on document.body
+function initializeTheme() {
+  const defaultTheme = themeVariants['ocean-light'];
+  
+  // Set CSS variables on document body
+  Object.entries(defaultTheme.colors).forEach(([key, value]) => {
+    document.body.style.setProperty(`--color-${key}`, value);
+  });
+  
+  Object.entries(defaultTheme.shadows).forEach(([key, value]) => {
+    document.body.style.setProperty(`--shadow-${key}`, value);
+  });
+  
+  Object.entries(defaultTheme.gradients).forEach(([key, value]) => {
+    document.body.style.setProperty(`--gradient-${key}`, value);
+  });
+  
+  // Apply theme class to body
+  document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '').concat(' theme-ocean-light').trim();
+}
 
 // Wait for DOM and data to be ready
 function initializeLytsite() {
@@ -12,6 +34,9 @@ function initializeLytsite() {
     console.error('Lytsite: Missing root element or data');
     return;
   }
+  
+  // Initialize theme before rendering
+  initializeTheme();
 
   // Transform data to match UniversalFileTemplate interface
   const templateData = {
