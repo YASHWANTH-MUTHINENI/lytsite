@@ -5,7 +5,9 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import QRCode from 'qrcode';
+import UniversalFileTemplate from "./universal-file-template";
 import { 
   Upload, 
   X, 
@@ -36,8 +38,6 @@ import {
 } from "lucide-react";
 
 interface MinimalUploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
   onSuccess: (templateId: string) => void;
 }
 
@@ -107,13 +107,39 @@ const formatFileSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: MinimalUploadModalProps) {
+// Transform user data for UniversalFileTemplate
+const getTemplateData = (formData: any, uploadedFiles: File[]) => {
+  return {
+    title: formData.title || "My Files",
+    subLine: formData.description || "File delivery",
+    tagLine: formData.authorName ? `By ${formData.authorName}` : "Shared with Lytsite",
+    heroImage: null, // We can add hero image upload later
+    files: uploadedFiles.map((file, index) => ({
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+      url: URL.createObjectURL(file), // For preview purposes
+      thumbnailUrl: undefined, // Changed from null to undefined
+      uploadedAt: new Date().toISOString().split('T')[0],
+      uploadedBy: formData.authorName || "Anonymous",
+      description: `${file.name} - ${formatFileSize(file.size)}`
+    })),
+    contactInfo: {
+      email: "",
+      website: "",
+      linkedin: ""
+    }
+  };
+};
+
+export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [step, setStep] = useState<'upload' | 'template' | 'details' | 'success'>('upload');
+  const [step, setStep] = useState<'upload' | 'template' | 'details' | 'preview' | 'success'>('upload');
   const [selectedTemplate, setSelectedTemplate] = useState('universal');
+  const [showFilesModal, setShowFilesModal] = useState(false);
   
   // Minimal form data - only 2-3 inputs required
   const [formData, setFormData] = useState({
@@ -179,6 +205,19 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
       color: 'red'
     }
   ];
+
+  // Lock body scroll when preview is open
+  React.useEffect(() => {
+    if (step === 'preview') {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [step]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -318,7 +357,6 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     
     const templateRoute = getTemplateRoute(selectedTemplate);
     onSuccess(templateRoute);
-    onClose();
   };
 
   const getTemplateRoute = (templateId: string) => {
@@ -335,23 +373,105 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
     setIsUploading(false);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto scrollbar-hide">
-        <CardContent className="p-0">
-          {/* Header */}
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Create Professional Site</h2>
-              <p className="text-slate-600">Upload your file and create a beautiful sharing page in seconds</p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+    <>
+      {step === 'preview' ? (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-hidden"
+          style={{ touchAction: 'none' }}
+        >
+          <div className="h-full w-full flex flex-col">
+            <div 
+              className="bg-white w-full h-full flex flex-col"
+              style={{ touchAction: 'auto' }}
+            >
+              {/* Browser-like Header */}
+              <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-gray-100 border-b flex-shrink-0">
+                <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <div className="flex space-x-1 sm:space-x-2">
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <div className="flex-1 bg-white rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 border min-w-0 truncate">
+                    <span className="text-gray-400">🔒</span> lytsite.com/preview
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStep('details')}
+                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-gray-200 flex-shrink-0 ml-2"
+                >
+                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+              </div>
 
+              {/* Preview Content - Full Viewport */}
+              <div 
+                className="flex-1 bg-white overflow-y-auto"
+                style={{ 
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                <UniversalFileTemplate 
+                  data={getTemplateData(formData, uploadedFiles)}
+                  onNavigate={() => {}}
+                />
+              </div>
+
+              {/* Action Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white border-t border-gray-200 flex-shrink-0 gap-3 sm:gap-0">
+                <div className="flex items-center text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="hidden sm:inline">Preview Mode - This is how visitors will see your site</span>
+                  <span className="sm:hidden">Preview Mode</span>
+                </div>
+                <div className="flex items-center space-x-2 sm:space-x-3 order-1 sm:order-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep('details')}
+                    className="px-3 sm:px-4 text-sm flex-1 sm:flex-none"
+                  >
+                    <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={handleUpload}
+                    disabled={isUploading}
+                    size="lg"
+                    style={{
+                      background: isUploading 
+                        ? '#9ca3af' 
+                        : 'linear-gradient(to right, #10b981, #059669)',
+                      color: 'white',
+                      border: 'none'
+                    }}
+                    className="px-4 sm:px-8 h-10 sm:h-11 text-sm sm:text-base text-white font-semibold shadow-lg relative z-10 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none"
+                  >
+                    {isUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
+                        <span className="hidden sm:inline">Publishing...</span>
+                        <span className="sm:hidden">Publishing</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Publish Site</span>
+                        <span className="sm:hidden">Publish</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-4xl mx-auto">
+          <Card className="w-full overflow-auto scrollbar-hide">
+            <CardContent className="p-0">
           {step === 'upload' && (
             <div className="p-6">
               {/* Upload Area */}
@@ -410,67 +530,55 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                   </p>
                 </div>
               </div>
-
-              {/* Features */}
-              <div className="grid md:grid-cols-3 gap-4 mt-8">
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <h4 className="font-medium text-slate-900 mb-1">Instant Processing</h4>
-                  <p className="text-sm text-slate-600">Files are automatically optimized for web viewing</p>
-                </div>
-                
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Sparkles className="w-5 h-5 text-green-600" />
-                  </div>
-                  <h4 className="font-medium text-slate-900 mb-1">Smart Defaults</h4>
-                  <p className="text-sm text-slate-600">Professional styling applied automatically</p>
-                </div>
-                
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h4 className="font-medium text-slate-900 mb-1">Ready to Share</h4>
-                  <p className="text-sm text-slate-600">Get a professional URL instantly</p>
-                </div>
-              </div>
             </div>
           )}
 
           {step === 'template' && uploadedFiles.length > 0 && (
             <div className="p-6">
-              {/* Files Preview */}
+              {/* Files Summary */}
               <div className="mb-6">
-                <h4 className="font-medium text-slate-900 mb-3">
-                  Uploaded Files ({uploadedFiles.length})
-                </h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-2 bg-slate-50 rounded-lg">
-                      <div className="flex-shrink-0">
-                        {getFileIcon(file.name, file.type)}
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-slate-900">
+                      {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} uploaded
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Total: {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
+                    </p>
+                  </div>
+                  <Dialog open={showFilesModal} onOpenChange={setShowFilesModal}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Files
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Uploaded Files ({uploadedFiles.length})</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {uploadedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <div className="flex-shrink-0">
+                              {getFileIcon(file.name, file.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                              <p className="text-xs text-slate-600">
+                                {formatFileSize(file.size)} • {file.type || 'Unknown type'}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Ready
+                            </Badge>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                        <p className="text-xs text-slate-600">
-                          {formatFileSize(file.size)} • {file.type || 'Unknown type'}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Ready
-                      </Badge>
-                    </div>
-                  ))}
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                {uploadedFiles.length > 1 && (
-                  <p className="text-xs text-slate-500 mt-2">
-                    Total: {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
-                  </p>
-                )}
               </div>
 
               <div className="mb-6">
@@ -552,47 +660,53 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
             <div className="p-8 pb-12">
               {/* Files Summary - Enhanced */}
               <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      Files Ready for Upload
-                    </h3>
-                    <p className="text-sm text-slate-600 mt-1">
-                      {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} • {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
+                    <p className="font-medium text-slate-900">
+                      {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''} ready
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Total: {formatFileSize(uploadedFiles.reduce((total, file) => total + file.size, 0))}
                     </p>
                   </div>
-                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
-                    <CheckCircle className="w-4 h-4 mr-1.5" />
-                    Ready to Share
-                  </Badge>
-                </div>
-                
-                {/* File List - Improved */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                  {uploadedFiles.length <= 4 ? (
-                    <div className="space-y-3">
-                      {uploadedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100">
-                          <div className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg">
-                            {getFileIcon(file.name, file.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                            <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
-                          </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 px-3 py-1">
+                      <CheckCircle className="w-4 h-4 mr-1.5" />
+                      Ready to Share
+                    </Badge>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Files
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Files Ready for Upload ({uploadedFiles.length})</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                          {uploadedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                              <div className="flex-shrink-0">
+                                {getFileIcon(file.name, file.type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                                <p className="text-xs text-slate-600">
+                                  {formatFileSize(file.size)} • {file.type || 'Unknown type'}
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Ready
+                              </Badge>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-2">
-                      <p className="text-sm text-slate-600">
-                        {uploadedFiles.slice(0, 2).map(f => f.name).join(', ')}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        +{uploadedFiles.length - 2} more files
-                      </p>
-                    </div>
-                  )}
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </div>
 
@@ -716,11 +830,11 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                     </Button>
                     
                     <Button
-                      onClick={handleUpload}
-                      disabled={!formData.title.trim() || !formData.description.trim() || isUploading}
+                      onClick={() => setStep('preview')}
+                      disabled={!formData.title.trim() || !formData.description.trim()}
                       size="lg"
                       style={{
-                        background: isUploading || (!formData.title.trim() || !formData.description.trim()) 
+                        background: (!formData.title.trim() || !formData.description.trim()) 
                           ? '#9ca3af' 
                           : 'linear-gradient(to right, #06b6d4, #2563eb)',
                         color: 'white',
@@ -728,17 +842,8 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
                       }}
                       className="px-8 h-11 text-white font-semibold shadow-lg relative z-10 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isUploading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Creating Site...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4 mr-2" />
-                          Create Site
-                        </>
-                      )}
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview Site
                     </Button>
                   </div>
                 </div>
@@ -853,8 +958,10 @@ export default function MinimalUploadModal({ isOpen, onClose, onSuccess }: Minim
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }

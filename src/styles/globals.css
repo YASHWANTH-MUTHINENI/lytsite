@@ -244,3 +244,15 @@ html {
     border-image: linear-gradient(135deg, var(--ocean-200) 0%, var(--teal-200) 100%) 1;
   }
 }
+
+/* Professional SaaS-standard animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

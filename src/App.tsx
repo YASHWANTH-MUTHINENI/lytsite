@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Homepage from './components/homepage';
+import TemplatesPage from './components/templates-page';
 import ClientDelivery from './components/client-delivery';
 import PhotoGallery from './components/photo-gallery';
 import PortfolioResume from './components/portfolio-resume';
@@ -11,7 +12,7 @@ import UniversalFileTemplate from './components/universal-file-template';
 import HeroBlockExamples from './components/hero-block-examples';
 import BackendDataTest from './components/backend-data-test';
 
-type Page = 'homepage' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples' | 'backend-data-test';
+type Page = 'homepage' | 'templates-page' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples' | 'backend-data-test';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('homepage');
@@ -24,6 +25,8 @@ export default function App() {
     switch (currentPage) {
       case 'homepage':
         return <Homepage onNavigate={handleNavigate} />;
+      case 'templates-page':
+        return <TemplatesPage onNavigate={handleNavigate} />;
       case 'client-delivery':
         return <ClientDelivery onNavigate={handleNavigate} />;
       case 'photo-gallery':
