@@ -1,9 +1,5 @@
-import { pdfjs } from 'react-pdf';
-
-// Ensure PDF.js worker is set up
-if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-}
+// Simple PDF thumbnail generator without npm dependencies
+// Uses dynamic PDF.js loading to avoid conflicts
 
 interface ThumbnailOptions {
   scale?: number;
@@ -18,6 +14,29 @@ interface PDFThumbnail {
   width: number;
   height: number;
 }
+
+// Load PDF.js dynamically
+const loadPdfJs = async (): Promise<any> => {
+  if ((window as any).pdfjsLib) {
+    return (window as any).pdfjsLib;
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = () => {
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve(pdfjsLib);
+      } else {
+        reject(new Error('PDF.js not loaded'));
+      }
+    };
+    script.onerror = () => reject(new Error('Failed to load PDF.js'));
+    document.head.appendChild(script);
+  });
+};
 
 export class PDFThumbnailGenerator {
   private static canvas: HTMLCanvasElement | null = null;
@@ -51,8 +70,11 @@ export class PDFThumbnailGenerator {
         format = 'jpeg'
       } = options;
 
+      // Load PDF.js library
+      const pdfjsLib = await loadPdfJs();
+      
       // Load PDF
-      const pdf = await pdfjs.getDocument(pdfUrl).promise;
+      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
       const page = await pdf.getPage(pageNumber);
       
       // Get viewport
@@ -99,8 +121,11 @@ export class PDFThumbnailGenerator {
         format = 'jpeg'
       } = options;
 
+      // Load PDF.js library
+      const pdfjsLib = await loadPdfJs();
+
       // Load PDF to get page count
-      const pdf = await pdfjs.getDocument(pdfUrl).promise;
+      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
       const totalPages = pdf.numPages;
       const pagesToGenerate = Math.min(totalPages, maxPages);
 
@@ -160,8 +185,11 @@ export class PDFThumbnailGenerator {
     try {
       const { maxPages = 5 } = options;
       
+      // Load PDF.js library
+      const pdfjsLib = await loadPdfJs();
+      
       // Load PDF to get page count
-      const pdf = await pdfjs.getDocument(pdfUrl).promise;
+      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
       const totalPages = pdf.numPages;
       const pagesToGenerate = Math.min(totalPages, maxPages);
 

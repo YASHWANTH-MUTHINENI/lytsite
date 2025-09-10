@@ -4,6 +4,14 @@ compatibility_date = "2024-09-01"
 
 [vars]
 ENVIRONMENT = "development"
+# LibreOffice conversion service URLs (update with your deployed services)
+# 1. Deploy AWS LibreOffice to ECS/Lambda (primary): See AWS_LIBREOFFICE_DEPLOYMENT.md
+# 2. Deploy Gotenberg to Railway: https://railway.app/template/gotenberg
+# 3. Sign up for CloudMersive free tier: https://cloudmersive.com/ (3.5MB limit)
+AWS_CONVERTER_URL = "http://3.110.196.217:8080"
+GOTENBERG_SERVICE_URL = "https://your-gotenberg-service.railway.app"
+CLOUDMERSIVE_API_KEY = "your-cloudmersive-api-key"
+ONLYOFFICE_SERVER_URL = "https://your-onlyoffice-server.com"
 
 [[kv_namespaces]]
 binding = "LYTSITE_KV"
@@ -17,7 +25,13 @@ preview_bucket_name = "lytsite-files-preview"
 
 [env.production]
 name = "lytsite-backend-prod"
-vars = { ENVIRONMENT = "production" }
+
+[env.production.vars]
+ENVIRONMENT = "production"
+AWS_CONVERTER_URL = "http://3.110.196.217:8080"
+GOTENBERG_SERVICE_URL = "https://your-gotenberg-service.railway.app"
+CLOUDMERSIVE_API_KEY = "your-cloudmersive-api-key"
+ONLYOFFICE_SERVER_URL = "https://your-onlyoffice-server.com"
 
 [[env.production.kv_namespaces]]
 binding = "LYTSITE_KV"

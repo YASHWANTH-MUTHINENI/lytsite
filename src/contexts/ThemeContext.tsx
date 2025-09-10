@@ -114,11 +114,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   );
 };
 
-// Custom hook to use theme
+// Custom hook to use theme with fallback
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Provide a fallback theme when no provider is available
+    return {
+      theme: defaultTheme,
+      setTheme: () => {},
+      availableThemes: [],
+      toggleDarkMode: () => {},
+      changePalette: () => {}
+    };
   }
   return context;
 };

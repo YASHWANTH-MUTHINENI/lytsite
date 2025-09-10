@@ -30,13 +30,7 @@ import {
 
 // Set up PDF.js with reliable worker
 if (typeof window !== 'undefined') {
-  // Use jsdelivr CDN which has better CORS support and correct paths
-  const workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
-  
-  console.log('🔧 PDF.js initialized with jsdelivr CDN worker');
-  console.log('🔧 PDF.js version:', pdfjsLib.version);
-  console.log('🔧 Worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
 }
 
 // Global file data access for preview PDFs
@@ -139,34 +133,28 @@ export default function EnhancedPDFBlock({
 
   // Load and render PDF using direct PDF.js canvas approach
   const loadPDFDocument = useCallback(async (source: string) => {
-    let pdfData: Uint8Array | null = null;
-    
     try {
-      console.log('🚀 Starting PDF load for source:', source);
       setIsLoading(true);
       setLoadingProgress(10);
       
+      let pdfData: Uint8Array;
+      
       if (source.startsWith('preview://')) {
         // Get from global file store
-        console.log('📦 Looking for preview data in global store...');
         const fileData = getFileData(source);
         if (!fileData) {
-          console.error('❌ Preview file data not found for:', source);
-          console.log('📊 Global store contents:', (window as any).fileDataStore);
           throw new Error('Preview file data not found');
         }
-        console.log('✅ Retrieved from global store:', fileData.byteLength, 'bytes');
+        console.log('📦 Retrieved from global store:', fileData.byteLength, 'bytes');
         // Clone to prevent detachment
         const clonedData = fileData.slice();
         pdfData = new Uint8Array(clonedData);
-        console.log('📋 Cloned to Uint8Array:', pdfData.byteLength, 'bytes');
       } else if (source.startsWith('blob:') || source.startsWith('data:')) {
         // Fetch blob/data URL
         console.log('🔗 Fetching blob/data URL...');
         const response = await fetch(source);
         const arrayBuffer = await response.arrayBuffer();
         pdfData = new Uint8Array(arrayBuffer);
-        console.log('✅ Fetched blob/data URL:', pdfData.byteLength, 'bytes');
       } else {
         // Regular URL
         console.log('🌐 Fetching server URL...');
@@ -174,34 +162,21 @@ export default function EnhancedPDFBlock({
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         const arrayBuffer = await response.arrayBuffer();
         pdfData = new Uint8Array(arrayBuffer);
-        console.log('✅ Fetched server URL:', pdfData.byteLength, 'bytes');
       }
       
       setLoadingProgress(30);
       
       // Validate PDF signature
       const signature = String.fromCharCode(...pdfData.slice(0, 4));
-      console.log('🔍 PDF signature check:', signature, 'from bytes:', Array.from(pdfData.slice(0, 8)));
       if (signature !== '%PDF') {
         throw new Error(`Invalid PDF signature: ${signature}`);
       }
       
       console.log('📄 Loading PDF with direct PDF.js, size:', pdfData.byteLength, 'signature:', signature);
-      console.log('🔧 PDF.js worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
-      
       setLoadingProgress(50);
       
-      // Load the PDF document - force main thread by not providing worker
-      console.log('⚙️ Calling pdfjsLib.getDocument...');
-      const loadingTask = pdfjsLib.getDocument({ 
-        data: pdfData,
-        useWorkerFetch: false,
-        verbosity: 0
-      });
-      console.log('⏳ Loading task created, awaiting promise...');
-      const pdf = await loadingTask.promise;
-      console.log('🎉 PDF document loaded! Pages:', pdf.numPages);
-      
+      // Load the PDF document
+      const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
       setPdfDocument(pdf);
       setNumPages(pdf.numPages);
       setLoadingProgress(70);
@@ -210,10 +185,7 @@ export default function EnhancedPDFBlock({
       
       // Render the first page to main canvas
       if (canvasRef.current) {
-        console.log('🖼️ Rendering page 1 to canvas...');
         await renderPage(pdf, 1, canvasRef.current, scale);
-      } else {
-        console.warn('⚠️ Canvas ref not available for rendering');
       }
       
       setLoadingProgress(100);
@@ -221,107 +193,9 @@ export default function EnhancedPDFBlock({
       
     } catch (error) {
       console.error('❌ Failed to load PDF:', error);
-      console.error('❌ Error details:', {
-        message: (error as Error).message || 'Unknown error',
-        stack: (error as Error).stack || 'No stack trace',
-        name: (error as Error).name || 'Unknown error type',
-        errorObject: error
-      });
-      
-      // If worker failed and we have PDF data, try without worker
-      if (pdfData && ((error as Error).message?.includes('worker') || (error as Error).message?.includes('fetch') || (error as Error).message?.includes('CORS'))) {
-        console.log('🔄 Worker failed, trying alternative worker sources...');
-        
-        // Try different CDN sources with full PDF.js reset
-        const alternativeWorkers = [
-          `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`,
-          `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.js`, // Try .js instead of .min.js
-          `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.js`,
-          null  // Finally try no worker (main thread)
-        ];
-        
-        for (const workerSrc of alternativeWorkers) {
-          try {
-            // Reset PDF.js completely by clearing the global options
-            delete (pdfjsLib.GlobalWorkerOptions as any).workerSrc;
-            
-            if (workerSrc) {
-              pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
-              console.log('🔧 Retrying with worker:', workerSrc);
-            } else {
-              console.log('🔧 Retrying with MAIN THREAD (no worker)');
-            }
-            
-            // Add a small delay to allow worker reset
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Retry loading the PDF with fresh configuration
-            const pdf = await pdfjsLib.getDocument({ 
-              data: pdfData,
-              useWorkerFetch: false,
-              verbosity: 0
-            }).promise;
-            console.log('🎉 PDF loaded successfully! Pages:', pdf.numPages);
-            
-            setPdfDocument(pdf);
-            setNumPages(pdf.numPages);
-            setLoadingProgress(70);
-            
-            // Render the first page to main canvas
-            if (canvasRef.current) {
-              console.log('🖼️ Rendering page 1 to canvas...');
-              await renderPage(pdf, 1, canvasRef.current, scale);
-            }
-            
-            setLoadingProgress(100);
-            setIsLoading(false);
-            return; // Success!
-            
-          } catch (retryError) {
-            console.warn(`❌ Worker ${workerSrc || 'MAIN THREAD'} failed:`, (retryError as Error).message);
-            continue; // Try next worker source
-          }
-        }
-        
-        console.error('❌ All worker sources failed');
-        
-        // Final fallback: try with disableWorker option
-        try {
-          console.log('🔧 Final attempt: Disabling worker completely...');
-          
-          // Clear any existing worker configuration
-          pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-          
-          const pdf = await pdfjsLib.getDocument({ 
-            data: pdfData,
-            useWorkerFetch: false,
-            verbosity: 0,
-            isEvalSupported: false
-          }).promise;
-          
-          console.log('🎉 PDF loaded with disabled worker! Pages:', pdf.numPages);
-          setPdfDocument(pdf);
-          setNumPages(pdf.numPages);
-          setLoadingProgress(70);
-          
-          // Render the first page to main canvas
-          if (canvasRef.current) {
-            console.log('🖼️ Rendering page 1 to canvas...');
-            await renderPage(pdf, 1, canvasRef.current, scale);
-          }
-          
-          setLoadingProgress(100);
-          setIsLoading(false);
-          return;
-          
-        } catch (finalError) {
-          console.error('❌ Final fallback also failed:', finalError);
-        }
-      }
       
       // For preview URLs, we can't fall back to iframe
       if (source.startsWith('preview://') || source.startsWith('blob:') || source.startsWith('data:')) {
-        console.log('🚫 Cannot fallback to iframe for preview/blob/data URLs, showing error');
         setViewerMethod('error');
       } else {
         console.log('🔄 Falling back to iframe...');

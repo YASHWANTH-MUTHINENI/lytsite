@@ -4,6 +4,9 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    dedupe: ['react', 'react-dom', 'lucide-react']
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/lytsite-standalone.tsx'),
@@ -15,6 +18,13 @@ export default defineConfig({
       output: {
         inlineDynamicImports: true,
         manualChunks: undefined
+      },
+      // Don't externalize any dependencies for standalone build
+      external: [],
+      // Suppress warnings about external dependencies
+      onwarn(warning, warn) {
+        if (warning.code === 'UNRESOLVED_IMPORT') return;
+        warn(warning);
       }
     },
     outDir: 'dist-standalone',

@@ -365,9 +365,16 @@ Version: 1.0`;
   
   // Determine the primary file type for the template
   const detectedFileType = getMultipleFileTypes(templateData.files);
-  const primaryFileType = detectedFileType === 'mixed' ? 'gallery' : detectedFileType;
+  const primaryFileType = detectedFileType; // Keep the detected type, including 'mixed'
+
+  // PowerPoint files should use presentation type to route correctly in BlockRouter
+  const isPowerPointFile = templateData.files.some(f => 
+    f.name?.toLowerCase().endsWith('.ppt') || 
+    f.name?.toLowerCase().endsWith('.pptx') ||
+    f.type?.includes('presentation')
+  );
   
-  const handleDownload = () => {
+  const finalFileType = isPowerPointFile ? 'presentation' : primaryFileType;  const handleDownload = () => {
     // Track download action
     console.log(`Download tracked for files`);
   };
@@ -430,6 +437,19 @@ Version: 1.0`;
           characters: 15420,
           language: "markdown"
         };
+      case 'presentation':
+        const presentationFile = templateData.files.find(f => 
+          f.type?.includes('presentation') || 
+          f.name?.toLowerCase().endsWith('.ppt') || 
+          f.name?.toLowerCase().endsWith('.pptx')
+        );
+        return {
+          size: presentationFile?.size || "0 MB",
+          format: "PowerPoint → PDF",
+          pages: 12, // Estimated pages after PDF conversion
+          theme: "Converted Document",
+          modified: presentationFile?.uploadedAt || new Date().toISOString().split('T')[0]
+        };
       default:
         return {
           size: "0 MB",
@@ -455,11 +475,11 @@ Version: 1.0`;
 
         {/* Specialized File Block - Core content */}
         <BlockRouter
-          fileType={primaryFileType}
+          fileType={finalFileType}
           title={templateData.title}
           description={templateData.tagLine}
           files={templateData.files}
-          content={primaryFileType === 'document' ? getSampleDocumentContent() : undefined}
+          content={finalFileType === 'document' ? getSampleDocumentContent() : undefined}
           onDownload={handleDownload}
           metadata={getMetadata()}
         />

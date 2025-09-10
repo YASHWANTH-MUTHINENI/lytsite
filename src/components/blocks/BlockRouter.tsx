@@ -5,12 +5,12 @@ import GridGalleryBlock from "./GridGalleryBlock";
 import MasonryGalleryBlock from "./MasonryGalleryBlock";
 import LightboxGalleryBlock from "./LightboxGalleryBlock";
 import GalleryBlock from "./GalleryBlock";
-import PDFBlock from "./PDFBlock";
-import MultiPDFBlock from "./MultiPDFBlock";
-import EnhancedPDFBlock from "./EnhancedPDFBlock";
+import DynamicPDFBlock from "./DynamicPDFBlock";
+import MultiDynamicPDFBlock from "./MultiDynamicPDFBlock";
 import VideoBlock from "./VideoBlock";
 import ArchiveBlock from "./ArchiveBlock";
 import DocumentBlock from "./DocumentBlock";
+import PowerPointBlock from "./PowerPointBlock";
 
 export interface FileMetadata {
   name: string;
@@ -21,10 +21,32 @@ export interface FileMetadata {
   uploadedAt?: string;
   uploadedBy?: string;
   description?: string;
+  // Add presentation-specific data (legacy)
+  presentationData?: {
+    slides: Array<{
+      id: number;
+      imageUrl: string;
+      thumbnailUrl: string;
+      title?: string;
+    }>;
+    totalSlides: number;
+    slideImages: string[];
+    pdfUrl?: string;
+    embedUrl?: string;
+    theme?: string;
+  };
+  // Enhanced PowerPoint processing data
+  powerPointData?: {
+    originalFileUrl: string;     // Original PPTX for download
+    pdfUrl: string;             // PDF for inline viewing
+    thumbnailUrls: string[];     // PNG thumbnails for gallery
+    slideCount: number;
+    pdfViewerUrl?: string;      // Google Docs style viewer URL
+  };
 }
 
 interface BlockRouterProps {
-  fileType: 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'mixed';
+  fileType: 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'presentation' | 'mixed';
   title: string;
   description?: string;
   files?: FileMetadata[];
@@ -34,22 +56,36 @@ interface BlockRouterProps {
 }
 
 // Utility function to determine file type from file extension or MIME type
-export const getFileType = (fileName: string, mimeType?: string): 'gallery' | 'pdf' | 'video' | 'archive' | 'document' => {
+export const getFileType = (fileName: string, mimeType?: string): 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'presentation' => {
   const extension = fileName.split('.').pop()?.toLowerCase() || '';
   
-  // Image files
-  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'ico'].includes(extension) || 
-      mimeType?.startsWith('image/')) {
-    return 'gallery';
-  }
-  
-  // PDF files
+  // PDF files (highest priority)
   if (extension === 'pdf' || mimeType === 'application/pdf') {
     return 'pdf';
   }
   
+  // Presentation files (before images/documents to avoid conflicts)
+  // Enhanced detection for PowerPoint files
+  if (['ppt', 'pptx', 'key', 'odp'].includes(extension) || 
+      mimeType?.includes('presentation') || 
+      mimeType?.includes('powerpoint') ||
+      mimeType === 'application/vnd.ms-powerpoint' ||
+      mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      // Additional MIME type variations that might occur
+      mimeType === 'application/mspowerpoint' ||
+      mimeType === 'application/powerpoint' ||
+      mimeType === 'application/x-mspowerpoint') {
+    return 'presentation';
+  }
+  
+  // Image files
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'ico', 'heic', 'heif', 'avif'].includes(extension) || 
+      mimeType?.startsWith('image/')) {
+    return 'gallery';
+  }
+  
   // Video files
-  if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'ogv'].includes(extension) ||
+  if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v'].includes(extension) ||
       mimeType?.startsWith('video/')) {
     return 'video';
   }
@@ -60,12 +96,12 @@ export const getFileType = (fileName: string, mimeType?: string): 'gallery' | 'p
     return 'archive';
   }
   
-  // Default to document for text-based files
+  // Default to document for text-based files and everything else
   return 'document';
 };
 
 // Utility function to get multiple file types from a list of files
-export const getMultipleFileTypes = (files: FileMetadata[]): 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'mixed' => {
+export const getMultipleFileTypes = (files: FileMetadata[]): 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'presentation' | 'mixed' => {
   if (files.length === 0) return 'document';
   
   const types = new Set(files.map(file => getFileType(file.name, file.type)));
@@ -178,55 +214,40 @@ export default function BlockRouter({
         }
       }));
 
-      // Use MultiPDFBlock for multiple PDFs
+      // Use MultiDynamicPDFBlock for multiple PDFs
       if (pdfFiles.length > 1) {
         return (
-          <MultiPDFBlock
-            files={pdfFiles}
-            onDownload={(fileId) => {
+          <MultiDynamicPDFBlock
+            files={pdfFiles.map(file => ({
+              id: file.id,
+              name: file.name,
+              url: file.url,
+              size: file.size,
+              pages: file.pages,
+              thumbnails: file.thumbnails
+            }))}
+            title={title}
+            onDownload={(fileId: string) => {
               console.log(`Download PDF: ${fileId}`);
               onDownload?.();
             }}
-            onShare={(fileId) => {
-              console.log(`Share PDF: ${fileId}`);
-            }}
-            autoPlay={metadata?.autoPlay || false}
-            showThumbnails={metadata?.showThumbnails !== false}
+            className="max-w-6xl mx-auto"
           />
         );
       }
 
-      // Use EnhancedPDFBlock for single PDF with better UX (thumbnail first + modal)
+      // Use DynamicPDFBlock for single PDF with better UX (thumbnail first + modal)
       if (pdfFiles.length === 1) {
         return (
-          <EnhancedPDFBlock
-            title={title}
+          <DynamicPDFBlock
             url={pdfFiles[0].url}
-            pages={pdfFiles[0].pages}
-            thumbnails={pdfFiles[0].thumbnails}
-            onDownload={onDownload}
-            onShare={() => console.log(`Share PDF: ${pdfFiles[0].id}`)}
-            metadata={{
-              size: pdfFiles[0].size,
-              author: pdfFiles[0].metadata?.author,
-              created: pdfFiles[0].metadata?.created
-            }}
-            showThumbnailFirst={metadata?.showThumbnailFirst !== false}
+            className="max-w-4xl mx-auto"
           />
         );
       }
 
-      // Fallback to original PDF block for edge cases
-      return (
-        <PDFBlock
-          title={title}
-          url={files[0]?.url || ''}
-          pages={metadata?.pages || 1}
-          thumbnails={metadata?.thumbnails || []}
-          onDownload={onDownload}
-          metadata={metadata}
-        />
-      );
+      // Should not reach here since single PDFs are handled above
+      return null;
       
     case 'video':
       return (
@@ -299,6 +320,52 @@ export default function BlockRouter({
             );
           })}
         </div>
+      );
+      
+    case 'presentation':
+      // Check if we have new PowerPoint processing data first
+      const powerPointFile = files.find(f => f.powerPointData);
+      
+      if (powerPointFile?.powerPointData) {
+        // Use new PowerPointBlock for enhanced presentation viewing
+        return (
+          <PowerPointBlock
+            files={files}
+            title={title}
+            description={description}
+          />
+        );
+      }
+      
+      // Fallback to PDF handling for PowerPoint files (converted by backend)
+      const presentationFile = files.find(f => 
+        f.type?.includes('presentation') || 
+        f.name?.toLowerCase().endsWith('.ppt') || 
+        f.name?.toLowerCase().endsWith('.pptx')
+      );
+      
+      if (presentationFile) {
+        // PowerPoint files are converted to PDF by the backend AWS service
+        // Use pre-generated thumbnails from PowerPoint conversion
+        const powerPointThumbnails = metadata?.powerPointData?.thumbnailUrls || [];
+        
+        return (
+          <DynamicPDFBlock
+            url={presentationFile.url || '#'}
+            className="max-w-4xl mx-auto"
+          />
+        );
+      }
+      
+      // If no specific presentation file found, use first file as PDF
+      // Check if we have PowerPoint thumbnails available
+      const powerPointThumbnails = metadata?.powerPointData?.thumbnailUrls || [];
+      
+      return (
+        <DynamicPDFBlock
+          url={files[0]?.url || '#'}
+          className="max-w-4xl mx-auto"
+        />
       );
       
     case 'document':

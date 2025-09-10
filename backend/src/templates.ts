@@ -137,6 +137,10 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
         thumbnailUrl: isImage(file.type) ? file.url : undefined,
         uploadedAt: new Date(project.createdAt).toISOString(),
         uploadedBy: project.authorName || "Anonymous",
+        // Pass through presentation data if available (legacy)
+        presentationData: file.presentationData,
+        // Pass through PowerPoint data if available (AWS LibreOffice conversion)
+        powerPointData: file.powerPointData,
       })),
       views: project.views,
       createdAt: project.createdAt,

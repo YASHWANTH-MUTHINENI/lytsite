@@ -1,0 +1,35 @@
+{
+  "family": "powerpoint-converter",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::849837241005:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "powerpoint-converter",
+      "image": "849837241005.dkr.ecr.ap-south-1.amazonaws.com/powerpoint-converter:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/powerpoint-converter",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ]
+    }
+  ]
+}

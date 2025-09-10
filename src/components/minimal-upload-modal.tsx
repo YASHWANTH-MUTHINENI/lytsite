@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -9,6 +9,7 @@ import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import QRCode from 'qrcode';
 import UniversalFileTemplate from "./universal-file-template";
+import { PDFThumbnailGenerator } from "../utils/pdfThumbnailGenerator";
 import { 
   Upload, 
   X, 
@@ -48,6 +49,19 @@ interface UploadResult {
   url?: string;
   error?: string;
 }
+
+// Simple PowerPoint file detection
+const isPowerPointFile = (file: File): boolean => {
+  const powerPointTypes = [
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.slideshow'
+  ];
+  const powerPointExtensions = ['.ppt', '.pptx', '.pps', '.ppsx'];
+  
+  return powerPointTypes.includes(file.type) || 
+         powerPointExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+};
 
 // Backend API configuration
 const API_BASE = process.env.NODE_ENV === 'production' 
@@ -108,34 +122,125 @@ const formatFileSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Transform user data for UniversalFileTemplate
-const getTemplateData = (formData: any, uploadedFiles: File[]) => {
+// Global storage for file data (used by PDF viewer)
+const fileDataStore = new Map<string, ArrayBuffer>();
+
+// Expose to window for PDF viewer access
+if (typeof window !== 'undefined') {
+  (window as any).fileDataStore = fileDataStore;
+}
+
+// Enhanced file processing with thumbnail generation
+const processFileWithThumbnails = async (file: File): Promise<any> => {
+  console.log('Processing file:', file.name, 'MIME type:', file.type);
+  
+  // Create file URL - use special handling for PDFs
+  let fileUrl;
+  
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    // For PDFs, read as ArrayBuffer and store it
+    const fileData = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+    
+    // Create unique ID and store a copy of the data to prevent detachment
+    const fileId = `pdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const clonedData = fileData.slice(); // Create a copy to prevent ArrayBuffer detachment
+    fileDataStore.set(fileId, clonedData);
+    fileUrl = `preview://${fileId}`;
+  } else {
+    fileUrl = URL.createObjectURL(file);
+  }
+
+  let thumbnailUrl: string | undefined = undefined;
+  let pages: number | undefined = undefined;
+
+  // Generate thumbnails for PDFs
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    try {
+      const thumbnails = await PDFThumbnailGenerator.generateThumbnails(fileUrl, {
+        scale: 0.3,
+        maxPages: 1, // Just generate cover thumbnail for upload preview
+        quality: 0.8,
+        format: 'jpeg'
+      });
+      
+      if (thumbnails.length > 0) {
+        thumbnailUrl = thumbnails[0].dataUrl;
+      }
+
+      // Get page count
+      try {
+        const pdf = await import('react-pdf').then(mod => mod.pdfjs.getDocument(fileUrl).promise);
+        pages = pdf.numPages;
+      } catch (error) {
+        console.warn('Could not get PDF page count:', error);
+      }
+    } catch (error) {
+      console.warn('Could not generate PDF thumbnail:', error);
+    }
+  }
+
+  // PowerPoint files are handled by backend AWS LibreOffice conversion
+  if (isPowerPointFile(file)) {
+    console.log('PowerPoint file detected:', file.name, '- Will be converted to PDF by backend AWS service');
+  }
+
+  // Generate thumbnails for images (resize for consistent display)
+  if (file.type.startsWith('image/')) {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = document.createElement('img') as HTMLImageElement;
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => {
+          const maxSize = 200;
+          const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
+          resolve();
+        };
+        img.onerror = reject;
+        img.src = fileUrl;
+      });
+    } catch (error) {
+      console.warn('Could not generate image thumbnail:', error);
+    }
+  }
+
+  return {
+    name: file.name,
+    size: formatFileSize(file.size),
+    type: file.type,
+    url: fileUrl,
+    thumbnailUrl,
+    pages,
+    uploadedAt: new Date().toISOString().split('T')[0],
+    uploadedBy: "Anonymous",
+    description: `${file.name} - ${formatFileSize(file.size)}`
+  };
+};
+
+// Transform user data for UniversalFileTemplate with enhanced processing
+const getTemplateData = async (formData: any, uploadedFiles: File[]) => {
+  // Process files with thumbnail generation
+  const processedFiles = await Promise.all(
+    uploadedFiles.map(file => processFileWithThumbnails(file))
+  );
+
   return {
     title: formData.title || "My Files",
     subLine: formData.description || "File delivery",
     tagLine: formData.authorName ? `By ${formData.authorName}` : "Shared with Lytsite",
-    heroImage: null, // We can add hero image upload later
-    files: uploadedFiles.map((file, index) => {
-      // Create proper blob with explicit MIME type for PDFs
-      let fileUrl;
-      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-        const pdfBlob = new Blob([file], { type: 'application/pdf' });
-        fileUrl = URL.createObjectURL(pdfBlob);
-      } else {
-        fileUrl = URL.createObjectURL(file);
-      }
-      
-      return {
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: file.type,
-        url: fileUrl, // Properly typed blob URL
-        thumbnailUrl: undefined, // Changed from null to undefined
-        uploadedAt: new Date().toISOString().split('T')[0],
-        uploadedBy: formData.authorName || "Anonymous",
-        description: `${file.name} - ${formatFileSize(file.size)}`
-      };
-    }),
+    heroImage: null,
+    files: processedFiles,
     contactInfo: {
       email: "",
       website: "",
@@ -168,6 +273,36 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [password, setPassword] = useState<string>('');
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [templateData, setTemplateData] = useState<any>(null);
+  const [isProcessingTemplate, setIsProcessingTemplate] = useState(false);
+  
+// Helper function to check if any uploaded file is a PowerPoint
+const hasPowerPointFiles = (files: File[]) => {
+  return files.some(file => 
+    file.type.includes('presentation') || 
+    file.name.toLowerCase().endsWith('.pptx') || 
+    file.name.toLowerCase().endsWith('.ppt')
+  );
+};
+
+// Process template data when files or form data changes
+useEffect(() => {
+  const processTemplateData = async () => {
+    if (uploadedFiles.length > 0 && step === 'preview') {
+      setIsProcessingTemplate(true);
+      try {
+        const data = await getTemplateData(formData, uploadedFiles);
+        setTemplateData(data);
+      } catch (error) {
+        console.error('Error processing template data:', error);
+      } finally {
+        setIsProcessingTemplate(false);
+      }
+    }
+  };
+
+  processTemplateData();
+}, [uploadedFiles, formData, step]);
   
   // Destructure form data for easier access
   const { title, description, authorName } = formData;
@@ -306,6 +441,11 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
     setUploadProgress(0);
 
     try {
+      // Process files to extract presentation data and other metadata
+      const processedFiles = await Promise.all(
+        uploadedFiles.map(file => processFileWithThumbnails(file))
+      );
+      
       // Create FormData with files and metadata
       const formData = new FormData();
       
@@ -317,6 +457,15 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
       formData.append('description', description);
       formData.append('template', selectedTemplate);
       formData.append('authorName', authorName);
+      
+      // Add processed file metadata
+      formData.append('filesMetadata', JSON.stringify(
+        processedFiles.map(processedFile => ({
+          name: processedFile.name,
+          type: processedFile.type,
+          size: processedFile.size
+        }))
+      ));
       
       // Add password and expiry if set
       if (password) {
@@ -450,10 +599,51 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
-                <UniversalFileTemplate 
-                  data={getTemplateData(formData, uploadedFiles)}
-                  onNavigate={() => {}}
-                />
+                {isProcessingTemplate || !templateData ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Processing files and generating thumbnails...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col">
+                    {/* PowerPoint Notice Banner */}
+                    {hasPowerPointFiles(uploadedFiles) && (
+                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-200 px-4 py-3 flex-shrink-0">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                              <FileText className="w-4 h-4 text-orange-600" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-orange-900">
+                              PowerPoint files will be converted to PDF
+                            </p>
+                            <p className="text-xs text-orange-700">
+                              Your .pptx/.ppt files will be automatically converted to PDF using our AWS LibreOffice service. Users will view them as PDFs with full download options.
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <div className="inline-flex items-center px-2 py-1 bg-orange-100 border border-orange-300 rounded-full text-xs text-orange-800 font-medium">
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              AWS Conversion
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Template Preview */}
+                    <div className="flex-1 overflow-y-auto">
+                      <UniversalFileTemplate 
+                        data={templateData}
+                        onNavigate={() => {}}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Bar */}
@@ -568,6 +758,12 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
                   <p className="text-xs text-slate-500">
                     All file types supported • Multiple files welcome • Beautiful presentation guaranteed
                   </p>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs text-blue-700 text-center">
+                      💡 <strong>PowerPoint files</strong> will be automatically converted to PDF for universal compatibility and easier viewing
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -608,6 +804,11 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
                               <p className="text-xs text-slate-600">
                                 {formatFileSize(file.size)} • {file.type || 'Unknown type'}
                               </p>
+                              {isPowerPointFile(file) && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  ✨ Will be converted to PDF for easier viewing
+                                </p>
+                              )}
                             </div>
                             <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
                               <CheckCircle className="w-3 h-3 mr-1" />

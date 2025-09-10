@@ -24,6 +24,28 @@ export interface FileMetadata {
   size: number;
   type: string;
   url?: string;
+  // Add presentation-specific data
+  presentationData?: {
+    slides: Array<{
+      id: number;
+      imageUrl: string;
+      thumbnailUrl: string;
+      title?: string;
+    }>;
+    totalSlides: number;
+    slideImages: string[];
+    pdfUrl?: string;
+    embedUrl?: string;
+    theme?: string;
+  };
+  // Enhanced PowerPoint processing data
+  powerPointData?: {
+    originalFileUrl: string;     // Original PPTX for download
+    pdfUrl: string;             // PDF for inline viewing
+    thumbnailUrls: string[];     // PNG thumbnails for gallery
+    slideCount: number;
+    pdfViewerUrl?: string;      // Google Docs style viewer URL
+  };
 }
 
 export interface UploadResponse {

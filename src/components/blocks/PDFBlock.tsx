@@ -314,7 +314,7 @@ export default function PDFBlock({
             {viewerMethod === 'pdfjs' && pdfData && (
               <div className="w-full flex justify-center py-4">
                 <Document
-                  file={pdfData}
+                  file={pdfData as any}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   loading={
