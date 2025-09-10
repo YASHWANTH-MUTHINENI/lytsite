@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useFileManager, FileType, ProcessedFile } from '../hooks/useFileManager';
-import PDFBlock from './blocks/PDFBlock';
+import DynamicPDFBlock from './blocks/DynamicPDFBlock';
 import SingleImageBlock from './blocks/SingleImageBlock';
 import DocumentBlock from './blocks/DocumentBlock';
 import VideoBlock from './blocks/VideoBlock';
-import MultiPDFBlock from './blocks/MultiPDFBlock';
+import MultiDynamicPDFBlock from './blocks/MultiDynamicPDFBlock';
 import FileHandlingBlock from './blocks/FileHandlingBlock';
 import ArchiveBlock from './blocks/ArchiveBlock';
 import GalleryBlock from './blocks/GalleryBlock';
@@ -75,16 +75,9 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
       switch (file.type) {
         case 'pdf':
           return (
-            <PDFBlock 
+            <DynamicPDFBlock 
               url={file.url} 
-              title={file.name} 
-              pages={(file as any).pages || 1}
-              thumbnails={file.thumbnails} 
-              metadata={{
-                size: file.size,
-                author: file.metadata.author,
-                created: file.metadata.created
-              }} 
+              className="max-w-4xl mx-auto"
             />
           );
         case 'image':
@@ -137,7 +130,13 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
     // Multiple files of same type
     switch (primaryFileType) {
       case 'pdf':
-        return <MultiPDFBlock files={filesByType.pdf} />;
+        return <MultiDynamicPDFBlock files={filesByType.pdf.map(f => ({
+          id: f.id || f.name,
+          name: f.name,
+          url: f.url,
+          size: f.size,
+          pages: (f as any).pages
+        }))} />;
       case 'image':
         return (
           <GalleryBlock 
@@ -196,16 +195,9 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
                 <h3 className="text-lg font-medium mb-4">Preview: {activeFile.name}</h3>
                 <div className="bg-white rounded-lg overflow-hidden">
                   {activeFile.type === 'pdf' && (
-                    <PDFBlock 
+                    <DynamicPDFBlock 
                       url={activeFile.url} 
-                      title={activeFile.name} 
-                      pages={(activeFile as any).pages || 1}
-                      thumbnails={activeFile.thumbnails} 
-                      metadata={{
-                        size: activeFile.size,
-                        author: activeFile.metadata.author,
-                        created: activeFile.metadata.created
-                      }} 
+                      className="max-w-4xl mx-auto"
                     />
                   )}
                   {activeFile.type === 'image' && (

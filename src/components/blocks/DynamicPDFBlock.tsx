@@ -106,11 +106,25 @@ export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlock
       
       console.log('✅ Retrieved from global store:', storedData.byteLength, 'bytes');
       
-      // Clone the ArrayBuffer to prevent it from being transferred
-      const clonedData = new Uint8Array(storedData);
-      console.log('📋 Cloned to Uint8Array:', clonedData.length, 'bytes');
+      // Always create a fresh copy to prevent detachment issues
+      // Check if the ArrayBuffer is detached first
+      if (storedData.byteLength === 0) {
+        throw new Error('ArrayBuffer is detached - data has been transferred elsewhere');
+      }
       
-      return clonedData;
+      // Create a completely new ArrayBuffer and copy the data
+      const freshBuffer = new ArrayBuffer(storedData.byteLength);
+      const freshView = new Uint8Array(freshBuffer);
+      const sourceView = new Uint8Array(storedData);
+      
+      // Copy byte by byte to ensure we don't transfer ownership
+      for (let i = 0; i < sourceView.length; i++) {
+        freshView[i] = sourceView[i];
+      }
+      
+      console.log('📋 Created fresh copy:', freshView.length, 'bytes');
+      
+      return freshView;
     } else {
       // For regular URLs, fetch the data
       console.log('🌐 Fetching PDF from URL...');
@@ -203,7 +217,21 @@ export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlock
       
     } catch (error) {
       console.error('❌ Failed to load PDF:', error);
-      setError((error as Error).message);
+      
+      // Provide more specific error messages
+      let errorMessage = (error as Error).message;
+      
+      if (errorMessage.includes('detached ArrayBuffer')) {
+        errorMessage = 'PDF data is no longer available. Please refresh and try again.';
+      } else if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Unable to download PDF file. Please check your connection.';
+      } else if (errorMessage.includes('Invalid PDF')) {
+        errorMessage = 'This file is not a valid PDF document.';
+      } else if (errorMessage.includes('PDF.js')) {
+        errorMessage = 'PDF viewer failed to load. Please refresh the page.';
+      }
+      
+      setError(errorMessage);
       setViewerMethod('error');
       setIsLoading(false);
     }
@@ -212,9 +240,41 @@ export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlock
   // Load PDF when component mounts or URL changes
   useEffect(() => {
     if (url) {
+      // Clean up previous PDF document before loading new one
+      if (pdfDocument) {
+        console.log('🧹 Cleaning up previous PDF document...');
+        try {
+          pdfDocument.destroy();
+        } catch (error) {
+          console.warn('⚠️ Error destroying previous PDF document:', error);
+        }
+        setPdfDocument(null);
+      }
+      
+      // Reset state for new PDF
+      setCurrentPage(1);
+      setNumPages(0);
+      setScale(1.0);
+      setRotation(0);
+      setError(null);
+      
       loadPdf();
     }
   }, [url]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (pdfDocument) {
+        console.log('🧹 Component unmounting - cleaning up PDF document...');
+        try {
+          pdfDocument.destroy();
+        } catch (error) {
+          console.warn('⚠️ Error destroying PDF document on unmount:', error);
+        }
+      }
+    };
+  }, [pdfDocument]);
 
   // Re-render current page when scale or rotation changes
   useEffect(() => {
