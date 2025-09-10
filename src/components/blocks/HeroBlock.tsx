@@ -16,7 +16,7 @@ export default function HeroBlock({
 
   return (
     <section 
-      className="relative py-20 px-6 overflow-hidden"
+      className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 overflow-hidden"
       style={{ backgroundColor: theme.colors.background }}
     >
       {/* Background Elements */}
@@ -26,9 +26,9 @@ export default function HeroBlock({
 
       {/* Content */}
       <div className="relative z-10 text-center max-w-4xl mx-auto">
-        {/* Main Title */}
+        {/* Main Title - Improved mobile typography */}
         <h1 
-          className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
+          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 leading-tight px-2"
           style={{ 
             color: theme.colors.textPrimary,
             textShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0, 0, 0, 0.5)' : '0 2px 4px rgba(0, 0, 0, 0.1)'
@@ -37,10 +37,10 @@ export default function HeroBlock({
           {title}
         </h1>
 
-        {/* Sub-line / Context */}
-        <div className="mb-3">
+        {/* Sub-line / Context - Improved mobile spacing */}
+        <div className="mb-2 sm:mb-3">
           <p 
-            className="text-lg md:text-xl lg:text-2xl font-semibold"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold px-2"
             style={{ 
               color: theme.colors.textSecondary,
               textShadow: theme.mode === 'dark' ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
@@ -50,10 +50,10 @@ export default function HeroBlock({
           </p>
         </div>
 
-        {/* Tagline / Note */}
-        <div className="mb-8">
+        {/* Tagline / Note - Better mobile readability */}
+        <div className="mb-6 sm:mb-8">
           <p 
-            className="text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed"
+            className="text-sm sm:text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed px-4"
             style={{ 
               color: theme.colors.textSecondary,
               textShadow: theme.mode === 'dark' ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'

@@ -1,0 +1,80 @@
+/* Performance optimizations for gradients and animations */
+
+/* Use CSS containment for better performance */
+.hero-section {
+  contain: layout style paint;
+}
+
+.pricing-section {
+  contain: layout style paint;
+}
+
+/* Optimize gradients with will-change for smooth animations */
+.bg-ocean-gradient {
+  will-change: transform;
+  background: linear-gradient(135deg, var(--ocean-50) 0%, var(--teal-50) 100%);
+  /* Add hardware acceleration fallback */
+  transform: translateZ(0);
+}
+
+/* Smooth scroll behavior */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Performance improvements for mobile */
+@media (max-width: 768px) {
+  /* Simplify gradients on mobile for better performance */
+  .bg-gradient-to-br {
+    background: var(--slate-50);
+  }
+  
+  /* Reduce shadow complexity on mobile */
+  .shadow-xl {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-2xl {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* Touch target improvements */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Focus improvements for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Loading states */
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.loading-pulse {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}

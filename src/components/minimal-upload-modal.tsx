@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -114,16 +115,27 @@ const getTemplateData = (formData: any, uploadedFiles: File[]) => {
     subLine: formData.description || "File delivery",
     tagLine: formData.authorName ? `By ${formData.authorName}` : "Shared with Lytsite",
     heroImage: null, // We can add hero image upload later
-    files: uploadedFiles.map((file, index) => ({
-      name: file.name,
-      size: formatFileSize(file.size),
-      type: file.type,
-      url: URL.createObjectURL(file), // For preview purposes
-      thumbnailUrl: undefined, // Changed from null to undefined
-      uploadedAt: new Date().toISOString().split('T')[0],
-      uploadedBy: formData.authorName || "Anonymous",
-      description: `${file.name} - ${formatFileSize(file.size)}`
-    })),
+    files: uploadedFiles.map((file, index) => {
+      // Create proper blob with explicit MIME type for PDFs
+      let fileUrl;
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const pdfBlob = new Blob([file], { type: 'application/pdf' });
+        fileUrl = URL.createObjectURL(pdfBlob);
+      } else {
+        fileUrl = URL.createObjectURL(file);
+      }
+      
+      return {
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type,
+        url: fileUrl, // Properly typed blob URL
+        thumbnailUrl: undefined, // Changed from null to undefined
+        uploadedAt: new Date().toISOString().split('T')[0],
+        uploadedBy: formData.authorName || "Anonymous",
+        description: `${file.name} - ${formatFileSize(file.size)}`
+      };
+    }),
     contactInfo: {
       email: "",
       website: "",
@@ -210,6 +222,20 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   React.useEffect(() => {
     if (step === 'preview') {
       document.body.style.overflow = 'hidden';
+      
+      // Add ESC key listener
+      const handleEscKey = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setStep('details');
+        }
+      };
+      
+      document.addEventListener('keydown', handleEscKey);
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+        document.removeEventListener('keydown', handleEscKey);
+      };
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -375,10 +401,20 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
 
   return (
     <>
-      {step === 'preview' ? (
+      {/* Debug log */}
+      {step === 'preview' && console.log('Rendering preview step')}
+      
+      {/* Preview Modal - Rendered as Portal */}
+      {step === 'preview' && createPortal(
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-hidden"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] overflow-hidden"
           style={{ touchAction: 'none' }}
+          onClick={(e) => {
+            // Close on backdrop click (only if clicking the backdrop, not the content)
+            if (e.target === e.currentTarget) {
+              setStep('details');
+            }
+          }}
         >
           <div className="h-full w-full flex flex-col">
             <div 
@@ -467,8 +503,12 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
               </div>
             </div>
           </div>
-        </div>
-      ) : (
+        </div>,
+        document.body
+      )}
+      
+      {/* Main Modal Content */}
+      {step !== 'preview' && (
         <div className="w-full max-w-4xl mx-auto">
           <Card className="w-full overflow-auto scrollbar-hide">
             <CardContent className="p-0">
@@ -830,7 +870,13 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
                     </Button>
                     
                     <Button
-                      onClick={() => setStep('preview')}
+                      onClick={() => {
+                        console.log('Preview button clicked, current step:', step);
+                        console.log('Form data:', formData);
+                        console.log('Title valid:', !!formData.title.trim());
+                        console.log('Description valid:', !!formData.description.trim());
+                        setStep('preview');
+                      }}
                       disabled={!formData.title.trim() || !formData.description.trim()}
                       size="lg"
                       style={{

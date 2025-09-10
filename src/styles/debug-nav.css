@@ -1,0 +1,15 @@
+/* Debug styles for hamburger menu visibility issue */
+
+/* Force hide hamburger on medium screens and above */
+@media (min-width: 768px) {
+  .mobile-menu-button {
+    display: none !important;
+  }
+}
+
+/* Ensure desktop nav is visible on medium screens and above */
+@media (min-width: 768px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+}

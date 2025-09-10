@@ -6,6 +6,8 @@ import MasonryGalleryBlock from "./MasonryGalleryBlock";
 import LightboxGalleryBlock from "./LightboxGalleryBlock";
 import GalleryBlock from "./GalleryBlock";
 import PDFBlock from "./PDFBlock";
+import MultiPDFBlock from "./MultiPDFBlock";
+import EnhancedPDFBlock from "./EnhancedPDFBlock";
 import VideoBlock from "./VideoBlock";
 import ArchiveBlock from "./ArchiveBlock";
 import DocumentBlock from "./DocumentBlock";
@@ -155,6 +157,66 @@ export default function BlockRouter({
       );
       
     case 'pdf':
+      // Convert FileMetadata to PDFFile format for MultiPDFBlock
+      const pdfFiles = files.filter(file => 
+        file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      ).map((file, index) => ({
+        id: file.url || `pdf-${index}`,
+        name: file.name,
+        url: file.url || '',
+        size: file.size,
+        pages: metadata?.pages || 1,
+        thumbnails: metadata?.thumbnails || [],
+        isPitchDeck: file.name.toLowerCase().includes('pitch') || 
+                    file.name.toLowerCase().includes('deck') || 
+                    file.name.toLowerCase().includes('presentation'),
+        coverPage: file.thumbnailUrl,
+        metadata: {
+          author: metadata?.author,
+          created: file.uploadedAt,
+          modified: file.uploadedAt
+        }
+      }));
+
+      // Use MultiPDFBlock for multiple PDFs
+      if (pdfFiles.length > 1) {
+        return (
+          <MultiPDFBlock
+            files={pdfFiles}
+            onDownload={(fileId) => {
+              console.log(`Download PDF: ${fileId}`);
+              onDownload?.();
+            }}
+            onShare={(fileId) => {
+              console.log(`Share PDF: ${fileId}`);
+            }}
+            autoPlay={metadata?.autoPlay || false}
+            showThumbnails={metadata?.showThumbnails !== false}
+          />
+        );
+      }
+
+      // Use EnhancedPDFBlock for single PDF with better UX (thumbnail first + modal)
+      if (pdfFiles.length === 1) {
+        return (
+          <EnhancedPDFBlock
+            title={title}
+            url={pdfFiles[0].url}
+            pages={pdfFiles[0].pages}
+            thumbnails={pdfFiles[0].thumbnails}
+            onDownload={onDownload}
+            onShare={() => console.log(`Share PDF: ${pdfFiles[0].id}`)}
+            metadata={{
+              size: pdfFiles[0].size,
+              author: pdfFiles[0].metadata?.author,
+              created: pdfFiles[0].metadata?.created
+            }}
+            showThumbnailFirst={metadata?.showThumbnailFirst !== false}
+          />
+        );
+      }
+
+      // Fallback to original PDF block for edge cases
       return (
         <PDFBlock
           title={title}

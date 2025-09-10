@@ -54,7 +54,7 @@ export default function PDFBlock({
   // PDF.js specific state
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.3); // Better default scale for readability
+  const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [pdfData, setPdfData] = useState<string | Uint8Array | null>(null);
 
@@ -125,16 +125,15 @@ export default function PDFBlock({
   const goToNextPage = () => setPageNumber(page => Math.min(numPages || pages, page + 1));
   const zoomIn = () => setScale(scale => Math.min(3.0, scale + 0.2));
   const zoomOut = () => setScale(scale => Math.max(0.5, scale - 0.2));
-  const resetZoom = () => setScale(1.3); // Reset to better default
+  const resetZoom = () => setScale(1.0);
   const rotate = () => setRotation(rot => (rot + 90) % 360);
 
   // Responsive scale calculation
   const getResponsiveScale = () => {
     if (typeof window === 'undefined') return scale;
-    const containerWidth = Math.min(window.innerWidth - 64, 1000); // Increased max width
+    const containerWidth = Math.min(window.innerWidth - 64, 800);
     const defaultPageWidth = 612; // Standard PDF page width
-    const baseScale = Math.min(containerWidth / defaultPageWidth, scale);
-    return Math.max(1.2, baseScale); // Minimum scale of 1.2 for better readability
+    return Math.min(containerWidth / defaultPageWidth, scale);
   };
 
   // Initialize PDF viewer
@@ -208,7 +207,7 @@ export default function PDFBlock({
       </div>
 
       {/* Main PDF Viewer */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Card 
           className="overflow-hidden shadow-lg sm:shadow-xl relative"
           style={{ backgroundColor: theme.colors.surface }}
@@ -273,29 +272,14 @@ export default function PDFBlock({
           )}
 
           {/* PDF Viewer Container */}
-          <div className={`bg-gray-100 flex items-center justify-center overflow-auto relative ${
-            typeof window !== 'undefined' && window.innerWidth < 768
-              ? 'h-[70vh]' // Mobile: 70vh for better scrolling experience
-              : 'h-[80vh] max-h-[800px]' // Desktop: 80vh with 800px max
-          } min-h-[500px]`}>
+          <div className="bg-gray-100 min-h-[600px] flex items-center justify-center overflow-auto relative">
             {viewerMethod === 'iframe' && (
-              <div className={`w-full bg-white relative ${
-                typeof window !== 'undefined' && window.innerWidth < 768
-                  ? 'h-[70vh]' // Mobile: 70vh
-                  : 'h-[80vh] max-h-[800px]' // Desktop: 80vh with 800px max
-              } min-h-[500px]`}>
+              <div className="w-full h-[600px] bg-white relative">
                 <iframe
                   src={url}
                   width="100%"
                   height="100%"
-                  style={{ 
-                    border: 'none',
-                    height: typeof window !== 'undefined' 
-                      ? window.innerWidth < 768 ? '70vh' : '80vh'
-                      : '70vh',
-                    maxHeight: '800px',
-                    minHeight: '500px'
-                  }}
+                  style={{ border: 'none' }}
                   onLoad={handleIframeLoad}
                   onError={handleIframeError}
                   title={`PDF: ${cleanTitle}`}
@@ -312,34 +296,32 @@ export default function PDFBlock({
             )}
 
             {viewerMethod === 'pdfjs' && pdfData && (
-              <div className="w-full flex justify-center py-4">
-                <Document
-                  file={pdfData}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  onLoadError={onDocumentLoadError}
+              <Document
+                file={pdfData}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                loading={
+                  <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: theme.colors.primary }} />
+                      <p className="text-gray-600">Rendering PDF...</p>
+                    </div>
+                  </div>
+                }
+                className="flex justify-center"
+              >
+                <Page
+                  pageNumber={pageNumber}
+                  scale={getResponsiveScale()}
+                  rotate={rotation}
+                  className="shadow-lg border border-gray-300"
                   loading={
-                    <div className="flex items-center justify-center py-20">
-                      <div className="text-center">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: theme.colors.primary }} />
-                        <p className="text-gray-600">Rendering PDF...</p>
-                      </div>
+                    <div className="w-full h-96 bg-white border border-gray-300 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin" style={{ color: theme.colors.primary }} />
                     </div>
                   }
-                  className="flex justify-center"
-                >
-                  <Page
-                    pageNumber={pageNumber}
-                    scale={getResponsiveScale()}
-                    rotate={rotation}
-                    className="shadow-lg border border-gray-300 max-w-full"
-                    loading={
-                      <div className="w-full h-96 bg-white border border-gray-300 flex items-center justify-center">
-                        <Loader2 className="w-6 h-6 animate-spin" style={{ color: theme.colors.primary }} />
-                      </div>
-                    }
-                  />
-                </Document>
-              </div>
+                />
+              </Document>
             )}
 
             {viewerMethod === 'error' && (

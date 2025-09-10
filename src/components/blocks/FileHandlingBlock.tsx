@@ -58,25 +58,27 @@ const PDFViewer = ({ file }: { file: FileData }) => {
   
   return (
     <Card className="overflow-hidden">
-      <div className="bg-slate-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <FileTypeIcon type={file.type} />
-          <span className="text-white text-sm font-medium">{file.name}</span>
+      <div className="bg-slate-800 px-3 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <div className="flex-shrink-0">
+            <FileTypeIcon type={file.type} />
+          </div>
+          <span className="text-white text-sm font-medium truncate">{file.name}</span>
         </div>
-        <Badge variant="secondary" className="bg-slate-700 text-slate-300">
+        <Badge variant="secondary" className="bg-slate-700 text-slate-300 self-start sm:self-auto text-xs">
           PDF • {file.pages} pages
         </Badge>
       </div>
       
       <CardContent className="p-0">
-        <div className="aspect-[3/4] bg-white relative">
+        <div className="aspect-[3/4] sm:aspect-[4/3] bg-white relative">
           {/* PDF Embed or iframe would go here */}
           <div className="w-full h-full flex items-center justify-center bg-slate-100">
-            <div className="text-center">
-              <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 mb-4">PDF Viewer</p>
-              <Button size="sm">
-                <Eye className="w-4 h-4 mr-2" />
+            <div className="text-center p-4">
+              <FileText className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-slate-600 mb-3 sm:mb-4 text-sm sm:text-base">PDF Viewer</p>
+              <Button size="sm" className="text-xs sm:text-sm">
+                <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Open Full View
               </Button>
             </div>
@@ -84,7 +86,7 @@ const PDFViewer = ({ file }: { file: FileData }) => {
           
           {/* Page Navigation */}
           {file.pages && file.pages > 1 && (
-            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur rounded-full px-4 py-2 text-sm font-medium shadow-lg">
+            <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-white/90 backdrop-blur rounded-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium shadow-lg">
               Page {currentPage + 1} of {file.pages}
             </div>
           )}
@@ -97,15 +99,15 @@ const PDFViewer = ({ file }: { file: FileData }) => {
 // Image Gallery Component
 const ImageGallery = ({ file }: { file: FileData }) => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('masonry');
+  const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid'); // Default to grid for better mobile experience
   
   const images = file.thumbnails || [];
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Gallery Controls */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+        <h3 className="text-base sm:text-lg font-semibold text-slate-900">
           {file.name} ({images.length} images)
         </h3>
         <div className="flex items-center space-x-2">
@@ -113,30 +115,34 @@ const ImageGallery = ({ file }: { file: FileData }) => {
             variant={viewMode === 'grid' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setViewMode('grid')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
-            <Grid className="w-4 h-4" />
+            <Grid className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline ml-1">Grid</span>
           </Button>
           <Button 
             variant={viewMode === 'masonry' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setViewMode('masonry')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
-            <Image className="w-4 h-4" />
+            <Image className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline ml-1">Masonry</span>
           </Button>
         </div>
       </div>
 
       {/* Image Grid */}
-      <div className={`grid gap-4 ${
+      <div className={`grid gap-2 sm:gap-4 ${
         viewMode === 'grid' 
-          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' 
-          : 'columns-2 md:columns-3 lg:columns-4'
+          ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' 
+          : 'columns-2 sm:columns-3 lg:columns-4'
       }`}>
         {images.map((src, index) => (
           <div
             key={index}
             className={`cursor-pointer overflow-hidden rounded-lg hover:shadow-lg transition-all hover:scale-[1.02] ${
-              viewMode === 'masonry' ? 'break-inside-avoid mb-4' : 'aspect-square'
+              viewMode === 'masonry' ? 'break-inside-avoid mb-2 sm:mb-4' : 'aspect-square'
             }`}
             onClick={() => setSelectedImage(index)}
           >
@@ -208,27 +214,27 @@ const VideoPlayer = ({ file }: { file: FileData }) => {
           <div className="w-full h-full flex items-center justify-center">
             <Button 
               size="lg"
-              className="rounded-full w-16 h-16"
+              className="rounded-full w-12 h-12 sm:w-16 sm:h-16"
               onClick={() => setIsPlaying(!isPlaying)}
             >
-              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              {isPlaying ? <Pause className="w-4 h-4 sm:w-6 sm:h-6" /> : <Play className="w-4 h-4 sm:w-6 sm:h-6" />}
             </Button>
           </div>
           
           {/* Video Controls Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="flex items-center justify-between text-white">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm">{file.name}</span>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 sm:p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-white gap-2 sm:gap-0">
+              <div className="flex items-center space-x-2 min-w-0">
+                <span className="text-xs sm:text-sm truncate">{file.name}</span>
                 {file.duration && (
-                  <Badge variant="secondary" className="bg-black/50 text-white border-0">
+                  <Badge variant="secondary" className="bg-black/50 text-white border-0 text-xs flex-shrink-0">
                     {file.duration}
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
-                <Volume2 className="w-4 h-4" />
-                <Maximize className="w-4 h-4" />
+              <div className="flex items-center space-x-3 sm:space-x-2 justify-end">
+                <Volume2 className="w-4 h-4 sm:w-4 sm:h-4" />
+                <Maximize className="w-4 h-4 sm:w-4 sm:h-4" />
               </div>
             </div>
           </div>
@@ -298,23 +304,29 @@ export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlo
   };
 
   return (
-    <section className="py-12 px-4">
+    <section className="py-6 sm:py-12 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto">
         {files.map((file) => (
-          <div key={file.id} className="mb-12 last:mb-0">
+          <div key={file.id} className="mb-8 sm:mb-12 last:mb-0">
             {/* File Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <FileTypeIcon type={file.type} />
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">{file.name}</h2>
-                  <p className="text-slate-600">{file.size}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                <div className="flex-shrink-0">
+                  <FileTypeIcon type={file.type} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">{file.name}</h2>
+                  <p className="text-slate-600 text-sm sm:text-base">{file.size}</p>
                 </div>
               </div>
               
-              <Button onClick={() => handleDownload(file.id)}>
-                <Download className="w-4 h-4 mr-2" />
-                Download
+              <Button 
+                onClick={() => handleDownload(file.id)}
+                size="sm"
+                className="self-start sm:self-auto"
+              >
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Download</span>
               </Button>
             </div>
 

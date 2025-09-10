@@ -71,22 +71,24 @@ export default function GalleryBlock({
 
   return (
     <section 
-      className="py-12 px-6 pb-20"
+      className="py-8 sm:py-12 px-4 sm:px-6 pb-12 sm:pb-20"
       style={{ backgroundColor: theme.colors.backgroundSecondary }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12">
-          <div className="mb-6 lg:mb-0">
-            <div className="flex items-center space-x-3 mb-3">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
-                style={{ backgroundColor: theme.colors.primary }}
-              >
-                <ImageIcon className="w-6 h-6" style={{ color: theme.colors.surface }} />
+        {/* Header - Mobile-optimized */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 sm:mb-12">
+          <div className="mb-4 sm:mb-6 lg:mb-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-3">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: theme.colors.primary }}
+                >
+                  <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: theme.colors.surface }} />
+                </div>
               </div>
               <Badge 
-                className="px-3 py-1 text-sm font-medium"
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium w-fit"
                 style={{ 
                   backgroundColor: theme.colors.primaryLight,
                   color: theme.colors.primary 
@@ -96,7 +98,7 @@ export default function GalleryBlock({
               </Badge>
             </div>
             <h2 
-              className="text-3xl lg:text-4xl font-bold mb-2"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 px-1"
               style={{ color: theme.colors.textPrimary }}
             >
               {title}

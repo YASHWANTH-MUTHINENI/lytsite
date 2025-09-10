@@ -1,0 +1,141 @@
+/* Responsive utility classes for consistent breakpoint behavior */
+
+/* Touch-friendly sizing */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+.touch-target-lg {
+  @apply min-h-[48px] min-w-[48px];
+}
+
+/* Consistent button sizing across breakpoints */
+.btn-responsive {
+  @apply h-12 px-4 text-sm;
+}
+
+@screen md {
+  .btn-responsive {
+    @apply h-12 px-6 text-base;
+  }
+}
+
+@screen lg {
+  .btn-responsive {
+    @apply h-14 px-8 text-base;
+  }
+}
+
+/* Typography scale optimizations */
+.heading-responsive-xl {
+  @apply text-4xl leading-tight;
+}
+
+@screen md {
+  .heading-responsive-xl {
+    @apply text-5xl leading-tight;
+  }
+}
+
+@screen lg {
+  .heading-responsive-xl {
+    @apply text-6xl leading-[0.9];
+  }
+}
+
+/* Container spacing */
+.section-padding {
+  @apply py-12 px-4;
+}
+
+@screen md {
+  .section-padding {
+    @apply py-16;
+  }
+}
+
+@screen lg {
+  .section-padding {
+    @apply py-20;
+  }
+}
+
+/* Grid improvements */
+.grid-responsive-2-4 {
+  @apply grid grid-cols-2 gap-4;
+}
+
+@screen md {
+  .grid-responsive-2-4 {
+    @apply grid-cols-2 gap-6;
+  }
+}
+
+@screen lg {
+  .grid-responsive-2-4 {
+    @apply grid-cols-4 gap-8;
+  }
+}
+
+/* Focus states */
+.focus-outline {
+  @apply focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 focus-visible:rounded;
+}
+
+/* Mobile-first navigation */
+.nav-link {
+  @apply block py-3 px-4 text-base transition-colors;
+}
+
+@screen md {
+  .nav-link {
+    @apply inline-block py-2 px-0 text-base;
+  }
+}
+
+/* Loading states */
+.loading-skeleton {
+  @apply animate-pulse bg-slate-200 rounded;
+}
+
+.loading-skeleton-text {
+  @apply loading-skeleton h-4 w-full mb-2;
+}
+
+.loading-skeleton-title {
+  @apply loading-skeleton h-6 w-3/4 mb-4;
+}
+
+/* Card responsiveness */
+.card-responsive {
+  @apply p-4 rounded-lg;
+}
+
+@screen md {
+  .card-responsive {
+    @apply p-6 rounded-xl;
+  }
+}
+
+@screen lg {
+  .card-responsive {
+    @apply p-8 rounded-2xl;
+  }
+}
+
+/* Improved spacing for mobile */
+.mobile-optimized-spacing > * + * {
+  @apply mt-4;
+}
+
+@screen md {
+  .mobile-optimized-spacing > * + * {
+    @apply mt-6;
+  }
+}
+
+@screen lg {
+  .mobile-optimized-spacing > * + * {
+    @apply mt-8;
+  }
+}

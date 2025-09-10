@@ -108,49 +108,49 @@ export default function DocumentBlock({
 
   return (
     <section 
-      className="py-6 sm:py-12 px-3 sm:px-6 pb-8 sm:pb-20"
+      className="py-8 sm:py-12 px-4 sm:px-6 pb-12 sm:pb-20"
       style={{ backgroundColor: theme.colors.backgroundSecondary }}
     >
       <div className="max-w-6xl mx-auto">
         
         {!showInlinePreview ? (
           // Card View - Default State
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid md:grid-cols-12 gap-6 lg:gap-8">
             
             {/* Document Preview Card */}
-            <div className="lg:col-span-8 order-1">
+            <div className="md:col-span-8">
               <Card className="overflow-hidden shadow-xl border-0" style={{ backgroundColor: theme.colors.surface }}>
                 
                 {/* Card Header */}
-                <div className="p-3 sm:p-6 border-b" style={{ borderColor: theme.colors.border }}>
-                  <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:justify-between sm:space-y-0 sm:gap-3">
-                    <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                <div className="p-6 border-b" style={{ borderColor: theme.colors.border }}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-4">
                       <div 
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+                        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
                         style={{ backgroundColor: getLanguageColor(metadata?.language) }}
                       >
-                        <FileText className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: theme.colors.surface }} />
+                        <FileText className="w-6 h-6" style={{ color: theme.colors.surface }} />
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div>
                         <h2 
-                          className="text-base sm:text-xl font-bold mb-2 sm:mb-1 leading-tight"
+                          className="text-xl font-bold mb-1"
                           style={{ color: theme.colors.textPrimary }}
                         >
                           {title}
                         </h2>
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs sm:text-sm">
+                        <div className="flex items-center space-x-3 text-sm">
                           <Badge 
-                            className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs"
+                            className="px-2 py-1"
                             style={{ 
                               backgroundColor: theme.colors.info + '20',
                               color: theme.colors.info 
                             }}
                           >
-                            Text Document
+                            {metadata?.format || 'TEXT'}
                           </Badge>
                           {metadata?.language && (
                             <Badge 
-                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs"
+                              className="px-2 py-1"
                               style={{ 
                                 backgroundColor: getLanguageColor(metadata.language) + '20',
                                 color: getLanguageColor(metadata.language)
@@ -167,12 +167,12 @@ export default function DocumentBlock({
                     </div>
                     
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 self-end sm:self-start flex-shrink-0">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setIsLiked(!isLiked)}
-                        className="rounded-lg px-2 sm:px-3 h-8"
+                        className="rounded-lg"
                         style={{ 
                           borderColor: theme.colors.border,
                           backgroundColor: theme.colors.surface,
@@ -180,34 +180,34 @@ export default function DocumentBlock({
                         }}
                       >
                         <Heart 
-                          className={`w-4 h-4 sm:mr-1 ${isLiked ? 'fill-current' : ''}`}
+                          className={`w-4 h-4 mr-1 ${isLiked ? 'fill-current' : ''}`}
                           style={{ color: isLiked ? theme.colors.error : theme.colors.textSecondary }}
                         />
-                        <span className="hidden sm:inline">{isLiked ? 'Liked' : 'Like'}</span>
+                        {isLiked ? 'Liked' : 'Like'}
                       </Button>
                       
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={onDownload}
-                        className="rounded-lg px-2 sm:px-3 h-8"
+                        className="rounded-lg"
                         style={{ 
                           borderColor: theme.colors.info,
                           backgroundColor: theme.colors.info + '10',
                           color: theme.colors.info
                         }}
                       >
-                        <Download className="w-4 h-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Download</span>
+                        <Download className="w-4 h-4 mr-1" />
+                        Download
                       </Button>
                     </div>
                   </div>
                 </div>
 
                 {/* Document Preview */}
-                <div className="p-3 sm:p-6">
+                <div className="p-6">
                   <div 
-                    className="relative rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 min-h-[240px] sm:min-h-[300px] border border-dashed cursor-pointer transition-all hover:border-solid"
+                    className="relative rounded-lg p-4 mb-6 min-h-[300px] border border-dashed cursor-pointer transition-all hover:border-solid"
                     style={{ 
                       backgroundColor: theme.colors.background,
                       borderColor: theme.colors.border
@@ -215,30 +215,30 @@ export default function DocumentBlock({
                     onClick={() => setShowInlinePreview(true)}
                   >
                     {/* Preview Content */}
-                    <div className="space-y-1.5 sm:space-y-3">
+                    <div className="space-y-3">
                       {content.split('\n').slice(0, 12).map((line, index) => (
                         <div 
                           key={index}
-                          className="flex text-xs sm:text-sm opacity-70 hover:opacity-100 transition-opacity"
+                          className="flex text-sm opacity-70 hover:opacity-100 transition-opacity"
                         >
                           <span 
-                            className="w-5 sm:w-8 text-right pr-2 sm:pr-3 select-none flex-shrink-0"
+                            className="w-8 text-right pr-3 select-none"
                             style={{ color: theme.colors.textMuted }}
                           >
                             {index + 1}
                           </span>
                           <span 
-                            className="font-mono leading-relaxed min-w-0 break-words"
+                            className="font-mono"
                             style={{ color: theme.colors.textPrimary }}
                           >
-                            {line.length > 50 ? line.substring(0, 50) + '...' : line || ' '}
+                            {line.length > 80 ? line.substring(0, 80) + '...' : line}
                           </span>
                         </div>
                       ))}
                       {content.split('\n').length > 12 && (
-                        <div className="text-center pt-2 sm:pt-4">
+                        <div className="text-center pt-4">
                           <span 
-                            className="text-xs sm:text-sm italic"
+                            className="text-sm italic"
                             style={{ color: theme.colors.textMuted }}
                           >
                             +{content.split('\n').length - 12} more lines...
@@ -254,45 +254,44 @@ export default function DocumentBlock({
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/5 rounded-lg">
                       <Button
                         size="lg"
-                        className="shadow-xl gap-2"
+                        className="shadow-xl"
                         style={{
                           backgroundColor: theme.colors.primary,
                           color: theme.colors.surface
                         }}
                       >
-                        <BookOpen className="w-5 h-5" />
-                        <span className="hidden sm:inline">Open Preview</span>
-                        <span className="sm:hidden">Preview</span>
+                        <BookOpen className="w-5 h-5 mr-2" />
+                        Open Preview
                       </Button>
                     </div>
                   </div>
 
                   {/* Quick Actions */}
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowInlinePreview(true)}
-                      className="flex-1 sm:flex-none text-xs sm:text-sm min-w-0 h-8"
+                      className="flex-1 sm:flex-none"
                     >
-                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <Eye className="w-4 h-4 mr-2" />
                       Preview
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigator.clipboard.writeText(content)}
-                      className="flex-1 sm:flex-none text-xs sm:text-sm min-w-0 h-8"
+                      className="flex-1 sm:flex-none"
                     >
-                      <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <Copy className="w-4 h-4 mr-2" />
                       Copy
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full sm:flex-none text-xs sm:text-sm min-w-0 h-8"
+                      className="flex-1 sm:flex-none"
                     >
-                      <Share2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <Share2 className="w-4 h-4 mr-2" />
                       Share
                     </Button>
                   </div>
@@ -301,106 +300,114 @@ export default function DocumentBlock({
             </div>
 
             {/* Sidebar Info */}
-            <div className="lg:col-span-4 order-2">
+            <div className="md:col-span-4 space-y-6">
               
+              {/* Document Stats */}
+              <Card style={{ backgroundColor: theme.colors.surface }}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <FileSearch className="w-5 h-5" style={{ color: theme.colors.primary }} />
+                    <h3 className="font-semibold" style={{ color: theme.colors.textPrimary }}>
+                      Document Info
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-3">
+                      <div>
+                        <span className="block" style={{ color: theme.colors.textMuted }}>Format</span>
+                        <span className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                          {metadata?.format || 'TEXT'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block" style={{ color: theme.colors.textMuted }}>Size</span>
+                        <span className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                          {metadata?.size}
+                        </span>
+                      </div>
+                      {metadata?.lines && (
+                        <div>
+                          <span className="block" style={{ color: theme.colors.textMuted }}>Lines</span>
+                          <span className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                            {metadata.lines.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      {metadata?.words && (
+                        <div>
+                          <span className="block" style={{ color: theme.colors.textMuted }}>Words</span>
+                          <span className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                            {metadata.words.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {metadata?.characters && (
+                        <div>
+                          <span className="block" style={{ color: theme.colors.textMuted }}>Characters</span>
+                          <span className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                            {metadata.characters.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      {metadata?.language && (
+                        <div>
+                          <span className="block" style={{ color: theme.colors.textMuted }}>Language</span>
+                          <Badge 
+                            className="text-xs"
+                            style={{ 
+                              backgroundColor: getLanguageColor(metadata.language) + '20',
+                              color: getLanguageColor(metadata.language)
+                            }}
+                          >
+                            {metadata.language.toUpperCase()}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Quick Actions */}
               <Card style={{ backgroundColor: theme.colors.surface }}>
-                <CardContent className="p-3 sm:p-6">
-                  <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style={{ color: theme.colors.textPrimary }}>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4" style={{ color: theme.colors.textPrimary }}>
                     Quick Actions
                   </h3>
-                  <div className="space-y-2 sm:space-y-3">
+                  <div className="space-y-3">
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start text-sm py-2.5 h-10 hover:scale-[1.02] transition-transform"
+                      className="w-full justify-start"
                       onClick={() => setShowInlinePreview(true)}
-                      style={{
-                        borderColor: theme.colors.primary + '40',
-                        backgroundColor: theme.colors.primary + '05'
-                      }}
                     >
-                      <BookOpen className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: theme.colors.primary }} />
-                      <span style={{ color: theme.colors.textPrimary }}>Full Preview</span>
+                      <BookOpen className="w-4 h-4 mr-3" />
+                      Full Preview
                     </Button>
-                    
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start text-sm py-2.5 h-10 hover:scale-[1.02] transition-transform"
+                      className="w-full justify-start"
                       onClick={onDownload}
-                      style={{
-                        borderColor: theme.colors.success + '40',
-                        backgroundColor: theme.colors.success + '05'
-                      }}
                     >
-                      <Download className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: theme.colors.success }} />
-                      <span style={{ color: theme.colors.textPrimary }}>Download File</span>
+                      <Download className="w-4 h-4 mr-3" />
+                      Download File
                     </Button>
-                    
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start text-sm py-2.5 h-10 hover:scale-[1.02] transition-transform"
-                      onClick={() => {
-                        navigator.clipboard.writeText(content);
-                        // You could add a toast notification here
-                      }}
-                      style={{
-                        borderColor: theme.colors.info + '40',
-                        backgroundColor: theme.colors.info + '05'
-                      }}
+                      className="w-full justify-start"
+                      onClick={() => navigator.clipboard.writeText(content)}
                     >
-                      <Copy className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: theme.colors.info }} />
-                      <span style={{ color: theme.colors.textPrimary }}>Copy Content</span>
+                      <Copy className="w-4 h-4 mr-3" />
+                      Copy Content
                     </Button>
-                    
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start text-sm py-2.5 h-10 hover:scale-[1.02] transition-transform"
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: title,
-                            text: `Check out this document: ${title}`,
-                            url: window.location.href
-                          });
-                        } else {
-                          // Fallback for browsers that don't support Web Share API
-                          navigator.clipboard.writeText(window.location.href);
-                        }
-                      }}
-                      style={{
-                        borderColor: theme.colors.warning + '40',
-                        backgroundColor: theme.colors.warning + '05'
-                      }}
+                      className="w-full justify-start"
                     >
-                      <Share2 className="w-4 h-4 mr-3 flex-shrink-0" style={{ color: theme.colors.warning }} />
-                      <span style={{ color: theme.colors.textPrimary }}>Share Document</span>
+                      <Share2 className="w-4 h-4 mr-3" />
+                      Share Document
                     </Button>
-                    
-                    {/* Additional Quick Actions */}
-                    <div className="border-t pt-3 mt-3" style={{ borderColor: theme.colors.border }}>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-xs py-2 h-8 opacity-75 hover:opacity-100"
-                        onClick={() => window.print()}
-                      >
-                        <Printer className="w-3 h-3 mr-3 flex-shrink-0" style={{ color: theme.colors.textMuted }} />
-                        <span style={{ color: theme.colors.textMuted }}>Print Document</span>
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-xs py-2 h-8 opacity-75 hover:opacity-100"
-                        onClick={() => setIsLiked(!isLiked)}
-                      >
-                        <Heart 
-                          className={`w-3 h-3 mr-3 flex-shrink-0 ${isLiked ? 'fill-current' : ''}`}
-                          style={{ color: isLiked ? theme.colors.error : theme.colors.textMuted }}
-                        />
-                        <span style={{ color: theme.colors.textMuted }}>
-                          {isLiked ? 'Remove from Favorites' : 'Add to Favorites'}
-                        </span>
-                      </Button>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -411,24 +418,23 @@ export default function DocumentBlock({
           <div className="space-y-6">
             
             {/* Preview Header */}
-            <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 lg:space-x-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
                 <Button
                   variant="outline"
                   onClick={() => setShowInlinePreview(false)}
-                  className="rounded-lg w-fit px-4 py-2 h-10"
-                  size="sm"
+                  className="rounded-lg"
                 >
                   ← Back to Card
                 </Button>
-                <div className="min-w-0">
+                <div>
                   <h2 
-                    className="text-xl sm:text-2xl font-bold leading-tight mb-1"
+                    className="text-2xl font-bold"
                     style={{ color: theme.colors.textPrimary }}
                   >
                     {title}
                   </h2>
-                  <p className="text-sm" style={{ color: theme.colors.textMuted }}>
+                  <p style={{ color: theme.colors.textMuted }}>
                     Full document preview
                   </p>
                 </div>
@@ -440,84 +446,74 @@ export default function DocumentBlock({
               
               {/* Toolbar */}
               <div 
-                className="flex flex-col space-y-3 px-3 sm:px-6 py-3 sm:py-4 border-b lg:flex-row lg:items-center lg:justify-between lg:space-y-0"
+                className="flex flex-col space-y-3 px-3 sm:px-6 py-3 sm:py-4 border-b sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
                 style={{ 
                   backgroundColor: theme.colors.backgroundSecondary,
                   borderColor: theme.colors.border
                 }}
               >
                 {/* View Mode Toggle */}
-                <div className="flex rounded-lg border overflow-hidden w-full lg:w-auto"
+                <div className="flex rounded-lg border overflow-hidden"
                      style={{ borderColor: theme.colors.border }}>
                   <Button
                     variant={viewMode === 'preview' ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode('preview')}
-                    className="rounded-none px-3 sm:px-4 flex-1 lg:flex-none text-xs sm:text-sm h-8"
+                    className="rounded-none px-4"
                     style={viewMode === 'preview' ? {
                       backgroundColor: theme.colors.primary,
                       color: theme.colors.surface
                     } : {}}
                   >
-                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <BookOpen className="w-4 h-4 mr-2" />
                     Preview
                   </Button>
                   <Button
                     variant={viewMode === 'raw' ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode('raw')}
-                    className="rounded-none px-3 sm:px-4 flex-1 lg:flex-none text-xs sm:text-sm h-8"
+                    className="rounded-none px-4"
                     style={viewMode === 'raw' ? {
                       backgroundColor: theme.colors.primary,
                       color: theme.colors.surface
                     } : {}}
                   >
-                    <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <FileText className="w-4 h-4 mr-2" />
                     Raw
                   </Button>
                 </div>
 
                 {/* Controls */}
-                <div className="flex items-center justify-between lg:justify-start lg:space-x-2">
-                  <span className="text-xs sm:text-sm text-center" style={{ color: theme.colors.textMuted }}>
-                    Font Size
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFontSize(Math.max(10, fontSize - 2))}
+                    disabled={fontSize <= 10}
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </Button>
+                  <span 
+                    className="text-sm font-mono min-w-[3rem] text-center"
+                    style={{ color: theme.colors.textSecondary }}
+                  >
+                    {fontSize}px
                   </span>
-                  <div className="flex items-center space-x-1 sm:space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFontSize(Math.max(10, fontSize - 2))}
-                      disabled={fontSize <= 10}
-                      className="p-1 sm:p-2 h-8 w-8"
-                    >
-                      <ZoomOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
-                    <span 
-                      className="text-xs sm:text-sm font-mono min-w-[2.5rem] sm:min-w-[3rem] text-center px-2 py-1 rounded"
-                      style={{ 
-                        color: theme.colors.textSecondary,
-                        backgroundColor: theme.colors.background
-                      }}
-                    >
-                      {fontSize}px
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFontSize(Math.min(24, fontSize + 2))}
-                      disabled={fontSize >= 24}
-                      className="p-1 sm:p-2 h-8 w-8"
-                    >
-                      <ZoomIn className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFontSize(Math.min(24, fontSize + 2))}
+                    disabled={fontSize >= 24}
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-auto">
+              <div className="max-h-[600px] overflow-auto">
                 {viewMode === 'preview' ? (
-                  <div className="p-3 sm:p-6">
+                  <div className="p-6">
                     <pre 
                       className={`${wrapText ? 'whitespace-pre-wrap' : 'whitespace-pre'} leading-relaxed overflow-x-auto`}
                       style={{ 
@@ -531,27 +527,26 @@ export default function DocumentBlock({
                         <div key={index} className="flex">
                           {showLineNumbers && (
                             <span 
-                              className="select-none pr-2 sm:pr-4 text-right flex-shrink-0"
+                              className="select-none pr-4 text-right"
                               style={{ 
                                 color: theme.colors.textMuted,
-                                minWidth: '1.5rem',
-                                fontSize: `${Math.max(10, fontSize - 2)}px`
+                                minWidth: '3rem'
                               }}
                             >
                               {index + 1}
                             </span>
                           )}
-                          <span className="min-w-0 break-words flex-1">{line}</span>
+                          <span>{line}</span>
                         </div>
                       ))}
                     </pre>
                   </div>
                 ) : (
-                  <div className="p-3 sm:p-6">
+                  <div className="p-6">
                     <textarea
                       value={content}
                       readOnly
-                      className="w-full h-[350px] sm:h-[450px] lg:h-[500px] resize-none focus:outline-none"
+                      className="w-full h-[500px] resize-none focus:outline-none"
                       style={{
                         fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
                         fontSize: `${fontSize}px`,

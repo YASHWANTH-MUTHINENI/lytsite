@@ -83,19 +83,19 @@ export default function VideoBlock({
 
   return (
     <section 
-      className="py-12 px-6 pb-20"
+      className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6 pb-8 sm:pb-12 lg:pb-20"
       style={{ backgroundColor: theme.colors.backgroundSecondary }}
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8">
-          <div className="mb-6 lg:mb-0">
-            <div className="flex items-center space-x-3 mb-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6 lg:mb-0">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-2 sm:mb-3">
               <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-lg"
                 style={{ backgroundColor: theme.colors.warning }}
               >
-                <VideoIcon className="w-6 h-6" style={{ color: theme.colors.surface }} />
+                <VideoIcon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: theme.colors.surface }} />
               </div>
               <Badge 
                 className="px-3 py-1 text-sm font-medium"
@@ -108,13 +108,13 @@ export default function VideoBlock({
               </Badge>
             </div>
             <h2 
-              className="text-3xl lg:text-4xl font-bold mb-2"
+              className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2"
               style={{ color: theme.colors.textPrimary }}
             >
               {title}
             </h2>
             {metadata && (
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
                 <span style={{ color: theme.colors.textSecondary }}>
                   Size: {metadata.size}
                 </span>
@@ -136,42 +136,42 @@ export default function VideoBlock({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsLiked(!isLiked)}
-              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
               style={{ borderColor: theme.colors.border }}
             >
               <Heart 
-                className={`w-4 h-4 mr-2 transition-colors ${isLiked ? 'fill-current' : ''}`}
+                className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 transition-colors ${isLiked ? 'fill-current' : ''}`}
                 style={{ color: isLiked ? theme.colors.error : theme.colors.textSecondary }}
               />
-              {isLiked ? 'Liked' : 'Like'}
+              <span className="hidden sm:inline">{isLiked ? 'Liked' : 'Like'}</span>
             </Button>
 
             <Button
               variant="outline"
               size="sm"
-              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
               style={{ borderColor: theme.colors.border }}
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
+              <Share2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Share</span>
             </Button>
 
             <Button
               size="sm"
               onClick={onDownload}
-              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
               style={{
                 backgroundColor: theme.colors.warning,
                 color: theme.colors.surface
               }}
             >
-              <Download className="w-4 h-4 mr-2" />
-              Download Video
+              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Download</span>
             </Button>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function VideoBlock({
 
                     {/* Controls Row */}
                     <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2 sm:space-x-4">
                         {/* Play/Pause */}
                         <Button
                           variant="ghost"
@@ -264,9 +264,9 @@ export default function VideoBlock({
                             e.stopPropagation();
                             handlePlayPause();
                           }}
-                          className="w-10 h-10 rounded-full text-white hover:bg-white/20"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full text-white hover:bg-white/20"
                         >
-                          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                          {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5" />}
                         </Button>
 
                         {/* Skip Buttons */}
@@ -277,9 +277,9 @@ export default function VideoBlock({
                             e.stopPropagation();
                             skipTime(-10);
                           }}
-                          className="w-8 h-8 rounded-full text-white hover:bg-white/20"
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full text-white hover:bg-white/20"
                         >
-                          <SkipBack className="w-4 h-4" />
+                          <SkipBack className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
 
                         <Button
@@ -289,13 +289,13 @@ export default function VideoBlock({
                             e.stopPropagation();
                             skipTime(10);
                           }}
-                          className="w-8 h-8 rounded-full text-white hover:bg-white/20"
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full text-white hover:bg-white/20"
                         >
-                          <SkipForward className="w-4 h-4" />
+                          <SkipForward className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
 
-                        {/* Volume Control */}
-                        <div className="flex items-center space-x-2">
+                        {/* Volume Control - Hidden on very small screens */}
+                        <div className="hidden sm:flex items-center space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -303,12 +303,12 @@ export default function VideoBlock({
                               e.stopPropagation();
                               setIsMuted(!isMuted);
                             }}
-                            className="w-8 h-8 rounded-full text-white hover:bg-white/20"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full text-white hover:bg-white/20"
                           >
-                            {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                            {isMuted || volume === 0 ? <VolumeX className="w-3 h-3 sm:w-4 sm:h-4" /> : <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />}
                           </Button>
                           
-                          <div className="w-20 hidden md:block">
+                          <div className="w-16 sm:w-20 hidden md:block">
                             <input
                               type="range"
                               min="0"
@@ -321,15 +321,15 @@ export default function VideoBlock({
                           </div>
                         </div>
 
-                        {/* Time Display */}
-                        <div className="text-sm font-mono">
+                        {/* Time Display - Hidden on very small screens */}
+                        <div className="text-xs sm:text-sm font-mono hidden sm:block">
                           {formatTime(currentTime)} / {formatTime(totalDuration)}
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        {/* Playback Speed */}
-                        <div className="relative group">
+                      <div className="flex items-center space-x-1 sm:space-x-2">
+                        {/* Playback Speed - Hidden on mobile */}
+                        <div className="relative group hidden sm:block">
                           <Button
                             variant="ghost"
                             size="sm"

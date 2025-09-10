@@ -2,6 +2,7 @@
 
 /* Import theme variables */
 @import './theme-variables.css';
+@import './performance-optimizations.css';
 
 :root {
   --font-size: 16px;
