@@ -1120,8 +1120,9 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                 <ul className="space-y-3">
                   <li><a href="#help" className="text-slate-400 hover:text-white transition-colors text-sm">Help Center</a></li>
                   <li><a href="#documentation" className="text-slate-400 hover:text-white transition-colors text-sm">Documentation</a></li>
-                  <li><a href="#privacy" className="text-slate-400 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
-                  <li><a href="#terms" className="text-slate-400 hover:text-white transition-colors text-sm">Terms of Service</a></li>
+                  <li><button onClick={() => onNavigate('privacy-policy')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Privacy Policy</button></li>
+                  <li><button onClick={() => onNavigate('terms-conditions')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Terms & Conditions</button></li>
+                  <li><button onClick={() => onNavigate('refund-cancellation')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Refund & Cancellation</button></li>
                 </ul>
               </div>
             </div>

@@ -60,13 +60,31 @@ app.post('/convert', upload.single('file'), async (req, res) => {
     const convertCommand = `libreoffice --headless --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
     console.log(`Executing: ${convertCommand}`);
     
-    await execAsync(convertCommand, { 
-      timeout: 60000,
-      env: { ...process.env, HOME: '/tmp' }
-    });
+    try {
+      const { stdout, stderr } = await execAsync(convertCommand, { 
+        timeout: 60000,
+        env: { ...process.env, HOME: '/tmp' }
+      });
+      console.log(`LibreOffice stdout: ${stdout}`);
+      if (stderr) console.log(`LibreOffice stderr: ${stderr}`);
+    } catch (execError) {
+      console.log(`LibreOffice execution error: ${execError.message}`);
+      if (execError.stdout) console.log(`stdout: ${execError.stdout}`);
+      if (execError.stderr) console.log(`stderr: ${execError.stderr}`);
+    }
+    
+    // List files in output directory for debugging
+    try {
+      const outputFiles = fs.readdirSync(outputDir);
+      console.log(`Files in output directory: ${outputFiles.join(', ')}`);
+    } catch (dirError) {
+      console.log(`Error reading output directory: ${dirError.message}`);
+    }
     
     // Check if PDF was created
     if (!fs.existsSync(outputPdfPath)) {
+      console.log(`Expected PDF path: ${outputPdfPath}`);
+      console.log(`Input file exists: ${fs.existsSync(inputPath)}`);
       throw new Error('PDF conversion failed - output file not found');
     }
     
@@ -88,10 +106,10 @@ app.post('/convert', upload.single('file'), async (req, res) => {
       convertedAt: new Date().toISOString()
     });
     
-    console.log(`✅ Conversion successful: ${req.file.originalname}`);
+    console.log(`SUCCESS: Conversion successful: ${req.file.originalname}`);
     
   } catch (error) {
-    console.error('❌ Conversion failed:', error);
+    console.error('ERROR: Conversion failed:', error);
     
     // Clean up on error
     if (inputPath && fs.existsSync(inputPath)) {
@@ -162,10 +180,10 @@ app.post('/convert-pdf', upload.single('file'), async (req, res) => {
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 LibreOffice PowerPoint Converter running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`📤 Convert endpoint: http://localhost:${PORT}/convert`);
-  console.log(`📄 PDF endpoint: http://localhost:${PORT}/convert-pdf`);
+  console.log(`STARTED: LibreOffice PowerPoint Converter running on port ${PORT}`);
+  console.log(`HEALTH: Health check: http://localhost:${PORT}/health`);
+  console.log(`CONVERT: Convert endpoint: http://localhost:${PORT}/convert`);
+  console.log(`PDF: PDF endpoint: http://localhost:${PORT}/convert-pdf`);
 });
 
 // Graceful shutdown

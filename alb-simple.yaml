@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Application Load Balancer for LibreOffice PowerPoint conversion service'
+
+Resources:
+  # Security Group for ALB
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: libreoffice-alb-sg
+      GroupDescription: Security group for LibreOffice ALB
+      VpcId: vpc-0dc608fc9331fc44d
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP access from anywhere
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS access from anywhere
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: All outbound traffic
+
+  # Application Load Balancer
+  LibreOfficeALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: libreoffice-converter-alb
+      Type: application
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      Subnets: 
+        - subnet-04751824805b806ab  # ap-south-1b
+        - subnet-0c93d9e06fbf197f4  # ap-south-1a
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: LibreOffice Converter ALB
+
+  # Target Group for ECS Service
+  ECSTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: libreoffice-ecs-targets
+      Port: 8080
+      Protocol: HTTP
+      VpcId: vpc-0dc608fc9331fc44d
+      TargetType: ip
+      HealthCheckEnabled: true
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: 8080
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: 200
+
+  # HTTP Listener (for now we'll use HTTP, add HTTPS later)
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ECSTargetGroup
+      LoadBalancerArn: !Ref LibreOfficeALB
+      Port: 80
+      Protocol: HTTP
+
+Outputs:
+  ALBDNSName:
+    Description: 'ALB DNS name'
+    Value: !GetAtt LibreOfficeALB.DNSName
+    Export:
+      Name: !Sub "${AWS::StackName}-ALB-DNSName"
+  
+  TargetGroupArn:
+    Description: 'Target Group ARN'
+    Value: !Ref ECSTargetGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-TargetGroup-ARN"
+  
+  HTTPEndpoint:
+    Description: 'HTTP endpoint for LibreOffice service'
+    Value: !Sub "http://${LibreOfficeALB.DNSName}"
+  
+  ConvertEndpoint:
+    Description: 'Convert endpoint URL'
+    Value: !Sub "http://${LibreOfficeALB.DNSName}/convert"

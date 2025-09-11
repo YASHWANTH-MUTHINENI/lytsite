@@ -184,37 +184,49 @@ async function convertPdfToThumbnails(pdfBuffer: ArrayBuffer, gotenbergUrl: stri
 
 // Process with AWS LibreOffice service
 async function processWithAWS(fileBuffer: ArrayBuffer, filename: string, awsEndpoint: string): Promise<PowerPointProcessingResult> {
-  const formData = new FormData();
-  formData.append('file', new Blob([fileBuffer]), filename);
+  console.log(`🔗 Calling AWS endpoint: ${awsEndpoint}/convert`);
+  console.log(`📎 File: ${filename}, Size: ${fileBuffer.byteLength} bytes`);
   
-  const response = await fetch(`${awsEndpoint}/convert`, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'Accept': 'application/json'
+  try {
+    const formData = new FormData();
+    formData.append('file', new Blob([fileBuffer]), filename);
+    
+    const response = await fetch(`${awsEndpoint}/convert`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    console.log(`📡 AWS Response Status: ${response.status} ${response.statusText}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ AWS Error Response: ${errorText}`);
+      throw new Error(`AWS conversion failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`AWS conversion failed: ${response.statusText}`);
+    
+    const result = await response.json() as { 
+      pdf: string; 
+      thumbnails?: string[]; 
+      slideCount?: number; 
+    };
+    
+    console.log(`✅ AWS Response: PDF size: ${result.pdf?.length || 0}, Thumbnails: ${result.thumbnails?.length || 0}, Slides: ${result.slideCount || 0}`);
+    
+    // AWS service returns: { pdf: base64, thumbnails: base64[], slideCount: number }
+    const pdfBuffer = base64ToArrayBuffer(result.pdf);
+    const thumbnails = result.thumbnails?.map((thumb: string) => base64ToArrayBuffer(thumb)) || [createPlaceholderThumbnail()];
+    
+    return {
+      pdfBuffer,
+      thumbnails,
+      originalBuffer: fileBuffer,
+      slideCount: result.slideCount || thumbnails.length
+    };
+    
+  } catch (error) {
+    console.error(`❌ AWS fetch error:`, error);
+    throw error;
   }
-  
-  const result = await response.json() as { 
-    pdf: string; 
-    thumbnails?: string[]; 
-    slideCount?: number; 
-  };
-  
-  // AWS service should return: { pdf: base64, thumbnails: base64[], slideCount: number }
-  const pdfBuffer = base64ToArrayBuffer(result.pdf);
-  const thumbnails = result.thumbnails?.map((thumb: string) => base64ToArrayBuffer(thumb)) || [createPlaceholderThumbnail()];
-  
-  return {
-    pdfBuffer,
-    thumbnails,
-    originalBuffer: fileBuffer,
-    slideCount: result.slideCount || thumbnails.length
-  };
 }
 
 // Process with CloudMersive (PDF conversion, then client-side thumbnails)

@@ -1,0 +1,40 @@
+# 🐳 Simplified Dockerfile using pre-built LibreOffice image
+FROM linuxserver/libreoffice:latest
+
+# Switch to root to install Node.js
+USER root
+
+# Install Node.js 18
+RUN apk add --no-cache nodejs npm curl
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package-docker.json ./package.json
+
+# Install dependencies
+RUN npm install --only=production
+
+# Copy application code
+COPY server.js ./
+
+# Create temp directory for conversions
+RUN mkdir -p /tmp/conversions && chmod 755 /tmp/conversions
+
+# Create a non-root user
+RUN adduser -D -s /bin/sh appuser && \
+    chown -R appuser:appuser /app /tmp/conversions
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# Start the application
+CMD ["node", "server.js"]

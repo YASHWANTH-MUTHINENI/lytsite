@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'API Gateway proxy for LibreOffice PowerPoint conversion service'
+
+Resources:
+  LibreOfficeAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: libreoffice-converter-api
+      Description: Proxy for LibreOffice PowerPoint conversion service
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ConvertResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      ParentId: !GetAtt LibreOfficeAPI.RootResourceId
+      PathPart: convert
+
+  OptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      ResourceId: !Ref ConvertResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  ConvertMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      ResourceId: !Ref ConvertResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.header.Content-Type: false
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: http://13.235.210.66:8080/convert
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 29000
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      ParentId: !GetAtt LibreOfficeAPI.RootResourceId
+      PathPart: health
+
+  HealthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      ResourceId: !Ref HealthResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP
+        IntegrationHttpMethod: GET
+        Uri: http://13.235.210.66:8080/health
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: 
+      - ConvertMethod
+      - OptionsMethod
+      - HealthMethod
+    Properties:
+      RestApiId: !Ref LibreOfficeAPI
+      StageName: prod
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${LibreOfficeAPI}.execute-api.${AWS::Region}.amazonaws.com/prod'
+  ConvertEndpoint:
+    Description: 'Convert endpoint URL'
+    Value: !Sub 'https://${LibreOfficeAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/convert'
+  HealthEndpoint:
+    Description: 'Health check endpoint URL'
+    Value: !Sub 'https://${LibreOfficeAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/health'

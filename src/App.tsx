@@ -17,8 +17,12 @@ import BlogPage from './components/blog-page';
 import PhotographerGalleriesPost from './components/blog-photographer-galleries';
 import BlogAgencyDelivery from './components/blog-agency-delivery';
 import BlogSalesFileSharing from './components/blog-sales-file-sharing';
+import PrivacyPolicy from './components/privacy-policy';
+import TermsOfService from './components/terms-of-service';
+import TermsConditions from './components/terms-conditions';
+import RefundCancellation from './components/refund-cancellation';
 
-type Page = 'homepage' | 'templates-page' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples' | 'backend-data-test' | 'faq' | 'blog' | 'blog-photographer-client-galleries' | 'blog-agency-delivery' | 'blog-sales-file-sharing';
+type Page = 'homepage' | 'templates-page' | 'client-delivery' | 'photo-gallery' | 'portfolio-resume' | 'event-template' | 'product-template' | 'case-study-template' | 'pitch-template' | 'universal-file-template' | 'hero-examples' | 'backend-data-test' | 'faq' | 'blog' | 'blog-photographer-client-galleries' | 'blog-agency-delivery' | 'blog-sales-file-sharing' | 'privacy-policy' | 'terms-of-service' | 'terms-conditions' | 'refund-cancellation';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('homepage');
@@ -61,6 +65,14 @@ export default function App() {
         return <BlogAgencyDelivery onBack={() => setCurrentPage('blog')} />;
       case 'blog-sales-file-sharing':
         return <BlogSalesFileSharing onNavigate={handleNavigate} />;
+      case 'privacy-policy':
+        return <PrivacyPolicy onNavigate={handleNavigate} />;
+      case 'terms-of-service':
+        return <TermsOfService onNavigate={handleNavigate} />;
+      case 'terms-conditions':
+        return <TermsConditions onNavigate={handleNavigate} />;
+      case 'refund-cancellation':
+        return <RefundCancellation onNavigate={handleNavigate} />;
       case 'hero-examples':
         return <HeroBlockExamples />;
       default:
