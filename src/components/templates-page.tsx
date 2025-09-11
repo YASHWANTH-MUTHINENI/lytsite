@@ -35,11 +35,13 @@ export default function TemplatesPage({ onNavigate }: TemplatesPageProps) {
               <ArrowLeft className="w-4 h-4" />
               Back to Home
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-semibold text-slate-900">Lytsite Templates</span>
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/logo.png" 
+                alt="Lytsite" 
+                className="w-8 h-8 object-contain flex-shrink-0"
+              />
+              <span className="text-xl font-semibold text-slate-900 leading-none">Lytsite Templates</span>
             </div>
           </div>
         </div>

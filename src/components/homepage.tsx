@@ -1063,10 +1063,12 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               {/* Company Info */}
               <div className="lg:col-span-1">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                    <Upload className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xl font-bold">Lytsite</span>
+                  <img 
+                    src="/logo.png" 
+                    alt="Lytsite" 
+                    className="w-8 h-8 object-contain flex-shrink-0"
+                  />
+                  <span className="text-xl font-bold leading-none">Lytsite</span>
                 </div>
                 <p className="text-slate-400 mb-6 leading-relaxed text-sm">
                   Professional file sharing made simple. Transform how you deliver work to clients with beautiful, secure sharing pages.

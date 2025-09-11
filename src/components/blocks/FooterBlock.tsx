@@ -220,15 +220,14 @@ export default function FooterBlock({
             className="text-center pt-8 border-t"
             style={{ borderColor: theme.colors.border }}
           >
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <div 
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: theme.colors.primary }}
-              >
-                <Zap className="w-4 h-4" style={{ color: theme.colors.surface }} />
-              </div>
+            <div className="flex items-center justify-center space-x-3 mb-2">
+              <img 
+                src="/logo.png" 
+                alt="Lytsite" 
+                className="w-8 h-8 object-contain flex-shrink-0"
+              />
               <span 
-                className="text-base font-medium"
+                className="text-base font-medium leading-none"
                 style={{ color: theme.colors.textSecondary }}
               >
                 Powered by{" "}

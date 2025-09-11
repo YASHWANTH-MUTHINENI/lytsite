@@ -41,11 +41,13 @@ export default function Homepage({ onNavigate }: HomepageProps) {
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Upload className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-xl font-semibold text-slate-900">Lytsite</span>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/logo.png" 
+              alt="Lytsite" 
+              className="w-8 h-8 object-contain flex-shrink-0"
+            />
+            <span className="text-xl font-semibold text-slate-900 leading-none">Lytsite</span>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">How it works</a>

@@ -15,11 +15,13 @@ export default function Navbar({ onNavigate }: NavbarProps) {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Left - Logo/Branding */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Upload className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-semibold text-slate-900 dark:text-white">Lytsite</span>
+            <div className="flex items-center space-x-3 flex-shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="Lytsite" 
+                className="w-8 h-8 object-contain flex-shrink-0"
+              />
+              <span className="text-xl font-semibold text-slate-900 dark:text-white leading-none">Lytsite</span>
             </div>
             
             {/* Center - Desktop Navigation */}
