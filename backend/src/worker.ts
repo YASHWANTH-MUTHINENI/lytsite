@@ -15,6 +15,14 @@ import {
   handleStreamChunk, 
   getStreamStatus 
 } from './stream-processing';
+// Direct-to-Storage: Import direct upload handlers
+import {
+  initializeDirectChunkedUpload,
+  getDirectChunkUploadUrls,
+  handleDirectChunkUpload,
+  completeDirectChunkedUpload,
+  getDirectChunkedUploadStatus
+} from './direct-upload';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -60,6 +68,55 @@ export default {
         return new Response('Method not allowed', { status: 405 });
       }
       return getUploadSessionStatus(request, env);
+    }
+
+    // Direct Chunked Upload routes
+    if (url.pathname === '/api/direct-upload/init') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return initializeDirectChunkedUpload(request, env);
+    }
+
+    if (url.pathname === '/api/direct-upload/urls') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return getDirectChunkUploadUrls(request, env);
+    }
+
+    if (url.pathname.startsWith('/api/direct-chunk-upload/')) {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      const pathParts = url.pathname.split('/');
+      const sessionId = pathParts[3];
+      const fileId = pathParts[4];
+      const chunkIndex = pathParts[5];
+      
+      if (!sessionId || !fileId || !chunkIndex) {
+        return new Response('Invalid chunk upload path', { status: 400 });
+      }
+      
+      return handleDirectChunkUpload(request, env, sessionId, fileId, chunkIndex);
+    }
+
+    if (url.pathname === '/api/direct-upload/complete') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return completeDirectChunkedUpload(request, env);
+    }
+
+    if (url.pathname.startsWith('/api/direct-upload/status/')) {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      const sessionId = url.pathname.split('/').pop();
+      if (!sessionId) {
+        return new Response('Session ID required', { status: 400 });
+      }
+      return getDirectChunkedUploadStatus(request, env, sessionId);
     }
 
     // Phase 3: Stream processing routes

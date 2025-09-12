@@ -12,6 +12,10 @@ import UniversalFileTemplate from "./universal-file-template";
 import { PDFThumbnailGenerator } from "../utils/pdfThumbnailGenerator";
 // Phase 2: Import chunked upload system
 import { ChunkedUploader } from '../hooks/useChunkedUpload';
+// Direct Chunked Upload: Import direct chunked upload system
+import { useDirectChunkedUpload, shouldUseDirectChunkedUpload } from '../hooks/useDirectChunkedUpload';
+// Simplified Direct Upload: Import simplified direct upload system
+import { useDirectUpload } from '../hooks/useSimpleDirectUpload';
 import { 
   Upload, 
   X, 
@@ -279,7 +283,7 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [isProcessingTemplate, setIsProcessingTemplate] = useState(false);
   
   // Phase 2: Track upload method for UI feedback
-  const [uploadMethod, setUploadMethod] = useState<'regular' | 'chunked' | null>(null);
+  const [uploadMethod, setUploadMethod] = useState<'regular' | 'chunked' | 'direct' | 'direct-chunked' | null>(null);
   
 // Helper function to check if any uploaded file is a PowerPoint
 const hasPowerPointFiles = (files: File[]) => {
@@ -439,7 +443,7 @@ useEffect(() => {
     }
   };
 
-  // Phase 2: Smart upload handler that chooses optimal method
+  // Smart upload handler with Direct-to-Storage support
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
     
@@ -447,19 +451,43 @@ useEffect(() => {
     setUploadProgress(0);
 
     try {
-      // Phase 2: Smart upload selection (Back to working system)
-      const shouldUseChunked = ChunkedUploader.shouldUseChunkedUpload(uploadedFiles);
+      // Smart upload selection priority:
+      // 1. Direct-to-Storage (fastest - bypasses Worker)
+      // 2. Chunked (for large files when direct upload not available)
+      // 3. Regular (fallback)
+      
+      // Smart upload method selection with 4-tier priority:
+      // 1. Direct Chunked Upload: For very large files (>100MB) with chunking
+      // 2. Direct Upload: For medium-large files that benefit from bypassing Worker
+      // 3. Chunked Upload: For medium files (>50MB) that need parallel processing  
+      // 4. Regular Upload: For smaller files (<50MB) using standard Worker processing
+      
       const totalSize = uploadedFiles.reduce((sum, file) => sum + file.size, 0);
+      const shouldUseDirectChunked = shouldUseDirectChunkedUpload(uploadedFiles);
+      const hasLargeFiles = uploadedFiles.some(file => file.size > 50 * 1024 * 1024 && file.size < 100 * 1024 * 1024); // 50-100MB
+      const shouldUseDirect = !shouldUseDirectChunked && (hasLargeFiles || totalSize > 100 * 1024 * 1024);
+      const shouldUseChunked = !shouldUseDirectChunked && !shouldUseDirect && ChunkedUploader.shouldUseChunkedUpload(uploadedFiles);
       
-      // Phase 2: Set upload method for UI feedback
-      setUploadMethod(shouldUseChunked ? 'chunked' : 'regular');
-      
-      console.log(`Upload strategy: ${shouldUseChunked ? 'CHUNKED' : 'REGULAR'} for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
-      console.log(`Phase 2 Status: ${shouldUseChunked ? 'Fast Mode - Parallel chunk processing active' : 'Standard Mode - Direct upload'}`);
-
-      if (shouldUseChunked) {
+      // Set upload method for UI feedback
+      if (shouldUseDirectChunked) {
+        setUploadMethod('direct-chunked');
+        console.log(`Upload strategy: DIRECT-CHUNKED for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
+        console.log(`Direct Chunked Mode: Maximum speed + reliability for very large files`);
+        await handleDirectChunkedUpload();
+      } else if (shouldUseDirect) {
+        setUploadMethod('direct');
+        console.log(`Upload strategy: DIRECT-TO-STORAGE for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
+        console.log(`Direct Storage Mode: Bypass Worker for maximum speed`);
+        await handleDirectUpload();
+      } else if (shouldUseChunked) {
+        setUploadMethod('chunked');
+        console.log(`Upload strategy: CHUNKED for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
+        console.log(`Chunked Mode: Parallel chunk processing active`);
         await handleChunkedUpload();
       } else {
+        setUploadMethod('regular');
+        console.log(`Upload strategy: REGULAR for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
+        console.log(`Regular Mode: Standard Worker upload`);
         await handleRegularUpload();
       }
 
@@ -524,6 +552,95 @@ useEffect(() => {
     }
     
     setStep('success');
+  };
+
+  // Direct-to-Storage upload using simplified direct upload
+  const { uploadFiles: directUploadFiles, result: directResult, isUploading: isDirectUploading, optimizationProgress } = useDirectUpload();
+  
+  // Direct Chunked Upload for very large files
+  const { uploadFiles: directChunkedUploadFiles, result: directChunkedResult, isUploading: isDirectChunkedUploading } = useDirectChunkedUpload();
+  
+  const handleDirectUpload = async () => {
+    try {
+      const result = await directUploadFiles(uploadedFiles, {
+        title,
+        description,
+        template: selectedTemplate,
+        authorName,
+        password: password || undefined,
+        expiryDate: expiryDate || undefined
+      });
+
+      if (result.success && result.url && result.slug) {
+        setGeneratedUrl(result.url);
+        setProjectSlug(result.slug);
+        setUploadProgress(100);
+        
+        // Generate QR code
+        try {
+          const qrDataUrl = await QRCode.toDataURL(result.url, {
+            width: 256,
+            margin: 2,
+            color: {
+              dark: '#1f2937',
+              light: '#ffffff',
+            },
+          });
+          setQrCodeDataUrl(qrDataUrl);
+        } catch (qrError) {
+          console.error('QR code generation failed:', qrError);
+        }
+        
+        setStep('success');
+      } else {
+        throw new Error(result.error || 'Direct upload failed');
+      }
+    } catch (error) {
+      console.error('Direct upload error:', error);
+      throw error;
+    }
+  };
+
+  // Direct Chunked Upload for very large files
+  const handleDirectChunkedUpload = async () => {
+    try {
+      const result = await directChunkedUploadFiles(uploadedFiles, {
+        title,
+        description,
+        template: selectedTemplate,
+        authorName,
+        password: password || undefined,
+        expiryDate: expiryDate || undefined
+      });
+
+      if (result.success && result.url && result.slug) {
+        setGeneratedUrl(result.url);
+        setProjectSlug(result.slug);
+        setUploadProgress(100);
+        
+        // Generate QR code
+        try {
+          const qrDataUrl = await QRCode.toDataURL(result.url, {
+            width: 256,
+            margin: 2,
+            color: {
+              dark: '#1f2937',
+              light: '#ffffff',
+            },
+          });
+          setQrCodeDataUrl(qrDataUrl);
+        } catch (qrError) {
+          console.error('QR code generation failed:', qrError);
+        }
+        
+        setStep('success');
+      } else {
+        throw new Error(result.error || 'Direct chunked upload failed');
+      }
+    } catch (error) {
+      console.error('Direct chunked upload error:', error);
+      throw error;
+    }
   };
 
   // Phase 1: Regular upload for smaller files (≤50MB)
@@ -728,15 +845,29 @@ useEffect(() => {
 
               {/* Action Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white border-t border-gray-200 flex-shrink-0 gap-3 sm:gap-0">
-                {/* Phase 2: Upload Method Indicator */}
+                {/* Upload Method Indicator */}
                 {uploadMethod && (
                   <div className="flex items-center justify-center mb-2 sm:mb-0">
                     <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
-                      uploadMethod === 'chunked' 
+                      uploadMethod === 'direct-chunked'
+                        ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200'
+                        : uploadMethod === 'direct'
+                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200'
+                        : uploadMethod === 'chunked' 
                         ? 'bg-blue-50 text-blue-700 border border-blue-200' 
                         : 'bg-gray-50 text-gray-700 border border-gray-200'
                     }`}>
-                      {uploadMethod === 'chunked' ? (
+                      {uploadMethod === 'direct-chunked' ? (
+                        <>
+                          <span className="w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mr-2 animate-pulse"></span>
+                          Ultra-Fast Chunked Mode
+                        </>
+                      ) : uploadMethod === 'direct' ? (
+                        <>
+                          <span className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                          Direct Storage Mode
+                        </>
+                      ) : uploadMethod === 'chunked' ? (
                         <>
                           <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
                           Fast Mode Active
@@ -782,7 +913,11 @@ useEffect(() => {
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
                         <span className="hidden sm:inline">
-                          Publishing{uploadMethod === 'chunked' ? ' (Fast Mode)' : ''}...
+                          Publishing{
+                            uploadMethod === 'direct-chunked' ? ' (Ultra-Fast Chunked)' :
+                            uploadMethod === 'direct' ? ' (Direct Storage)' :
+                            uploadMethod === 'chunked' ? ' (Fast Mode)' : ''
+                          }...
                         </span>
                         <span className="sm:hidden">Publishing</span>
                       </>

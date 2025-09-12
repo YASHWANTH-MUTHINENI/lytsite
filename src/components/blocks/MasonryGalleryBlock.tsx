@@ -40,9 +40,21 @@ export default function MasonryGalleryBlock({
   const [isLiked, setIsLiked] = useState(false);
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('masonry');
 
-  // Create a helper function to get image URL for display
-  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
-    // For now, use the legacy URL approach - we'll enhance this later
+  // Helper function to get optimized preview URL (WebP for images) 
+  const getPreviewUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id) {
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=preview`;
+    }
+    return file.url || '';
+  };
+
+  // Helper function to get original download URL
+  const getDownloadUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available  
+    if (file.id) {
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=download`;
+    }
     return file.url || '';
   };
 
@@ -221,7 +233,7 @@ export default function MasonryGalleryBlock({
             >
               <div className="relative">
                 <ImageWithFallback
-                  src={getImageUrl(file)}
+                  src={getPreviewUrl(file)}
                   alt={`Image ${index + 1}`}
                   className={`w-full ${viewMode === 'grid' ? 'h-full object-cover' : 'h-auto'} transition-transform duration-300 group-hover:scale-110`}
                 />
@@ -311,7 +323,7 @@ export default function MasonryGalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                src={selectedImage !== null ? getPreviewUrl(files[selectedImage]) : ''}
                 alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}

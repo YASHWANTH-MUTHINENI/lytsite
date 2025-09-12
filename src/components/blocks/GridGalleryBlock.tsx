@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useFileUrls } from "../../hooks/useDualQuality";
+import { 
+  useFileUrls,
+  formatFileSize
+} from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -18,7 +21,7 @@ import {
 
 interface GridGalleryBlockProps {
   title: string;
-  files: Array<{ id?: string; url?: string; name: string }>;
+  files: Array<{ id?: string; url?: string; name: string; type?: string; size?: number }>;
   onDownload?: () => void;
   metadata?: {
     size: string;
@@ -36,11 +39,78 @@ export default function GridGalleryBlock({
   const { theme } = useTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
-  // Create a helper function to get image URL for display
-  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
-    // For now, use the legacy URL approach - we'll enhance this later
+  // Phase 1 Dual-Quality System - Get optimized preview and original download URLs
+  const fileUrls = useFileUrls(files);
+
+  // Helper function to get optimized preview URL (WebP for images)
+  const getPreviewUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id && fileUrls[file.id]) {
+      return fileUrls[file.id].previewUrl;
+    } else if (file.id) {
+      // Direct URL construction for Phase 1
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=preview`;
+    }
     return file.url || '';
+  };
+
+  // Helper function to get original download URL
+  const getDownloadUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id && fileUrls[file.id]) {
+      return fileUrls[file.id].downloadUrl;
+    } else if (file.id) {
+      // Direct URL construction for Phase 1
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=download`;
+    }
+    return file.url || '';
+  };
+
+  // Enhanced download handler using Phase 1 system
+  const handleDownloadAll = async () => {
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    
+    try {
+      // Download all files using Phase 1 dual-quality URLs
+      const downloadPromises = files.map(async (file, index) => {
+        try {
+          const downloadUrl = getDownloadUrl(file);
+          const response = await fetch(downloadUrl);
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        } catch (error) {
+          console.error(`Failed to download ${file.name}:`, error);
+        }
+        
+        // Update progress
+        const progress = Math.round(((index + 1) / files.length) * 100);
+        setDownloadProgress(progress);
+      });
+
+      await Promise.all(downloadPromises);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+      if (onDownload) onDownload();
+    }
   };
 
   const openLightbox = (index: number) => {
@@ -161,7 +231,8 @@ export default function GridGalleryBlock({
 
             <Button
               size="sm"
-              onClick={onDownload}
+              onClick={handleDownloadAll}
+              disabled={isDownloading}
               className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
               style={{
                 backgroundColor: theme.colors.primary,
@@ -169,7 +240,7 @@ export default function GridGalleryBlock({
               }}
             >
               <Download className="w-4 h-4 mr-2" />
-              Download All
+              {isDownloading ? `Downloading... ${downloadProgress}%` : 'Download All'}
             </Button>
           </div>
         </div>
@@ -185,7 +256,7 @@ export default function GridGalleryBlock({
             >
               <div className="relative h-full">
                 <ImageWithFallback
-                  src={getImageUrl(file)}
+                  src={getPreviewUrl(file)}
                   alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -275,7 +346,7 @@ export default function GridGalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                src={selectedImage !== null ? getPreviewUrl(files[selectedImage]) : ''}
                 alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}

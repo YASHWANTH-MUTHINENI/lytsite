@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useFileUrls } from "../../hooks/useDualQuality";
+import { 
+  useFileUrls
+} from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -22,7 +24,7 @@ import {
 
 interface GalleryBlockProps {
   title: string;
-  files: Array<{ id?: string; url?: string; name: string }>;
+  files: Array<{ id?: string; url?: string; name: string; type?: string; size?: number }>;
   totalImages?: number;
   onDownload?: () => void;
   metadata?: {
@@ -44,8 +46,21 @@ export default function GalleryBlock({
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('masonry');
   const [isLiked, setIsLiked] = useState(false);
 
-  // Helper function to get image URL for display
-  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
+  // Helper function to get optimized preview URL (WebP for images)
+  const getPreviewUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id) {
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=preview`;
+    }
+    return file.url || '';
+  };
+
+  // Helper function to get original download URL
+  const getDownloadUrl = (file: { id?: string; url?: string; name: string }) => {
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id) {
+      return `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=download`;
+    }
     return file.url || '';
   };
 
@@ -226,7 +241,7 @@ export default function GalleryBlock({
             >
               <div className="relative">
                 <ImageWithFallback
-                  src={getImageUrl(file)}
+                  src={getPreviewUrl(file)}
                   alt={`Image ${index + 1}`}
                   className={`w-full ${viewMode === 'grid' ? 'h-full object-cover' : 'h-auto'} transition-transform duration-300 group-hover:scale-110`}
                 />
@@ -330,7 +345,7 @@ export default function GalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                src={selectedImage !== null ? getPreviewUrl(files[selectedImage]) : ''}
                 alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
