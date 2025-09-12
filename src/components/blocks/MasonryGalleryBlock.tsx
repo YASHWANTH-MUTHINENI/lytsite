@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -19,7 +20,7 @@ import {
 
 interface MasonryGalleryBlockProps {
   title: string;
-  images: string[];
+  files: Array<{ id?: string; url?: string; name: string }>;
   onDownload?: () => void;
   metadata?: {
     size: string;
@@ -30,7 +31,7 @@ interface MasonryGalleryBlockProps {
 
 export default function MasonryGalleryBlock({ 
   title, 
-  images, 
+  files, 
   onDownload,
   metadata 
 }: MasonryGalleryBlockProps) {
@@ -38,6 +39,12 @@ export default function MasonryGalleryBlock({
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('masonry');
+
+  // Create a helper function to get image URL for display
+  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
+    // For now, use the legacy URL approach - we'll enhance this later
+    return file.url || '';
+  };
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -53,8 +60,8 @@ export default function MasonryGalleryBlock({
     if (selectedImage === null) return;
     
     const newIndex = direction === 'prev' 
-      ? (selectedImage - 1 + images.length) % images.length
-      : (selectedImage + 1) % images.length;
+      ? (selectedImage - 1 + files.length) % files.length
+      : (selectedImage + 1) % files.length;
     
     setSelectedImage(newIndex);
   };
@@ -88,7 +95,7 @@ export default function MasonryGalleryBlock({
                   color: theme.colors.primary 
                 }}
               >
-                {images.length} Images • Masonry Gallery
+                {files.length} Images • Masonry Gallery
               </Badge>
             </div>
             <h2 
@@ -203,7 +210,7 @@ export default function MasonryGalleryBlock({
               : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
           }`}
         >
-          {images.map((src, index) => (
+          {files.map((file, index) => (
             <div
               key={index}
               className={`cursor-pointer overflow-hidden rounded-2xl shadow-md hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group ${
@@ -214,7 +221,7 @@ export default function MasonryGalleryBlock({
             >
               <div className="relative">
                 <ImageWithFallback
-                  src={src}
+                  src={getImageUrl(file)}
                   alt={`Image ${index + 1}`}
                   className={`w-full ${viewMode === 'grid' ? 'h-full object-cover' : 'h-auto'} transition-transform duration-300 group-hover:scale-110`}
                 />
@@ -295,7 +302,7 @@ export default function MasonryGalleryBlock({
                 e.stopPropagation();
                 navigateImage('next');
               }}
-              disabled={selectedImage === images.length - 1}
+              disabled={selectedImage === files.length - 1}
               style={{ backgroundColor: theme.colors.surface + '20' }}
             >
               <ChevronRight className="w-6 h-6" style={{ color: theme.colors.surface }} />
@@ -304,8 +311,8 @@ export default function MasonryGalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={images[selectedImage]}
-                alt={`Image ${selectedImage + 1}`}
+                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -319,7 +326,7 @@ export default function MasonryGalleryBlock({
                 color: theme.colors.textPrimary 
               }}
             >
-              {selectedImage + 1} of {images.length}
+              {(selectedImage || 0) + 1} of {files.length}
             </div>
           </div>
         )}

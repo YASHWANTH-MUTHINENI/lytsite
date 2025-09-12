@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -17,7 +18,7 @@ import {
 
 interface GridGalleryBlockProps {
   title: string;
-  images: string[];
+  files: Array<{ id?: string; url?: string; name: string }>;
   onDownload?: () => void;
   metadata?: {
     size: string;
@@ -28,13 +29,19 @@ interface GridGalleryBlockProps {
 
 export default function GridGalleryBlock({ 
   title, 
-  images, 
+  files, 
   onDownload,
   metadata 
 }: GridGalleryBlockProps) {
   const { theme } = useTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+
+  // Create a helper function to get image URL for display
+  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
+    // For now, use the legacy URL approach - we'll enhance this later
+    return file.url || '';
+  };
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -50,8 +57,8 @@ export default function GridGalleryBlock({
     if (selectedImage === null) return;
     
     const newIndex = direction === 'prev' 
-      ? (selectedImage - 1 + images.length) % images.length
-      : (selectedImage + 1) % images.length;
+      ? (selectedImage - 1 + files.length) % files.length
+      : (selectedImage + 1) % files.length;
     
     setSelectedImage(newIndex);
   };
@@ -92,7 +99,7 @@ export default function GridGalleryBlock({
                   color: theme.colors.primary 
                 }}
               >
-                {images.length} Images • Grid Gallery
+                {files.length} Images • Grid Gallery
               </Badge>
             </div>
             <h2 
@@ -168,8 +175,8 @@ export default function GridGalleryBlock({
         </div>
 
         {/* Grid Gallery */}
-        <div className={`grid ${getGridColumns(images.length)} gap-6`}>
-          {images.map((src, index) => (
+        <div className={`grid ${getGridColumns(files.length)} gap-6`}>
+          {files.map((file, index) => (
             <div
               key={index}
               className="cursor-pointer overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group aspect-square"
@@ -178,7 +185,7 @@ export default function GridGalleryBlock({
             >
               <div className="relative h-full">
                 <ImageWithFallback
-                  src={src}
+                  src={getImageUrl(file)}
                   alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -259,7 +266,7 @@ export default function GridGalleryBlock({
                 e.stopPropagation();
                 navigateImage('next');
               }}
-              disabled={selectedImage === images.length - 1}
+              disabled={selectedImage === files.length - 1}
               style={{ backgroundColor: theme.colors.surface + '20' }}
             >
               <ChevronRight className="w-6 h-6" style={{ color: theme.colors.surface }} />
@@ -268,8 +275,8 @@ export default function GridGalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={images[selectedImage]}
-                alt={`Image ${selectedImage + 1}`}
+                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -283,7 +290,7 @@ export default function GridGalleryBlock({
                 color: theme.colors.textPrimary 
               }}
             >
-              {selectedImage + 1} of {images.length}
+              {(selectedImage || 0) + 1} of {files.length}
             </div>
           </div>
         )}

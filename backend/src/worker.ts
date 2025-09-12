@@ -2,6 +2,19 @@ import { Env } from './types';
 import { handleUpload, handleFileServing } from './upload';
 import { serveLytsite } from './templates';
 import { handleCORS } from './utils';
+// Phase 2: Import chunked upload handlers
+import { 
+  initializeChunkedUpload, 
+  handleChunkUpload, 
+  completeChunkedUpload, 
+  getUploadSessionStatus 
+} from './chunked-upload';
+// Phase 3: Import stream processing handlers
+import { 
+  initializeStreamSession, 
+  handleStreamChunk, 
+  getStreamStatus 
+} from './stream-processing';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -18,6 +31,57 @@ export default {
         return new Response('Method not allowed', { status: 405 });
       }
       return handleUpload(request, env);
+    }
+
+    // Phase 2: Chunked upload routes
+    if (url.pathname === '/api/chunked-upload/init') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return initializeChunkedUpload(request, env);
+    }
+
+    if (url.pathname.startsWith('/api/upload-chunk/')) {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return handleChunkUpload(request, env);
+    }
+
+    if (url.pathname === '/api/chunked-upload/complete') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return completeChunkedUpload(request, env);
+    }
+
+    if (url.pathname === '/api/upload-session/status') {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return getUploadSessionStatus(request, env);
+    }
+
+    // Phase 3: Stream processing routes
+    if (url.pathname === '/api/stream/init') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return initializeStreamSession(request, env);
+    }
+
+    if (url.pathname.startsWith('/api/stream/chunk/')) {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return handleStreamChunk(request, env);
+    }
+
+    if (url.pathname === '/api/stream/status') {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      return getStreamStatus(request, env);
     }
     
     if (url.pathname.startsWith('/api/file/')) {

@@ -10,9 +10,9 @@ import MultiDynamicPDFBlock from "./MultiDynamicPDFBlock";
 import VideoBlock from "./VideoBlock";
 import ArchiveBlock from "./ArchiveBlock";
 import DocumentBlock from "./DocumentBlock";
-import PowerPointBlock from "./PowerPointBlock";
 
 export interface FileMetadata {
+  id?: string;
   name: string;
   size: string;
   type: string;
@@ -34,14 +34,6 @@ export interface FileMetadata {
     pdfUrl?: string;
     embedUrl?: string;
     theme?: string;
-  };
-  // Enhanced PowerPoint processing data
-  powerPointData?: {
-    originalFileUrl: string;     // Original PPTX for download
-    pdfUrl: string;             // PDF for inline viewing
-    thumbnailUrls: string[];     // PNG thumbnails for gallery
-    slideCount: number;
-    pdfViewerUrl?: string;      // Google Docs style viewer URL
   };
 }
 
@@ -132,9 +124,11 @@ export default function BlockRouter({
       
       // Single Image → Centered, large display with optional caption/credit
       if (imageCount === 1) {
+        const firstFile = files[0];
         return (
           <SingleImageBlock
             title={title}
+            fileId={firstFile.id}
             image={imageUrls[0]}
             caption={description}
             credit={metadata?.credit}
@@ -149,7 +143,7 @@ export default function BlockRouter({
         return (
           <GridGalleryBlock
             title={title}
-            images={imageUrls}
+            files={files}
             onDownload={onDownload}
             metadata={metadata}
           />
@@ -161,7 +155,7 @@ export default function BlockRouter({
         return (
           <MasonryGalleryBlock
             title={title}
-            images={imageUrls}
+            files={files}
             onDownload={onDownload}
             metadata={metadata}
           />
@@ -173,7 +167,7 @@ export default function BlockRouter({
         return (
           <LightboxGalleryBlock
             title={title}
-            images={imageUrls}
+            files={files}
             totalImages={files.length}
             onDownload={onDownload}
             metadata={metadata}
@@ -323,21 +317,7 @@ export default function BlockRouter({
       );
       
     case 'presentation':
-      // Check if we have new PowerPoint processing data first
-      const powerPointFile = files.find(f => f.powerPointData);
-      
-      if (powerPointFile?.powerPointData) {
-        // Use new PowerPointBlock for enhanced presentation viewing
-        return (
-          <PowerPointBlock
-            files={files}
-            title={title}
-            description={description}
-          />
-        );
-      }
-      
-      // Fallback to PDF handling for PowerPoint files (converted by backend)
+      // PowerPoint files are converted to PDF by the backend
       const presentationFile = files.find(f => 
         f.type?.includes('presentation') || 
         f.name?.toLowerCase().endsWith('.ppt') || 
@@ -345,10 +325,6 @@ export default function BlockRouter({
       );
       
       if (presentationFile) {
-        // PowerPoint files are converted to PDF by the backend AWS service
-        // Use pre-generated thumbnails from PowerPoint conversion
-        const powerPointThumbnails = metadata?.powerPointData?.thumbnailUrls || [];
-        
         return (
           <DynamicPDFBlock
             url={presentationFile.url || '#'}
@@ -358,9 +334,6 @@ export default function BlockRouter({
       }
       
       // If no specific presentation file found, use first file as PDF
-      // Check if we have PowerPoint thumbnails available
-      const powerPointThumbnails = metadata?.powerPointData?.thumbnailUrls || [];
-      
       return (
         <DynamicPDFBlock
           url={files[0]?.url || '#'}

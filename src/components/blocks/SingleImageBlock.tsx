@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { useFileUrls, DownloadButton } from "../../hooks/useDualQuality";
 import { 
   Download, 
   Eye,
@@ -17,7 +18,10 @@ import {
 
 interface SingleImageBlockProps {
   title: string;
-  image: string;
+  // Support both new fileId (dual-quality) and legacy image URL
+  fileId?: string;
+  image?: string;
+  fileName?: string;
   caption?: string;
   credit?: string;
   onDownload?: () => void;
@@ -30,7 +34,9 @@ interface SingleImageBlockProps {
 
 export default function SingleImageBlock({ 
   title, 
+  fileId,
   image, 
+  fileName,
   caption,
   credit,
   onDownload,
@@ -39,6 +45,12 @@ export default function SingleImageBlock({
   const { theme } = useTheme();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+
+  // Get appropriate URLs for dual-quality serving
+  // If fileId is provided, use dual-quality; otherwise fallback to legacy image URL
+  const fileUrls = fileId ? useFileUrls(fileId) : null;
+  const viewImageUrl = fileUrls?.viewUrl || image || '';
+  const downloadUrl = fileUrls?.downloadUrl;
 
   const openLightbox = () => {
     setIsLightboxOpen(true);
@@ -139,18 +151,34 @@ export default function SingleImageBlock({
               Share
             </Button>
 
-            <Button
-              size="sm"
-              onClick={onDownload}
-              className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
-              style={{
-                backgroundColor: theme.colors.primary,
-                color: theme.colors.surface
-              }}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download
-            </Button>
+            {/* Smart download button - uses dual-quality if available, fallback to legacy */}
+            {fileId && fileName ? (
+              <DownloadButton
+                fileId={fileId}
+                fileName={fileName}
+                className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 px-4 py-2 text-sm font-medium flex items-center"
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.surface
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </DownloadButton>
+            ) : (
+              <Button
+                size="sm"
+                onClick={onDownload}
+                className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.surface
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            )}
           </div>
         </div>
 
@@ -162,7 +190,7 @@ export default function SingleImageBlock({
             style={{ backgroundColor: theme.colors.surface }}
           >
             <ImageWithFallback
-              src={image}
+              src={viewImageUrl}
               alt={title}
               className="w-full h-auto max-h-[70vh] object-contain"
             />
@@ -274,7 +302,7 @@ export default function SingleImageBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={image}
+                src={viewImageUrl}
                 alt={title}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}

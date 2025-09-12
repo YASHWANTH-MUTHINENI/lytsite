@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import QRCode from 'qrcode';
 import UniversalFileTemplate from "./universal-file-template";
 import { PDFThumbnailGenerator } from "../utils/pdfThumbnailGenerator";
+// Phase 2: Import chunked upload system
+import { ChunkedUploader } from '../hooks/useChunkedUpload';
 import { 
   Upload, 
   X, 
@@ -276,6 +278,9 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [templateData, setTemplateData] = useState<any>(null);
   const [isProcessingTemplate, setIsProcessingTemplate] = useState(false);
   
+  // Phase 2: Track upload method for UI feedback
+  const [uploadMethod, setUploadMethod] = useState<'regular' | 'chunked' | null>(null);
+  
 // Helper function to check if any uploaded file is a PowerPoint
 const hasPowerPointFiles = (files: File[]) => {
   return files.some(file => 
@@ -434,6 +439,7 @@ useEffect(() => {
     }
   };
 
+  // Phase 2: Smart upload handler that chooses optimal method
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
     
@@ -441,86 +447,160 @@ useEffect(() => {
     setUploadProgress(0);
 
     try {
-      // Process files to extract presentation data and other metadata
-      const processedFiles = await Promise.all(
-        uploadedFiles.map(file => processFileWithThumbnails(file))
-      );
+      // Phase 2: Smart upload selection (Back to working system)
+      const shouldUseChunked = ChunkedUploader.shouldUseChunkedUpload(uploadedFiles);
+      const totalSize = uploadedFiles.reduce((sum, file) => sum + file.size, 0);
       
-      // Create FormData with files and metadata
-      const formData = new FormData();
+      // Phase 2: Set upload method for UI feedback
+      setUploadMethod(shouldUseChunked ? 'chunked' : 'regular');
       
-      uploadedFiles.forEach(file => {
-        formData.append('files', file);
-      });
-      
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('template', selectedTemplate);
-      formData.append('authorName', authorName);
-      
-      // Add processed file metadata
-      formData.append('filesMetadata', JSON.stringify(
-        processedFiles.map(processedFile => ({
-          name: processedFile.name,
-          type: processedFile.type,
-          size: processedFile.size
-        }))
-      ));
-      
-      // Add password and expiry if set
-      if (password) {
-        formData.append('password', password);
-      }
-      if (expiryDate) {
-        formData.append('expiryDate', expiryDate);
-      }
-      
-      // Upload progress simulation (real progress tracking would require chunked uploads)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 15, 90));
-      }, 300);
-      
-      // Make upload request to Cloudflare Worker
-      const response = await fetch(`${API_BASE}/api/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const result: UploadResult = await response.json();
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      
-      if (result.success && result.url) {
-        // Store the generated URL for success step
-        setGeneratedUrl(result.url);
-        setProjectSlug(result.slug || '');
-        
-        // Generate QR code
-        try {
-          const qrDataUrl = await QRCode.toDataURL(result.url, {
-            width: 256,
-            margin: 2,
-            color: {
-              dark: '#1f2937',
-              light: '#ffffff',
-            },
-          });
-          setQrCodeDataUrl(qrDataUrl);
-        } catch (qrError) {
-          console.error('QR code generation failed:', qrError);
-        }
-        
-        setStep('success');
+      console.log(`Upload strategy: ${shouldUseChunked ? 'CHUNKED' : 'REGULAR'} for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
+      console.log(`Phase 2 Status: ${shouldUseChunked ? 'Fast Mode - Parallel chunk processing active' : 'Standard Mode - Direct upload'}`);
+
+      if (shouldUseChunked) {
+        await handleChunkedUpload();
       } else {
-        throw new Error(result.error || 'Upload failed');
+        await handleRegularUpload();
       }
-      
+
     } catch (error) {
       console.error('Upload error:', error);
       alert('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
+      setUploadMethod(null);
+    }
+  };
+
+  // Phase 2: Chunked upload for large files (>50MB)
+  const handleChunkedUpload = async () => {
+    const uploader = new ChunkedUploader({
+      onProgress: (progress, fileIndex) => {
+        // Update overall progress based on all files
+        const overallProgress = uploader.getOverallProgress();
+        setUploadProgress(Math.min(overallProgress, 95)); // Reserve 5% for completion
+      },
+      onFileComplete: (fileIndex, fileId) => {
+        console.log(`File ${fileIndex} (${fileId}) uploaded successfully`);
+      },
+      onError: (error, fileIndex) => {
+        console.error(`Upload error for file ${fileIndex}:`, error);
+        throw new Error(error);
+      }
+    });
+
+    // Initialize upload session
+    await uploader.initializeUpload(uploadedFiles, {
+      title,
+      description,
+      template: selectedTemplate,
+      authorName,
+      password: password || undefined,
+      expiryDate: expiryDate || undefined
+    });
+
+    // Start chunked upload
+    const result = await uploader.startUpload();
+    
+    setUploadProgress(100);
+    
+    // Store results
+    setGeneratedUrl(result.url);
+    setProjectSlug(result.slug);
+    
+    // Generate QR code
+    try {
+      const qrDataUrl = await QRCode.toDataURL(result.url, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff',
+        },
+      });
+      setQrCodeDataUrl(qrDataUrl);
+    } catch (qrError) {
+      console.error('QR code generation failed:', qrError);
+    }
+    
+    setStep('success');
+  };
+
+  // Phase 1: Regular upload for smaller files (≤50MB)
+  const handleRegularUpload = async () => {
+    // Process files to extract presentation data and other metadata
+    const processedFiles = await Promise.all(
+      uploadedFiles.map(file => processFileWithThumbnails(file))
+    );
+    
+    // Create FormData with files and metadata
+    const uploadFormData = new FormData();
+    
+    uploadedFiles.forEach(file => {
+      uploadFormData.append('files', file);
+    });
+    
+    uploadFormData.append('title', title);
+    uploadFormData.append('description', description);
+    uploadFormData.append('template', selectedTemplate);
+    uploadFormData.append('authorName', authorName);
+    
+    // Add processed file metadata
+    uploadFormData.append('filesMetadata', JSON.stringify(
+      processedFiles.map(processedFile => ({
+        name: processedFile.name,
+        type: processedFile.type,
+        size: processedFile.size
+      }))
+    ));
+    
+    // Add password and expiry if set
+    if (password) {
+      uploadFormData.append('password', password);
+    }
+    if (expiryDate) {
+      uploadFormData.append('expiryDate', expiryDate);
+    }
+    
+    // Upload progress simulation (real progress tracking would require chunked uploads)
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => Math.min(prev + 15, 90));
+    }, 300);
+    
+    // Make upload request to Cloudflare Worker
+    const response = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      body: uploadFormData,
+    });
+    
+    const result: UploadResult = await response.json();
+    
+    clearInterval(progressInterval);
+    setUploadProgress(100);
+    
+    if (result.success && result.url) {
+      // Store the generated URL for success step
+      setGeneratedUrl(result.url);
+      setProjectSlug(result.slug || '');
+      
+      // Generate QR code
+      try {
+        const qrDataUrl = await QRCode.toDataURL(result.url, {
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#1f2937',
+            light: '#ffffff',
+          },
+        });
+        setQrCodeDataUrl(qrDataUrl);
+      } catch (qrError) {
+        console.error('QR code generation failed:', qrError);
+      }
+      
+      setStep('success');
+    } else {
+      throw new Error(result.error || 'Upload failed');
     }
   };
 
@@ -648,6 +728,29 @@ useEffect(() => {
 
               {/* Action Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white border-t border-gray-200 flex-shrink-0 gap-3 sm:gap-0">
+                {/* Phase 2: Upload Method Indicator */}
+                {uploadMethod && (
+                  <div className="flex items-center justify-center mb-2 sm:mb-0">
+                    <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+                      uploadMethod === 'chunked' 
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                        : 'bg-gray-50 text-gray-700 border border-gray-200'
+                    }`}>
+                      {uploadMethod === 'chunked' ? (
+                        <>
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+                          Fast Mode Active
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                          Standard Upload
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex items-center text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
                   <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   <span className="hidden sm:inline">Preview Mode - This is how visitors will see your site</span>
@@ -678,7 +781,9 @@ useEffect(() => {
                     {isUploading ? (
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
-                        <span className="hidden sm:inline">Publishing...</span>
+                        <span className="hidden sm:inline">
+                          Publishing{uploadMethod === 'chunked' ? ' (Fast Mode)' : ''}...
+                        </span>
                         <span className="sm:hidden">Publishing</span>
                       </>
                     ) : (

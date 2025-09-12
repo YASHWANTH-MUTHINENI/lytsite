@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -20,7 +21,7 @@ import {
 
 interface LightboxGalleryBlockProps {
   title: string;
-  images: string[];
+  files: Array<{ id?: string; url?: string; name: string }>;
   totalImages?: number;
   onDownload?: () => void;
   metadata?: {
@@ -32,8 +33,8 @@ interface LightboxGalleryBlockProps {
 
 export default function LightboxGalleryBlock({ 
   title, 
-  images, 
-  totalImages = images.length,
+  files, 
+  totalImages = files.length,
   onDownload,
   metadata 
 }: LightboxGalleryBlockProps) {
@@ -43,6 +44,11 @@ export default function LightboxGalleryBlock({
   const [visibleImages, setVisibleImages] = useState(20);
   const [searchTerm, setSearchTerm] = useState("");
   const galleryRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to get image URL for display
+  const getImageUrl = (file: { id?: string; url?: string; name: string }) => {
+    return file.url || '';
+  };
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -58,8 +64,8 @@ export default function LightboxGalleryBlock({
     if (selectedImage === null) return;
     
     const newIndex = direction === 'prev' 
-      ? (selectedImage - 1 + images.length) % images.length
-      : (selectedImage + 1) % images.length;
+      ? (selectedImage - 1 + files.length) % files.length
+      : (selectedImage + 1) % files.length;
     
     setSelectedImage(newIndex);
   };
@@ -71,12 +77,13 @@ export default function LightboxGalleryBlock({
   };
 
   const loadMoreImages = () => {
-    setVisibleImages(prev => Math.min(prev + 20, images.length));
+    setVisibleImages(prev => Math.min(prev + 20, files.length));
   };
 
-  const filteredImages = images.filter((_, index) => 
+  const filteredImages = files.filter((file, index) => 
     index.toString().includes(searchTerm) || 
-    `Image ${index + 1}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `Image ${index + 1}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    file.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const displayedImages = filteredImages.slice(0, visibleImages);
@@ -86,7 +93,7 @@ export default function LightboxGalleryBlock({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && visibleImages < images.length) {
+          if (entry.isIntersecting && visibleImages < files.length) {
             loadMoreImages();
           }
         });
@@ -99,7 +106,7 @@ export default function LightboxGalleryBlock({
     }
 
     return () => observer.disconnect();
-  }, [visibleImages, images.length]);
+  }, [visibleImages, files.length]);
 
   return (
     <section 
@@ -240,7 +247,7 @@ export default function LightboxGalleryBlock({
 
         {/* Compact Thumbnail Grid */}
         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-          {displayedImages.map((src, index) => (
+          {displayedImages.map((file, index) => (
             <div
               key={index}
               className="cursor-pointer overflow-hidden rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 group aspect-square"
@@ -249,7 +256,7 @@ export default function LightboxGalleryBlock({
             >
               <div className="relative h-full">
                 <ImageWithFallback
-                  src={src}
+                  src={getImageUrl(file)}
                   alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   loading="lazy"
@@ -354,7 +361,7 @@ export default function LightboxGalleryBlock({
                 e.stopPropagation();
                 navigateImage('next');
               }}
-              disabled={selectedImage === images.length - 1}
+              disabled={selectedImage === files.length - 1}
               style={{ backgroundColor: theme.colors.surface + '20' }}
             >
               <ChevronRight className="w-6 h-6" style={{ color: theme.colors.surface }} />
@@ -363,8 +370,8 @@ export default function LightboxGalleryBlock({
             {/* Centered Image Container */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <img
-                src={images[selectedImage]}
-                alt={`Image ${selectedImage + 1}`}
+                src={selectedImage !== null ? getImageUrl(files[selectedImage]) : ''}
+                alt={`Image ${(selectedImage || 0) + 1}`}
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -379,7 +386,7 @@ export default function LightboxGalleryBlock({
               }}
             >
               <div className="font-semibold">
-                {selectedImage + 1} of {images.length}
+                {(selectedImage || 0) + 1} of {files.length}
               </div>
               <div 
                 className="text-sm mt-1"
