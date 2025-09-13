@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import UniversalFileTemplate from './components/universal-file-template';
+import ClientDelivery from './components/client-delivery';
 import { EnhancedThemeProvider } from './contexts/EnhancedThemeContext';
 import { enhancedThemeVariants } from './styles/enhanced-themes';
 import './index.css';
@@ -63,13 +64,26 @@ function initializeLytsite() {
     }
   };
 
+  // Determine which template to render based on templateType
+  const renderTemplate = () => {
+    const templateType = data.templateType || 'universal';
+    
+    switch (templateType) {
+      case 'client-delivery':
+        return <ClientDelivery data={data} />;
+      case 'universal':
+      default:
+        return <UniversalFileTemplate data={templateData} />;
+    }
+  };
+
   // Create React root and render
   const root = ReactDOM.createRoot(rootElement);
   
   root.render(
     <React.StrictMode>
       <EnhancedThemeProvider defaultThemeKey="professional-light">
-        <UniversalFileTemplate data={templateData} />
+        {renderTemplate()}
       </EnhancedThemeProvider>
     </React.StrictMode>
   );
