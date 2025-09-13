@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -113,7 +112,10 @@ const getFileIcon = (type: string) => {
 };
 
 export default function ClientDelivery({ data }: ClientDeliveryProps) {
-  const navigate = useNavigate();
+  // Function to scroll to top instead of navigation
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   
   // Use provided data or fall back to mockData for testing
   const deliveryData = data || mockData;
@@ -127,11 +129,11 @@ export default function ClientDelivery({ data }: ClientDeliveryProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => navigate('/')}
+                onClick={scrollToTop}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Lytsite
+                Back to Top
               </Button>
               <div className="h-6 w-px bg-slate-200" />
               <h1 className="text-lg font-semibold text-slate-900">Project Delivery</h1>
@@ -292,7 +294,7 @@ export default function ClientDelivery({ data }: ClientDeliveryProps) {
             Sent with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => navigate('/')}
+              onClick={scrollToTop}
             >
               Lytsite
             </span>

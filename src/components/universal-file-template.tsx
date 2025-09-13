@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { EnhancedThemeProvider } from "../contexts/EnhancedThemeContext";
 import HeroBlock from "./blocks/HeroBlock";
 import BlockRouter, { getFileType, getMultipleFileTypes, FileMetadata } from "./blocks/BlockRouter";
@@ -88,9 +87,13 @@ const mockData = {
 };
 
 export default function UniversalFileTemplate({ data }: UniversalFileTemplateProps) {
-  const navigate = useNavigate();
   // Use provided data or fall back to mockData for testing
   const templateData = data || mockData;
+  
+  // Function to scroll to top instead of navigation
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   
   // Sample document content for text/document files
   const getSampleDocumentContent = () => {
@@ -476,11 +479,11 @@ Version: 1.0`;
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => navigate('/')}
+                onClick={scrollToTop}
                 className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all duration-200"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Homepage
+                Back to Top
               </Button>
               
               <div className="flex items-center space-x-2 text-sm text-slate-500">
@@ -522,7 +525,7 @@ Version: 1.0`;
             action: handleDownloadAll
           }}
           showLytsiteBranding={true}
-          onNavigateHome={() => navigate('/')}
+          onNavigateHome={scrollToTop}
         />
       </div>
     </EnhancedThemeProvider>
