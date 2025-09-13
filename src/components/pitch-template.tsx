@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -64,7 +64,7 @@ const fundingBreakdown = [
 ];
 
 export default function PitchTemplate() {
-  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -75,7 +75,7 @@ export default function PitchTemplate() {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => navigate('/')}
+                onClick={() => window.location.href = '/'}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -449,7 +449,7 @@ export default function PitchTemplate() {
             Crafted with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
             >
               Lytsite
             </span>

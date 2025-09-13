@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -19,7 +19,7 @@ import {
 
 
 export default function TemplatesPage() {
-  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -29,7 +29,7 @@ export default function TemplatesPage() {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function TemplatesPage() {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => navigate('/universal-file-template')} 
+                    onClick={() => window.location.href = '/universal-file-template'} 
                     size="lg" 
                     className="w-full"
                   >
@@ -141,7 +141,7 @@ export default function TemplatesPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
             {/* Client Delivery Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/client-delivery')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/client-delivery'}>
               <div className="aspect-video bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
                 <FileText className="w-10 h-10 text-blue-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -158,7 +158,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Photo Gallery Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/photo-gallery')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/photo-gallery'}>
               <div className="aspect-video bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center relative">
                 <Image className="w-10 h-10 text-emerald-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -175,7 +175,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Portfolio Resume Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/portfolio-resume')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/portfolio-resume'}>
               <div className="aspect-video bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center relative">
                 <User className="w-10 h-10 text-purple-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -192,7 +192,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Event Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/event-template')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/event-template'}>
               <div className="aspect-video bg-gradient-to-br from-orange-50 to-amber-100 flex items-center justify-center relative">
                 <Calendar className="w-10 h-10 text-orange-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -209,7 +209,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Product Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/product-template')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/product-template'}>
               <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center relative">
                 <ShoppingCart className="w-10 h-10 text-green-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -226,7 +226,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Case Study Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/case-study-template')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/case-study-template'}>
               <div className="aspect-video bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center relative">
                 <Target className="w-10 h-10 text-indigo-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -243,7 +243,7 @@ export default function TemplatesPage() {
             </Card>
 
             {/* Pitch Template */}
-            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => navigate('/pitch-template')}>
+            <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer group" onClick={() => window.location.href = '/pitch-template'}>
               <div className="aspect-video bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center relative">
                 <Presentation className="w-10 h-10 text-red-600" />
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -289,7 +289,7 @@ export default function TemplatesPage() {
             </p>
             <Button 
               size="lg" 
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="w-full sm:w-auto"
             >
               Get Started Now

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
@@ -8,7 +8,7 @@ import { ArrowLeft, CreditCard, Settings, Clock, Mail, Building, User } from 'lu
 import Navbar from './Navbar';
 
 const Payment: React.FC = () => {
-  const navigate = useNavigate();
+  
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -43,7 +43,7 @@ const Payment: React.FC = () => {
         <div className="max-w-2xl mx-auto">
           {/* Back Button */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => window.location.href = '/'}
             className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -105,7 +105,7 @@ const Payment: React.FC = () => {
                   
                   <Button 
                     variant="outline" 
-                    onClick={() => navigate('/')}
+                    onClick={() => window.location.href = '/'}
                     className="w-full"
                   >
                     Return to Homepage
@@ -117,7 +117,7 @@ const Payment: React.FC = () => {
                   <br />
                   <a 
                     href="#" 
-                    onClick={() => navigate('/feedback')} 
+                    onClick={() => window.location.href = '/feedback'} 
                     className="text-primary hover:underline font-medium"
                   >
                     Leave your feedback here

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from './ui/button';
 import { Upload, Calendar, Clock, ArrowLeft, User, Share2, Heart, MessageCircle, Tag } from 'lucide-react';
 import Navbar from './Navbar';
@@ -20,7 +20,7 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
               <div className="mb-8">
                 <Button 
                   variant="ghost" 
-                  onClick={() => navigate('/blog-page')}
+                  onClick={() => window.location.href = '/blog-page'}
                   className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors px-4 py-2 rounded-lg"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -296,7 +296,7 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
                     </Button>
                   </div>
                   <Button 
-                    onClick={() => navigate('/blog')}
+                    onClick={() => window.location.href = '/blog'}
                     variant="ghost"
                     className="text-slate-600 hover:text-slate-900"
                   >
@@ -315,13 +315,13 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
-                    onClick={() => navigate('/')}
+                    onClick={() => window.location.href = '/'}
                     className="bg-primary hover:bg-primary/90 text-white px-8 py-3"
                   >
                     Start Creating Galleries
                   </Button>
                   <Button 
-                    onClick={() => navigate('/templates')}
+                    onClick={() => window.location.href = '/templates'}
                     variant="outline" 
                     className="border-slate-300 text-slate-700 hover:bg-white px-8 py-3"
                   >

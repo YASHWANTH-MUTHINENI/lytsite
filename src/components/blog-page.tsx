@@ -1,11 +1,11 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from './ui/button';
 import { Upload, Calendar, Clock, ArrowRight, User, Tag, ArrowLeft } from 'lucide-react';
 import Navbar from './Navbar';
 
 const BlogPage = () => {
-  const navigate = useNavigate();
+  
   const blogPosts = [
     {
       id: 'photographer-client-galleries',
@@ -47,7 +47,7 @@ const BlogPage = () => {
             <div className="mb-8">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/')}
+                onClick={() => window.location.href = '/'}
                 className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -200,13 +200,13 @@ const BlogPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => navigate('/')}
+                  onClick={() => window.location.href = '/'}
                   className="bg-primary hover:bg-primary/90 text-white px-6 md:px-8 py-3 text-sm md:text-base"
                 >
                   Get Started Free
                 </Button>
                 <Button 
-                  onClick={() => navigate('/templates')}
+                  onClick={() => window.location.href = '/templates'}
                   variant="outline" 
                   className="border-slate-300 text-slate-700 hover:bg-slate-50 px-6 md:px-8 py-3 text-sm md:text-base"
                 >

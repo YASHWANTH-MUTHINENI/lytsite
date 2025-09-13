@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export default function Contact() {
-  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,7 +64,7 @@ export default function Contact() {
           <div className="max-w-4xl mx-auto text-center">
             <Button
               variant="ghost"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="mb-8 text-white hover:text-gray-100 hover:bg-white/10 border border-white/20"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -340,7 +340,7 @@ export default function Contact() {
             <Button 
               variant="outline" 
               size="lg" 
-              onClick={() => navigate('/faq')}
+              onClick={() => window.location.href = '/faq'}
               className="px-8 py-3"
             >
               View FAQ
@@ -365,19 +365,19 @@ export default function Contact() {
           </p>
           <div className="flex justify-center space-x-6 text-sm">
             <button 
-              onClick={() => navigate('/')} 
+              onClick={() => window.location.href = '/'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               Home
             </button>
             <button 
-              onClick={() => navigate('/about-us')} 
+              onClick={() => window.location.href = '/about-us'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               About
             </button>
             <button 
-              onClick={() => navigate('/privacy-policy')} 
+              onClick={() => window.location.href = '/privacy-policy'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               Privacy

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import Navbar from "./Navbar";
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default function AboutUs() {
-  const navigate = useNavigate();
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -35,7 +35,7 @@ export default function AboutUs() {
           <div className="max-w-4xl mx-auto text-center">
             <Button
               variant="ghost"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="mb-8 text-white hover:text-gray-100 hover:bg-white/10 border border-white/20"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -243,7 +243,7 @@ export default function AboutUs() {
                 </p>
                 <Button 
                   size="lg" 
-                  onClick={() => navigate('/')}
+                  onClick={() => window.location.href = '/'}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3"
                 >
                   Get Started Today
@@ -270,19 +270,19 @@ export default function AboutUs() {
           </p>
           <div className="flex justify-center space-x-6 text-sm">
             <button 
-              onClick={() => navigate('/')} 
+              onClick={() => window.location.href = '/'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               Home
             </button>
             <button 
-              onClick={() => navigate('/contact')} 
+              onClick={() => window.location.href = '/contact'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               Contact
             </button>
             <button 
-              onClick={() => navigate('/privacy-policy')} 
+              onClick={() => window.location.href = '/privacy-policy'} 
               className="text-slate-400 hover:text-white transition-colors"
             >
               Privacy

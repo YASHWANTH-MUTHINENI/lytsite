@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { ArrowLeft, Share2, Clock, Calendar, User } from 'lucide-react';
 
 

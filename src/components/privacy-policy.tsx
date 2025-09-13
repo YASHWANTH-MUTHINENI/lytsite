@@ -1,9 +1,9 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import { ArrowLeft } from 'lucide-react';
 
 const PrivacyPolicy = () => {
-  const navigate = useNavigate();
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
         {/* Header */}
         <div className="mb-8">
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => window.location.href = '/'}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from './ui/button';
 import { Upload, ChevronDown, ChevronUp, Mail, ArrowLeft, Home, Plus, Minus } from 'lucide-react';
 import Navbar from './Navbar';
 
 const FAQPage = () => {
-  const navigate = useNavigate();
+  
   const [openSection, setOpenSection] = useState<string | null>('general');
 
   const faqSections = [
@@ -157,7 +157,7 @@ const FAQPage = () => {
             <div className="mb-8">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate('/')}
+                onClick={() => window.location.href = '/'}
                 className="flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -233,13 +233,13 @@ const FAQPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => navigate('/')}
+                  onClick={() => window.location.href = '/'}
                   className="bg-primary hover:bg-primary/90 text-white px-8 py-3"
                 >
                   Back to Home
                 </Button>
                 <Button 
-                  onClick={() => navigate('/templates')}
+                  onClick={() => window.location.href = '/templates'}
                   variant="outline" 
                   className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3"
                 >

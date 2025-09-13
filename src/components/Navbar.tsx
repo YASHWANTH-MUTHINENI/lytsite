@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Upload, Menu, X, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -14,7 +14,7 @@ export default function Navbar() {
   const [loginData, setLoginData] = useState({ email: '', password: '', name: '' });
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
-  const navigate = useNavigate();
+  
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -92,7 +92,7 @@ export default function Navbar() {
                 How it works
               </a>
               <button 
-                onClick={() => navigate('/templates')}
+                onClick={() => window.location.href = '/templates'}
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors focus-visible"
               >
                 Templates
@@ -104,7 +104,7 @@ export default function Navbar() {
                 Pricing
               </a>
               <button 
-                onClick={() => navigate('/feedback')}
+                onClick={() => window.location.href = '/feedback'}
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors focus-visible"
               >
                 Feedback
@@ -149,7 +149,7 @@ export default function Navbar() {
               </a>
               <button 
                 onClick={() => {
-                  navigate('/templates');
+                  window.location.href = '/templates';
                   setMobileMenuOpen(false);
                 }}
                 className="block w-full text-left text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors py-3 text-lg font-medium border-b border-slate-100 dark:border-slate-700"
@@ -165,7 +165,7 @@ export default function Navbar() {
               </a>
               <button 
                 onClick={() => {
-                  navigate('/feedback');
+                  window.location.href = '/feedback';
                   setMobileMenuOpen(false);
                 }}
                 className="block text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors py-3 text-lg font-medium border-b border-slate-100 dark:border-slate-700 w-full text-left"

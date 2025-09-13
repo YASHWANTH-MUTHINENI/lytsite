@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 export default function HelpCenter() {
-  const navigate = useNavigate();
+  
   const [searchQuery, setSearchQuery] = useState("");
 
   const helpCategories = [
@@ -109,7 +109,7 @@ export default function HelpCenter() {
       title: "Contact Support",
       description: "Get help from our support team",
       icon: MessageCircle,
-      action: () => navigate('/contact'),
+      action: () => window.location.href = '/contact',
       color: "bg-blue-500"
     },
     {
@@ -161,7 +161,7 @@ export default function HelpCenter() {
           <div className="mb-8">
             <Button
               variant="ghost"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="mb-8 text-white hover:text-gray-100 hover:bg-white/10 border border-white/20"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -335,7 +335,7 @@ export default function HelpCenter() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/contact')}
+              onClick={() => window.location.href = '/contact'}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8"
             >
               Contact Support
@@ -343,7 +343,7 @@ export default function HelpCenter() {
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => navigate('/faq')}
+              onClick={() => window.location.href = '/faq'}
               className="border-white/20 text-white hover:bg-white/10 px-8"
             >
               View FAQ
@@ -361,25 +361,25 @@ export default function HelpCenter() {
             </p>
             <div className="flex justify-center space-x-6 text-sm">
               <button 
-                onClick={() => navigate('/')} 
+                onClick={() => window.location.href = '/'} 
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 Home
               </button>
               <button 
-                onClick={() => navigate('/about-us')} 
+                onClick={() => window.location.href = '/about-us'} 
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 About
               </button>
               <button 
-                onClick={() => navigate('/privacy-policy')} 
+                onClick={() => window.location.href = '/privacy-policy'} 
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 Privacy
               </button>
               <button 
-                onClick={() => navigate('/terms-conditions')} 
+                onClick={() => window.location.href = '/terms-conditions'} 
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 Terms

@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -38,11 +37,10 @@ import {
 } from "lucide-react";
 
 export default function Homepage() {
-  const navigate = useNavigate();
   const [showTrialModal, setShowTrialModal] = React.useState(false);
   
   const handleUploadSuccess = (templateRoute: string) => {
-    navigate(`/${templateRoute}`);
+    window.location.href = `/${templateRoute}`;
   };
 
   const handleFreeTrialClick = () => {
@@ -117,7 +115,7 @@ export default function Homepage() {
                 {/* <Button 
                   variant="outline" 
                   size="lg" 
-                  onClick={() => navigate('/universal-file-template')}
+                  onClick={() => window.location.href = '/universal-file-template'}
                   className="h-12 lg:h-14 px-6 lg:px-8 font-semibold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md min-h-[44px] min-w-[44px]"
                 >
                   Try Now
@@ -774,7 +772,7 @@ export default function Homepage() {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => navigate('/universal-file-template')} 
+                    onClick={() => window.location.href = '/universal-file-template'} 
                     size="lg" 
                     className="w-full"
                   >
@@ -813,7 +811,7 @@ export default function Homepage() {
           <div className="text-center">
             <div className="mb-6">
               <Button 
-                onClick={() => navigate('/templates')}
+                onClick={() => window.location.href = '/templates'}
                 variant="outline"
                 size="lg"
                 className="bg-white hover:bg-slate-50 border-2 border-primary text-primary hover:text-primary"
@@ -855,7 +853,7 @@ export default function Homepage() {
               variant="outline" 
               size="lg"
               className="h-14 px-8 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold text-lg transition-all"
-              onClick={() => navigate('/templates')}
+              onClick={() => window.location.href = '/templates'}
             >
               View Templates
               <ExternalLink className="w-5 h-5 ml-2" />
@@ -1009,7 +1007,7 @@ export default function Homepage() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/payment')}
+                  onClick={() => window.location.href = '/payment'}
                 >
                   Upgrade to Pro
                 </Button>
@@ -1053,7 +1051,7 @@ export default function Homepage() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate('/payment')}
+                  onClick={() => window.location.href = '/payment'}
                 >
                   Contact Sales
                 </Button>
@@ -1068,7 +1066,7 @@ export default function Homepage() {
               <p className="text-slate-600 mb-6">
                 Have questions about our pricing? We're here to help.
               </p>
-              <Button variant="outline" onClick={() => navigate('/faq')}>
+              <Button variant="outline" onClick={() => window.location.href = '/faq'}>
                 View FAQ
               </Button>
             </div>
@@ -1118,10 +1116,10 @@ export default function Homepage() {
               <div>
                 <h3 className="font-semibold text-lg mb-4">Company</h3>
                 <ul className="space-y-3">
-                  <li><button onClick={() => navigate('/about-us')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">About Us</button></li>
-                  <li><button onClick={() => navigate('/blog')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Blog</button></li>
-                  <li><button onClick={() => navigate('/contact')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Contact</button></li>
-                  <li><button onClick={() => navigate('/faq')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">FAQs</button></li>
+                  <li><button onClick={() => window.location.href = '/about-us'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">About Us</button></li>
+                  <li><button onClick={() => window.location.href = '/blog'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Blog</button></li>
+                  <li><button onClick={() => window.location.href = '/contact'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Contact</button></li>
+                  <li><button onClick={() => window.location.href = '/faq'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">FAQs</button></li>
                 </ul>
               </div>
 
@@ -1129,10 +1127,10 @@ export default function Homepage() {
               <div>
                 <h3 className="font-semibold text-lg mb-4">Support & Legal</h3>
                 <ul className="space-y-3">
-                  <li><button onClick={() => navigate('/help')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Help Center</button></li>
-                  <li><button onClick={() => navigate('/privacy-policy')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Privacy Policy</button></li>
-                  <li><button onClick={() => navigate('/terms-conditions')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Terms & Conditions</button></li>
-                  <li><button onClick={() => navigate('/refund-cancellation')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Refund & Cancellation</button></li>
+                  <li><button onClick={() => window.location.href = '/help'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Help Center</button></li>
+                  <li><button onClick={() => window.location.href = '/privacy-policy'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Privacy Policy</button></li>
+                  <li><button onClick={() => window.location.href = '/terms-conditions'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Terms & Conditions</button></li>
+                  <li><button onClick={() => window.location.href = '/refund-cancellation'} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Refund & Cancellation</button></li>
                 </ul>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import UniversalFileTemplate from './universal-file-template';
 
 // Test data that matches what our backend returns
@@ -48,7 +48,7 @@ const backendTestData = {
 
 
 export default function BackendDataTest() {
-  const navigate = useNavigate();
+  
   // Transform backend data to match the universal template's expected format
   const templateData = {
     title: backendTestData.title,
@@ -86,7 +86,7 @@ export default function BackendDataTest() {
           Backend Data Test: {backendTestData.files.length} files • {backendTestData.views} views • {backendTestData.slug}
         </div>
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => window.location.href = '/'}
           style={{ 
             background: '#3b82f6', 
             color: 'white', 

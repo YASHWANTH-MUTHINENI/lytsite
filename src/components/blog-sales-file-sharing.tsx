@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import Navbar from './Navbar';
 
 
@@ -517,7 +517,7 @@ const BlogSalesFileSharing = ({ onNavigate }: BlogSalesFileSharingProps) => {
           {/* Back to Blog CTA */}
           <div className="text-center mb-12">
             <button
-              onClick={() => navigate('/blog-page')}
+              onClick={() => window.location.href = '/blog-page'}
               className="inline-flex items-center px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium rounded-xl transition-colors duration-200"
             >
               ← Back to All Articles

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { ArrowLeft, Send, Star, MessageCircle } from 'lucide-react';
 
 const Feedback: React.FC = () => {
-  const navigate = useNavigate();
+  
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [email, setEmail] = useState('');
@@ -36,7 +36,7 @@ const Feedback: React.FC = () => {
               We appreciate you taking the time to share your thoughts. Your feedback helps us improve Lytsite for everyone.
             </p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg"
               style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
             >
@@ -55,7 +55,7 @@ const Feedback: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => window.location.href = '/'}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4 transition-colors font-medium"
             style={{ color: '#2563eb' }}
           >
