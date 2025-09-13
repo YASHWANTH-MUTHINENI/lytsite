@@ -183,9 +183,6 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Generate timestamp for cache busting
-  const timestamp = Date.now();
-  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -202,7 +199,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=${timestamp}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=600">
 </head>
 <body class="min-h-screen bg-slate-50">
   <div id="root">
@@ -222,7 +219,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   </script>
 
   <!-- Load React bundle -->
-  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=${timestamp}"></script>
+  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=600"></script>
 </body>
 </html>`;
 }
