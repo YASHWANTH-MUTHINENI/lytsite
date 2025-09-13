@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { EnhancedThemeProvider } from "../contexts/EnhancedThemeContext";
 import HeroBlock from "./blocks/HeroBlock";
-import ThemeSwitcher from "./ui/ThemeSwitcher";
+import EnhancedThemeSwitcher from "./ui/EnhancedThemeSwitcher";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -87,11 +87,11 @@ export default function HeroBlockExamples() {
   const current = examples[currentExample];
 
   return (
-    <ThemeProvider defaultThemeKey="ocean-light">
+    <EnhancedThemeProvider defaultThemeKey="professional-light">
       <div className="min-h-screen">
         {/* Theme Switcher */}
         <div className="fixed top-4 right-4 z-50">
-          <ThemeSwitcher variant="minimal" showLabel={false} />
+          <EnhancedThemeSwitcher variant="minimal" showLabel={false} />
         </div>
 
         {/* Navigation Controls */}
@@ -200,6 +200,6 @@ export default function HeroBlockExamples() {
           </div>
         </div>
       </div>
-    </ThemeProvider>
+    </EnhancedThemeProvider>
   );
 }

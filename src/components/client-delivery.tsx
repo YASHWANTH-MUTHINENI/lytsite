@@ -1,12 +1,48 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Download, FileText, Image, Video, Archive, Eye, ArrowLeft } from "lucide-react";
 
+// Interface for Client Delivery specific data
+interface ClientDeliveryData {
+  projectName: string;
+  clientName: string;
+  deliveryDate: string;
+  status: string;
+  description: string;
+  files: Array<{
+    id?: number;
+    name: string;
+    type: string;
+    size: string;
+    preview?: boolean;
+    thumbnail?: string;
+    url?: string;
+    uploadedAt?: string;
+    uploadedBy?: string;
+    description?: string;
+  }>;
+  contactInfo: {
+    email: string;
+    website?: string;
+    phone?: string;
+  };
+}
 
+interface ClientDeliveryProps {
+  data?: ClientDeliveryData; // Optional - falls back to mockData if not provided
+}
 
-const mockFiles = [
+// Mock data for testing - matches the new interface
+const mockData: ClientDeliveryData = {
+  projectName: "Brand Redesign 2025",
+  clientName: "TechCorp Inc.",
+  deliveryDate: "January 15, 2025",
+  status: "Ready for Download",
+  description: "Sarah Design Studio has shared 6 files with you. Download individual files or get everything at once.",
+  files: [
   {
     id: 1,
     name: "Project_Presentation.pdf",
@@ -53,7 +89,13 @@ const mockFiles = [
     size: "128.5 MB",
     preview: false
   }
-];
+  ],
+  contactInfo: {
+    email: "sarah@designstudio.com",
+    phone: "+1 (555) 123-4567",
+    website: "https://sarahdesignstudio.com"
+  }
+};
 
 const getFileIcon = (type: string) => {
   switch (type) {
@@ -70,8 +112,11 @@ const getFileIcon = (type: string) => {
   }
 };
 
-export default function ClientDelivery() {
+export default function ClientDelivery({ data }: ClientDeliveryProps) {
   const navigate = useNavigate();
+  
+  // Use provided data or fall back to mockData for testing
+  const deliveryData = data || mockData;
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -92,7 +137,7 @@ export default function ClientDelivery() {
               <h1 className="text-lg font-semibold text-slate-900">Project Delivery</h1>
             </div>
             <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-              Ready for Download
+              {deliveryData.status}
             </Badge>
           </div>
         </div>
@@ -105,13 +150,13 @@ export default function ClientDelivery() {
             Your files are ready
           </h1>
           <p className="text-xl text-slate-600 mb-8">
-            Sarah Design Studio has shared 6 files with you. Download individual files or get everything at once.
+            {deliveryData.description}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
               <Download className="w-4 h-4 mr-2" />
-              Download All (204.2 MB)
+              Download All ({deliveryData.files.reduce((total, file) => total + parseFloat(file.size.replace(' MB', '')), 0).toFixed(1)} MB)
             </Button>
             <Button variant="outline" size="lg">
               <Eye className="w-4 h-4 mr-2" />
@@ -123,8 +168,8 @@ export default function ClientDelivery() {
         {/* File Grid */}
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockFiles.map((file) => (
-              <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow">
+            {deliveryData.files.map((file, index) => (
+              <Card key={file.id || index} className="overflow-hidden hover:shadow-md transition-shadow">
                 {file.preview && file.thumbnail ? (
                   <div className="aspect-video relative group">
                     <ImageWithFallback
@@ -198,19 +243,21 @@ export default function ClientDelivery() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-600">Project Name:</span>
-                      <span className="text-slate-900 font-medium">Brand Redesign 2025</span>
+                      <span className="text-slate-900 font-medium">{deliveryData.projectName}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Client:</span>
-                      <span className="text-slate-900 font-medium">TechCorp Inc.</span>
+                      <span className="text-slate-900 font-medium">{deliveryData.clientName}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Delivery Date:</span>
-                      <span className="text-slate-900 font-medium">January 15, 2025</span>
+                      <span className="text-slate-900 font-medium">{deliveryData.deliveryDate}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Total Files:</span>
-                      <span className="text-slate-900 font-medium">6 files (204.2 MB)</span>
+                      <span className="text-slate-900 font-medium">
+                        {deliveryData.files.length} files ({deliveryData.files.reduce((total, file) => total + parseFloat(file.size.replace(' MB', '')), 0).toFixed(1)} MB)
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -219,15 +266,17 @@ export default function ClientDelivery() {
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">Need Help?</h3>
                   <p className="text-sm text-slate-600 mb-4">
                     If you have any questions about these files or need assistance, 
-                    don't hesitate to reach out to Sarah Design Studio.
+                    don't hesitate to reach out.
                   </p>
                   <div className="space-y-2">
                     <Button variant="outline" size="sm" className="w-full justify-start">
-                      📧 sarah@designstudio.com
+                      📧 {deliveryData.contactInfo.email}
                     </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      📱 +1 (555) 123-4567
-                    </Button>
+                    {deliveryData.contactInfo.phone && (
+                      <Button variant="outline" size="sm" className="w-full justify-start">
+                        📱 {deliveryData.contactInfo.phone}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

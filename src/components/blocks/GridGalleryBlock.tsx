@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { 
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
+import {
   useFileUrls,
-  formatFileSize
+  formatFileSize,
+  DualQualityFile
 } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -21,7 +22,7 @@ import {
 
 interface GridGalleryBlockProps {
   title: string;
-  files: Array<{ id?: string; url?: string; name: string; type?: string; size?: number }>;
+  files: DualQualityFile[]; // Use the standardized interface
   onDownload?: () => void;
   metadata?: {
     size: string;
@@ -36,7 +37,7 @@ export default function GridGalleryBlock({
   onDownload,
   metadata 
 }: GridGalleryBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);

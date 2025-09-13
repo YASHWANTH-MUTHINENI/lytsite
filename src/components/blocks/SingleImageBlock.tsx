@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -42,7 +42,7 @@ export default function SingleImageBlock({
   onDownload,
   metadata 
 }: SingleImageBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 

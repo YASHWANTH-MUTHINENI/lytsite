@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -43,7 +43,7 @@ export default function DocumentBlock({
   onDownload,
   metadata 
 }: DocumentBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [fontSize, setFontSize] = useState(14);
   const [isLiked, setIsLiked] = useState(false);

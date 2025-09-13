@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
 import { 
   Download, 
   Eye,
@@ -54,29 +55,68 @@ const FileTypeIcon = ({ type }: { type: string }) => {
 
 // PDF/Document Viewer Component
 const PDFViewer = ({ file }: { file: FileData }) => {
+  const { theme } = useEnhancedTheme();
   const [currentPage, setCurrentPage] = useState(0);
   
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-slate-800 px-3 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+    <Card 
+      className="overflow-hidden"
+      style={{ 
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.border
+      }}
+    >
+      <div 
+        className="px-3 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0"
+        style={{ backgroundColor: theme.colors.backgroundSecondary }}
+      >
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           <div className="flex-shrink-0">
             <FileTypeIcon type={file.type} />
           </div>
-          <span className="text-white text-sm font-medium truncate">{file.name}</span>
+          <span 
+            className="text-sm font-medium truncate"
+            style={{ color: theme.colors.textPrimary }}
+          >
+            {file.name}
+          </span>
         </div>
-        <Badge variant="secondary" className="bg-slate-700 text-slate-300 self-start sm:self-auto text-xs">
+        <Badge 
+          variant="secondary" 
+          className="self-start sm:self-auto text-xs"
+          style={{ 
+            backgroundColor: theme.colors.backgroundTertiary,
+            color: theme.colors.textSecondary
+          }}
+        >
           PDF • {file.pages} pages
         </Badge>
       </div>
       
-      <CardContent className="p-0">
-        <div className="aspect-[3/4] sm:aspect-[4/3] bg-white relative">
+      <CardContent 
+        className="p-0"
+        style={{ backgroundColor: theme.colors.surface }}
+      >
+        <div 
+          className="aspect-[3/4] sm:aspect-[4/3] relative"
+          style={{ backgroundColor: theme.colors.background }}
+        >
           {/* PDF Embed or iframe would go here */}
-          <div className="w-full h-full flex items-center justify-center bg-slate-100">
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ backgroundColor: theme.colors.backgroundSecondary }}
+          >
             <div className="text-center p-4">
-              <FileText className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 mx-auto mb-3 sm:mb-4" />
-              <p className="text-slate-600 mb-3 sm:mb-4 text-sm sm:text-base">PDF Viewer</p>
+              <FileText 
+                className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4"
+                style={{ color: theme.colors.textMuted }}
+              />
+              <p 
+                className="mb-3 sm:mb-4 text-sm sm:text-base"
+                style={{ color: theme.colors.textSecondary }}
+              >
+                PDF Viewer
+              </p>
               <Button size="sm" className="text-xs sm:text-sm">
                 <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Open Full View
@@ -86,7 +126,13 @@ const PDFViewer = ({ file }: { file: FileData }) => {
           
           {/* Page Navigation */}
           {file.pages && file.pages > 1 && (
-            <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-white/90 backdrop-blur rounded-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium shadow-lg">
+            <div 
+              className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 backdrop-blur rounded-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium shadow-lg"
+              style={{ 
+                backgroundColor: `${theme.colors.surface}CC`,
+                color: theme.colors.textPrimary 
+              }}
+            >
               Page {currentPage + 1} of {file.pages}
             </div>
           )}
@@ -98,6 +144,7 @@ const PDFViewer = ({ file }: { file: FileData }) => {
 
 // Image Gallery Component
 const ImageGallery = ({ file }: { file: FileData }) => {
+  const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid'); // Default to grid for better mobile experience
   
@@ -161,7 +208,17 @@ const ImageGallery = ({ file }: { file: FileData }) => {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            className="absolute top-4 right-4"
+            style={{ 
+              color: 'white',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             onClick={() => setSelectedImage(null)}
           >
             <X className="w-6 h-6" />
@@ -170,7 +227,17 @@ const ImageGallery = ({ file }: { file: FileData }) => {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+            className="absolute left-4 top-1/2 -translate-y-1/2"
+            style={{ 
+              color: 'white',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             onClick={() => setSelectedImage(Math.max(0, selectedImage - 1))}
             disabled={selectedImage === 0}
           >
@@ -180,7 +247,17 @@ const ImageGallery = ({ file }: { file: FileData }) => {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+            style={{ 
+              color: 'white',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             onClick={() => setSelectedImage(Math.min(images.length - 1, selectedImage + 1))}
             disabled={selectedImage === images.length - 1}
           >
@@ -193,7 +270,13 @@ const ImageGallery = ({ file }: { file: FileData }) => {
             className="max-w-[90vw] max-h-[90vh] object-contain"
           />
           
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur rounded-full px-4 py-2 text-sm font-medium">
+          <div 
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 backdrop-blur rounded-full px-4 py-2 text-sm font-medium"
+            style={{ 
+              backgroundColor: `${theme.colors.surface}CC`,
+              color: theme.colors.textPrimary 
+            }}
+          >
             {selectedImage + 1} of {images.length}
           </div>
         </div>
@@ -204,6 +287,7 @@ const ImageGallery = ({ file }: { file: FileData }) => {
 
 // Video Player Component
 const VideoPlayer = ({ file }: { file: FileData }) => {
+  const { theme } = useEnhancedTheme();
   const [isPlaying, setIsPlaying] = useState(false);
   
   return (
@@ -246,6 +330,7 @@ const VideoPlayer = ({ file }: { file: FileData }) => {
 
 // Archive Explorer Component
 const ArchiveExplorer = ({ file }: { file: FileData }) => {
+  const { theme } = useEnhancedTheme();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   
   const toggleExpand = (itemName: string) => {
@@ -260,10 +345,10 @@ const ArchiveExplorer = ({ file }: { file: FileData }) => {
   
   return (
     <Card>
-      <div className="bg-slate-100 px-4 py-3 border-b">
+      <div className="px-4 py-3 border-b" style={{ backgroundColor: theme.colors.backgroundSecondary, borderBottomColor: theme.colors.border }}>
         <div className="flex items-center space-x-3">
-          <Archive className="w-5 h-5 text-slate-600" />
-          <span className="font-medium">{file.name}</span>
+          <Archive className="w-5 h-5" style={{ color: theme.colors.textSecondary }} />
+          <span className="font-medium" style={{ color: theme.colors.textPrimary }}>{file.name}</span>
           <Badge variant="secondary">{file.files?.length || 0} files</Badge>
         </div>
       </div>
@@ -273,14 +358,25 @@ const ArchiveExplorer = ({ file }: { file: FileData }) => {
           {file.files?.map((archiveFile, index) => (
             <div
               key={index}
-              className="flex items-center justify-between px-4 py-3 border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+              className="flex items-center justify-between px-4 py-3 cursor-pointer"
+              style={{ 
+                borderBottom: `1px solid ${theme.colors.border}`,
+                backgroundColor: 'transparent',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
               onClick={() => archiveFile.url && window.open(archiveFile.url)}
             >
               <div className="flex items-center space-x-3">
                 <FileTypeIcon type={archiveFile.type} />
                 <div>
-                  <div className="font-medium text-slate-900">{archiveFile.name}</div>
-                  <div className="text-sm text-slate-500">{archiveFile.size}</div>
+                  <div className="font-medium" style={{ color: theme.colors.textPrimary }}>{archiveFile.name}</div>
+                  <div className="text-sm" style={{ color: theme.colors.textMuted }}>{archiveFile.size}</div>
                 </div>
               </div>
               {archiveFile.url && (
@@ -297,6 +393,7 @@ const ArchiveExplorer = ({ file }: { file: FileData }) => {
 };
 
 export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlockProps) {
+  const { theme } = useEnhancedTheme();
   const handleDownload = (fileId: string) => {
     onDownload?.(fileId);
     // Track download
@@ -304,7 +401,7 @@ export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlo
   };
 
   return (
-    <section className="py-6 sm:py-12 px-3 sm:px-4">
+    <section className="py-6 sm:py-12 px-3 sm:px-4" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-6xl mx-auto">
         {files.map((file) => (
           <div key={file.id} className="mb-8 sm:mb-12 last:mb-0">
@@ -315,8 +412,8 @@ export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlo
                   <FileTypeIcon type={file.type} />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">{file.name}</h2>
-                  <p className="text-slate-600 text-sm sm:text-base">{file.size}</p>
+                  <h2 className="text-lg sm:text-xl font-semibold truncate" style={{ color: theme.colors.textPrimary }}>{file.name}</h2>
+                  <p className="text-sm sm:text-base" style={{ color: theme.colors.textMuted }}>{file.size}</p>
                 </div>
               </div>
               

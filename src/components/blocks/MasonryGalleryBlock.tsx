@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -35,7 +35,7 @@ export default function MasonryGalleryBlock({
   onDownload,
   metadata 
 }: MasonryGalleryBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('masonry');

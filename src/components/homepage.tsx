@@ -568,8 +568,8 @@ export default function Homepage() {
                 </div>
               </div>
               
-              <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p className="text-sm text-amber-800">
+              <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700">
+                <p className="text-sm text-amber-900 dark:text-amber-200">
                   <span className="font-medium">💡 Why it matters:</span> Your clients get a premium experience, not "another Google Drive link."
                 </p>
               </div>
@@ -602,8 +602,8 @@ export default function Homepage() {
                 </div>
               </div>
               
-              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-sm text-green-800">
+              <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
+                <p className="text-sm text-green-900 dark:text-green-200">
                   <span className="font-medium">💡 Why it matters:</span> Save hours of manual sending → look polished and premium in front of clients.
                 </p>
               </div>
@@ -636,8 +636,8 @@ export default function Homepage() {
                 </div>
               </div>
               
-              <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <p className="text-sm text-purple-800">
+              <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-700">
+                <p className="text-sm text-purple-900 dark:text-purple-200">
                   <span className="font-medium">💡 Why it matters:</span> Every share feels personal, and you know exactly which leads are warm.
                 </p>
               </div>
@@ -733,10 +733,10 @@ export default function Homepage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Universal Template - Works with Any File
+              Choose Your Template Style
             </h2>
             <p className="text-lg text-slate-600">
-              Smart, adaptive design that automatically optimizes for your content
+              Professional templates designed for different use cases
             </p>
           </div>
           

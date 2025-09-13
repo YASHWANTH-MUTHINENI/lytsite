@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -42,7 +42,7 @@ export default function VideoBlock({
   onDownload,
   metadata 
 }: VideoBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(75);

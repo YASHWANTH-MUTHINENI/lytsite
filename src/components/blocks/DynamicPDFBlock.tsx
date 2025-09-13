@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Download, AlertCircle, Loader2 } from 'lucide-react';
+import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
 
 // Global declarations for dynamically loaded PDF.js
 declare global {
@@ -21,12 +22,13 @@ if (typeof globalThis.fileDataStore === 'undefined') {
 
 interface DynamicPDFBlockProps {
   url: string;
-  className?: string;
 }
 
 type ViewerMethod = 'canvas' | 'iframe' | 'error' | 'loading';
 
-export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlockProps) {
+export default function DynamicPDFBlock({ url }: DynamicPDFBlockProps) {
+  console.log('🔧 DynamicPDFBlock: Initialized with URL:', url);
+  const { theme } = useEnhancedTheme();
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [numPages, setNumPages] = useState(0);
@@ -239,6 +241,7 @@ export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlock
 
   // Load PDF when component mounts or URL changes
   useEffect(() => {
+    console.log('🔄 DynamicPDFBlock useEffect triggered with URL:', url);
     if (url) {
       // Clean up previous PDF document before loading new one
       if (pdfDocument) {
@@ -311,111 +314,171 @@ export default function DynamicPDFBlock({ url, className = '' }: DynamicPDFBlock
   // Render loading state
   if (viewerMethod === 'loading') {
     return (
-      <Card className={`w-full ${className}`}>
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <div className="text-center">
-              <h3 className="font-semibold mb-2">Loading PDF</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {loadingProgress < 35 ? 'Loading PDF.js library...' :
-                 loadingProgress < 50 ? 'Loading PDF data...' :
-                 loadingProgress < 70 ? 'Parsing PDF document...' :
-                 'Rendering preview...'}
-              </p>
-              <div className="w-64 bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${loadingProgress}%` }}
-                />
+      <section 
+        className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6"
+        style={{ backgroundColor: theme.colors.background }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <Card 
+            className="w-full"
+            style={{ 
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              color: theme.colors.textPrimary
+            }}
+          >
+            <CardContent 
+              className="p-6"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin" style={{ color: theme.colors.primary }} />
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2" style={{ color: theme.colors.textPrimary }}>Loading PDF</h3>
+                  <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>
+                    {loadingProgress < 35 ? 'Loading PDF.js library...' :
+                     loadingProgress < 50 ? 'Loading PDF data...' :
+                     loadingProgress < 70 ? 'Parsing PDF document...' :
+                   'Rendering preview...'}
+                  </p>
+                  <div className="w-64 rounded-full h-2" style={{ backgroundColor: theme.colors.borderLight }}>
+                    <div 
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${loadingProgress}%`,
+                        backgroundColor: theme.colors.primary
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     );
   }
 
   // Render error state
   if (viewerMethod === 'error') {
     return (
-      <Card className={`w-full ${className}`}>
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-            <AlertCircle className="h-12 w-12 text-red-500" />
-            <div className="text-center">
-              <h3 className="font-semibold mb-2">Unable to load PDF</h3>
-              <p className="text-sm text-muted-foreground mb-4">{error}</p>
-              <Button onClick={loadPdf} variant="outline">
-                Try Again
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <section 
+        className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6"
+        style={{ backgroundColor: theme.colors.background }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <Card 
+            className="w-full"
+            style={{ 
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              color: theme.colors.textPrimary
+            }}
+          >
+            <CardContent 
+              className="p-6"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <AlertCircle className="h-12 w-12" style={{ color: theme.colors.error }} />
+                <div className="text-center">
+                  <h3 className="font-semibold mb-2" style={{ color: theme.colors.textPrimary }}>Unable to load PDF</h3>
+                  <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>{error}</p>
+                  <Button onClick={loadPdf} variant="outline">
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     );
   }
 
   // Render canvas viewer
   if (viewerMethod === 'canvas') {
     return (
-      <Card className={`w-full ${className}`}>
-        <CardContent className="p-4">
-          {/* Controls */}
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPreviousPage}
-                disabled={currentPage <= 1}
+      <section 
+        className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6"
+        style={{ backgroundColor: theme.colors.background }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <Card 
+            className="w-full"
+            style={{ 
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              color: theme.colors.textPrimary
+            }}
+          >
+            <CardContent 
+              className="p-4"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              {/* Controls */}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage <= 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-sm font-medium px-2" style={{ color: theme.colors.textPrimary }}>
+                    {currentPage} / {numPages}
+                  </span>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNextPage}
+                    disabled={currentPage >= numPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" onClick={zoomOut}>
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-xs px-2" style={{ color: theme.colors.textSecondary }}>
+                    {Math.round(scale * 100)}%
+                  </span>
+                  
+                  <Button variant="outline" size="sm" onClick={zoomIn}>
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button variant="outline" size="sm" onClick={rotate}>
+                    <RotateCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* PDF Canvas */}
+              <div 
+                className="border rounded-lg overflow-auto min-h-[500px] max-h-[80vh]" 
+                style={{ 
+                  backgroundColor: theme.colors.backgroundSecondary,
+                  borderColor: theme.colors.border
+                }}
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <span className="text-sm font-medium px-2">
-                {currentPage} / {numPages}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={currentPage >= numPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={zoomOut}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              
-              <span className="text-xs px-2">
-                {Math.round(scale * 100)}%
-              </span>
-              
-              <Button variant="outline" size="sm" onClick={zoomIn}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              
-              <Button variant="outline" size="sm" onClick={rotate}>
-                <RotateCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* PDF Canvas */}
-          <div className="border rounded-lg overflow-auto max-h-[600px] bg-gray-50">
-            <canvas
-              ref={canvasRef}
-              className="max-w-full h-auto mx-auto block"
-              style={{ transform: `rotate(${rotation}deg)` }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+                <canvas
+                  ref={canvasRef}
+                  className="max-w-full h-auto mx-auto block"
+                  style={{ transform: `rotate(${rotation}deg)` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     );
   }
 

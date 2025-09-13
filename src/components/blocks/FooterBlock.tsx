@@ -1,6 +1,6 @@
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { 
   Mail, 
   Globe, 
@@ -48,7 +48,7 @@ export default function FooterBlock({
   showLytsiteBranding = true,
   onNavigateHome
 }: FooterBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   
   const socialLinks = [
     { icon: Mail, url: contactInfo.email ? `mailto:${contactInfo.email}` : null, label: "Email" },
@@ -173,46 +173,6 @@ export default function FooterBlock({
             </div>
           )}
         </div>
-
-        {/* CTA Card */}
-        <Card 
-          className="mb-8 shadow-lg border-0"
-          style={{ backgroundColor: theme.colors.backgroundSecondary }}
-        >
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <h4 
-                  className="text-xl font-bold mb-3"
-                  style={{ color: theme.colors.textPrimary }}
-                >
-                  Want to create your own professional file sharing site?
-                </h4>
-                <p 
-                  className="text-base leading-relaxed"
-                  style={{ color: theme.colors.textSecondary }}
-                >
-                  Transform any file into a beautiful presentation in seconds.
-                </p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="shrink-0 px-6 py-3 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-                onClick={() => {
-                  onNavigateHome?.();
-                }}
-                style={{ 
-                  borderColor: theme.colors.primary,
-                  backgroundColor: theme.colors.surface,
-                  color: theme.colors.primary
-                }}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" style={{ color: theme.colors.primary }} />
-                Try Lytsite Free
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Lytsite Branding */}
         {showLytsiteBranding && (

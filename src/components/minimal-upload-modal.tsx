@@ -9,6 +9,7 @@ import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import QRCode from 'qrcode';
 import UniversalFileTemplate from "./universal-file-template";
+import ClientDelivery from "./client-delivery";
 import { PDFThumbnailGenerator } from "../utils/pdfThumbnailGenerator";
 // Phase 2: Import chunked upload system
 import { ChunkedUploader } from '../hooks/useChunkedUpload';
@@ -276,6 +277,74 @@ const getTemplateData = async (formData: any, uploadedFiles: File[]) => {
   };
 };
 
+// Helper function to format file size for client delivery
+const formatFileSizeForClientDelivery = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+// Transform user data for ClientDelivery template
+const getClientDeliveryData = async (formData: any, uploadedFiles: File[]) => {
+  const processedFiles = await Promise.all(
+    uploadedFiles.map(async (file, index) => {
+      let thumbnail = null;
+      
+      if (file.type.startsWith('image/')) {
+        thumbnail = URL.createObjectURL(file);
+      } else if (file.type === 'application/pdf') {
+        try {
+          const fileUrl = URL.createObjectURL(file);
+          const thumbnails = await PDFThumbnailGenerator.generateThumbnails(fileUrl, {
+            scale: 0.3,
+            maxPages: 1,
+            quality: 0.8,
+            format: 'jpeg'
+          });
+          
+          if (thumbnails.length > 0) {
+            thumbnail = thumbnails[0].dataUrl;
+          }
+        } catch (error) {
+          console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+        }
+      }
+
+      return {
+        id: `file-${index}`,
+        name: file.name,
+        size: formatFileSizeForClientDelivery(file.size),
+        type: file.type,
+        url: URL.createObjectURL(file),
+        thumbnail,
+        uploadedAt: new Date().toISOString()
+      };
+    })
+  );
+
+  return {
+    projectName: formData.projectName || formData.title || "Project Delivery",
+    clientName: formData.clientName || "Client",
+    deliveryDate: formData.deliveryDate || new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }),
+    status: formData.status || "Ready for Download",
+    description: formData.description || `${processedFiles.length} files ready for download`,
+    files: processedFiles,
+    contactInfo: {
+      email: formData.contactEmail || "contact@example.com",
+      phone: formData.contactPhone || "+1 (555) 123-4567",
+      website: formData.contactWebsite
+    }
+  };
+};
+
 export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -293,7 +362,15 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    authorName: '' // Optional - can be auto-filled from user profile
+    authorName: '', // Optional - can be auto-filled from user profile
+    // Client delivery specific fields
+    projectName: '',
+    clientName: '',
+    deliveryDate: '',
+    status: '',
+    contactEmail: '',
+    contactPhone: '',
+    contactWebsite: ''
   });
   
   // Additional state for Cloudflare integration
@@ -328,7 +405,13 @@ useEffect(() => {
     if (uploadedFiles.length > 0 && step === 'preview') {
       setIsProcessingTemplate(true);
       try {
-        const data = await getTemplateData(formData, uploadedFiles);
+        let data;
+        if (selectedTemplate === 'client-delivery') {
+          data = await getClientDeliveryData(formData, uploadedFiles);
+        } else {
+          // Default to universal template
+          data = await getTemplateData(formData, uploadedFiles);
+        }
         setTemplateData(data);
       } catch (error) {
         console.error('Error processing template data:', error);
@@ -339,7 +422,7 @@ useEffect(() => {
   };
 
   processTemplateData();
-}, [uploadedFiles, formData, step]);
+}, [uploadedFiles, formData, step, selectedTemplate]);
   
   // Destructure form data for easier access
   const { title, description, authorName } = formData;
@@ -843,7 +926,18 @@ useEffect(() => {
     setUploadedFiles([]);
     setStep('upload');
     setSelectedTemplate('universal');
-    setFormData({ title: '', description: '', authorName: '' });
+    setFormData({ 
+      title: '', 
+      description: '', 
+      authorName: '', 
+      projectName: '',
+      clientName: '',
+      deliveryDate: '',
+      status: '',
+      contactEmail: '',
+      contactPhone: '',
+      contactWebsite: ''
+    });
     setUploadProgress(0);
     setIsUploading(false);
   };
@@ -937,9 +1031,13 @@ useEffect(() => {
                     
                     {/* Template Preview */}
                     <div className="flex-1 overflow-y-auto">
-                      <UniversalFileTemplate 
-                        data={templateData}
-                      />
+                      {selectedTemplate === 'client-delivery' ? (
+                        <ClientDelivery data={templateData} />
+                      ) : (
+                        <UniversalFileTemplate 
+                          data={templateData}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
@@ -1338,6 +1436,102 @@ useEffect(() => {
                       className="h-11 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                   </div>
+
+                  {/* Client Delivery Specific Fields */}
+                  {selectedTemplate === 'client-delivery' && (
+                    <>
+                      <div className="pt-4 border-t border-slate-200">
+                        <h4 className="text-sm font-semibold text-slate-900 mb-4">Client Delivery Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Project Name */}
+                          <div className="space-y-2">
+                            <Label htmlFor="projectName" className="text-sm font-medium text-slate-700">
+                              Project Name
+                            </Label>
+                            <Input
+                              id="projectName"
+                              value={formData.projectName || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, projectName: e.target.value }))}
+                              placeholder="e.g., Website Redesign"
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          {/* Client Name */}
+                          <div className="space-y-2">
+                            <Label htmlFor="clientName" className="text-sm font-medium text-slate-700">
+                              Client Name
+                            </Label>
+                            <Input
+                              id="clientName"
+                              value={formData.clientName || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, clientName: e.target.value }))}
+                              placeholder="e.g., Acme Corp"
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          {/* Delivery Date */}
+                          <div className="space-y-2">
+                            <Label htmlFor="deliveryDate" className="text-sm font-medium text-slate-700">
+                              Delivery Date
+                            </Label>
+                            <Input
+                              id="deliveryDate"
+                              type="date"
+                              value={formData.deliveryDate || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, deliveryDate: e.target.value }))}
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          {/* Status */}
+                          <div className="space-y-2">
+                            <Label htmlFor="status" className="text-sm font-medium text-slate-700">
+                              Status
+                            </Label>
+                            <Input
+                              id="status"
+                              value={formData.status || 'Ready for Download'}
+                              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                              placeholder="e.g., Ready for Download"
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          {/* Contact Email */}
+                          <div className="space-y-2">
+                            <Label htmlFor="contactEmail" className="text-sm font-medium text-slate-700">
+                              Contact Email
+                            </Label>
+                            <Input
+                              id="contactEmail"
+                              type="email"
+                              value={formData.contactEmail || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, contactEmail: e.target.value }))}
+                              placeholder="contact@yourcompany.com"
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          {/* Contact Phone */}
+                          <div className="space-y-2">
+                            <Label htmlFor="contactPhone" className="text-sm font-medium text-slate-700">
+                              Contact Phone
+                            </Label>
+                            <Input
+                              id="contactPhone"
+                              type="tel"
+                              value={formData.contactPhone || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                              placeholder="+1 (555) 123-4567"
+                              className="h-10 text-base border-slate-300 focus:border-cyan-500 focus:ring-cyan-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Security & Access - Enhanced */}

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeProvider } from "../contexts/ThemeContext";
+import { EnhancedThemeProvider } from "../contexts/EnhancedThemeContext";
 import HeroBlock from "./blocks/HeroBlock";
 import BlockRouter, { getFileType, getMultipleFileTypes, FileMetadata } from "./blocks/BlockRouter";
 import FooterBlock from "./blocks/FooterBlock";
-import ThemeSwitcher from "./ui/ThemeSwitcher";
+import EnhancedThemeSwitcher from "./ui/EnhancedThemeSwitcher";
+import { Button } from "./ui/button";
+import { ArrowLeft, Home } from "lucide-react";
 
 interface TemplateData {
   title: string;
@@ -39,7 +41,7 @@ const mockData = {
       name: "Q4_Business_Review_2024.pdf",
       size: "2.4 MB", 
       type: "application/pdf",
-      url: "https://example.com/report.pdf",
+      url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
       thumbnailUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
       uploadedAt: "2024-01-15",
       uploadedBy: "Sarah Chen",
@@ -460,12 +462,34 @@ Version: 1.0`;
   };
 
   return (
-    <ThemeProvider defaultThemeKey="ocean-light">
+    <EnhancedThemeProvider defaultThemeKey="professional-light">
       <div className="min-h-screen theme-bg theme-transition-colors">
-        {/* Theme Switcher - Mobile-optimized Fixed Position */}
+        {/* Enhanced Theme Switcher - Mobile-optimized Fixed Position */}
         <div className="fixed top-2 sm:top-4 right-2 sm:right-4 z-50">
-          <ThemeSwitcher variant="minimal" showLabel={false} />
+          <EnhancedThemeSwitcher variant="minimal" showLabel={false} />
         </div>
+
+        {/* Header with Back to Homepage */}
+        <header className="relative z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/')}
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all duration-200"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Homepage
+              </Button>
+              
+              <div className="flex items-center space-x-2 text-sm text-slate-500">
+                <Home className="w-4 h-4" />
+                <span>Lytsite</span>
+              </div>
+            </div>
+          </div>
+        </header>
 
         {/* Universal 3-Input Hero Block */}
         <HeroBlock
@@ -501,6 +525,6 @@ Version: 1.0`;
           onNavigateHome={() => navigate('/')}
         />
       </div>
-    </ThemeProvider>
+    </EnhancedThemeProvider>
   );
 }

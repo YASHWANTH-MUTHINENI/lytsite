@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -38,7 +38,7 @@ export default function LightboxGalleryBlock({
   onDownload,
   metadata 
 }: LightboxGalleryBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [visibleImages, setVisibleImages] = useState(20);

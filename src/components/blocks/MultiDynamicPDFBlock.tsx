@@ -4,6 +4,7 @@ import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { ChevronLeft, ChevronRight, Download, Eye, FileText, Grid, List } from 'lucide-react';
 import DynamicPDFBlock from './DynamicPDFBlock';
+import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
 
 interface MultiDynamicPDFBlockProps {
   files: Array<{
@@ -27,6 +28,7 @@ export default function MultiDynamicPDFBlock({
   className = '',
   onDownload 
 }: MultiDynamicPDFBlockProps) {
+  const { theme } = useEnhancedTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,9 +62,12 @@ export default function MultiDynamicPDFBlock({
 
   if (viewMode === 'preview' && selectedFileData) {
     return (
-      <div className={`w-full ${className}`}>
+      <div>
         {/* Preview Header */}
-        <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
+        <div 
+          className="flex items-center justify-between mb-4 p-4 rounded-lg mx-3 sm:mx-4 lg:mx-6"
+          style={{ backgroundColor: theme.colors.backgroundSecondary }}
+        >
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
@@ -74,7 +79,7 @@ export default function MultiDynamicPDFBlock({
             
             <div>
               <h3 className="font-semibold text-lg">{selectedFileData.name}</h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm" style={{ color: theme.colors.textMuted }}>
                 {currentIndex + 1} of {files.length} PDFs • {selectedFileData.size}
                 {selectedFileData.pages && ` • ${selectedFileData.pages} pages`}
               </p>
@@ -112,32 +117,35 @@ export default function MultiDynamicPDFBlock({
           </div>
         </div>
 
-        {/* PDF Preview */}
+        {/* PDF Preview - DynamicPDFBlock has its own full section */}
         <DynamicPDFBlock
           url={selectedFileData.url}
-          className="max-w-full"
         />
       </div>
     );
   }
 
   return (
-    <div className={`w-full ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          {title && <h2 className="text-2xl font-bold mb-2">{title}</h2>}
-          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-            <span>{files.length} PDF{files.length !== 1 ? 's' : ''}</span>
-            <span>•</span>
-            <span>
-              {files.reduce((total, file) => {
-                const pages = file.pages || 0;
-                return total + pages;
-              }, 0)} total pages
-            </span>
+    <section 
+      className="py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6"
+      style={{ backgroundColor: theme.colors.background }}
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            {title && <h2 className="text-2xl font-bold mb-2" style={{ color: theme.colors.textPrimary }}>{title}</h2>}
+            <div className="flex items-center space-x-4 text-sm" style={{ color: theme.colors.textMuted }}>
+              <span>{files.length} PDF{files.length !== 1 ? 's' : ''}</span>
+              <span>•</span>
+              <span>
+                {files.reduce((total, file) => {
+                  const pages = file.pages || 0;
+                  return total + pages;
+                }, 0)} total pages
+              </span>
+            </div>
           </div>
-        </div>
 
         <div className="flex items-center space-x-2">
           <Button
@@ -162,18 +170,32 @@ export default function MultiDynamicPDFBlock({
       {viewMode === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {files.map((file) => (
-            <Card key={file.id} className="group hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-4">
+            <Card 
+              key={file.id} 
+              className="group hover:shadow-lg transition-all duration-200"
+              style={{ 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.textPrimary
+              }}
+            >
+              <CardContent 
+                className="p-4"
+                style={{ backgroundColor: theme.colors.surface }}
+              >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                      <FileText className="h-6 w-6 text-red-600" />
+                    <div 
+                      className="w-12 h-12 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: theme.colors.primaryLight }}
+                    >
+                      <FileText className="h-6 w-6" style={{ color: theme.colors.primary }} />
                     </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate mb-1">{file.name}</h3>
-                    <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
+                    <div className="flex items-center space-x-2 text-xs mb-3" style={{ color: theme.colors.textMuted }}>
                       <span>{file.size}</span>
                       {file.pages && (
                         <>
@@ -216,17 +238,31 @@ export default function MultiDynamicPDFBlock({
       {viewMode === 'list' && (
         <div className="space-y-3">
           {files.map((file) => (
-            <Card key={file.id} className="group hover:shadow-md transition-all duration-200">
-              <CardContent className="p-4">
+            <Card 
+              key={file.id} 
+              className="group hover:shadow-md transition-all duration-200"
+              style={{ 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.textPrimary
+              }}
+            >
+              <CardContent 
+                className="p-4"
+                style={{ backgroundColor: theme.colors.surface }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <FileText className="h-5 w-5 text-red-600" />
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: theme.colors.primaryLight }}
+                    >
+                      <FileText className="h-5 w-5" style={{ color: theme.colors.primary }} />
                     </div>
                     
                     <div>
                       <h3 className="font-medium">{file.name}</h3>
-                      <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-3 text-sm" style={{ color: theme.colors.textMuted }}>
                         <span>{file.size}</span>
                         {file.pages && (
                           <>
@@ -264,6 +300,7 @@ export default function MultiDynamicPDFBlock({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </section>
   );
 }

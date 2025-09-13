@@ -10,6 +10,7 @@ import MultiDynamicPDFBlock from "./MultiDynamicPDFBlock";
 import VideoBlock from "./VideoBlock";
 import ArchiveBlock from "./ArchiveBlock";
 import DocumentBlock from "./DocumentBlock";
+import { DualQualityFile } from "../../hooks/useDualQuality";
 
 export interface FileMetadata {
   id?: string;
@@ -116,6 +117,17 @@ export default function BlockRouter({
   metadata 
 }: BlockRouterProps) {
   
+  // Helper function to convert FileMetadata to DualQualityFile format
+  const convertFilesToDualQuality = (files: FileMetadata[]): DualQualityFile[] => {
+    return files.map(file => ({
+      id: file.id,
+      name: file.name,
+      type: file.type,
+      size: parseFloat(file.size) || 0, // Convert string size to number
+      url: file.url
+    }));
+  };
+  
   switch (fileType) {
     case 'gallery':
       // Convert FileMetadata to image URLs for gallery blocks
@@ -143,7 +155,7 @@ export default function BlockRouter({
         return (
           <GridGalleryBlock
             title={title}
-            files={files}
+            files={convertFilesToDualQuality(files)}
             onDownload={onDownload}
             metadata={metadata}
           />
@@ -155,7 +167,7 @@ export default function BlockRouter({
         return (
           <MasonryGalleryBlock
             title={title}
-            files={files}
+            files={convertFilesToDualQuality(files)}
             onDownload={onDownload}
             metadata={metadata}
           />
@@ -167,7 +179,7 @@ export default function BlockRouter({
         return (
           <LightboxGalleryBlock
             title={title}
-            files={files}
+            files={convertFilesToDualQuality(files)}
             totalImages={files.length}
             onDownload={onDownload}
             metadata={metadata}
@@ -179,7 +191,7 @@ export default function BlockRouter({
       return (
         <GalleryBlock
           title={title}
-          images={imageUrls}
+          files={convertFilesToDualQuality(files)}
           totalImages={files.length}
           onDownload={onDownload}
           metadata={metadata}
@@ -235,7 +247,6 @@ export default function BlockRouter({
         return (
           <DynamicPDFBlock
             url={pdfFiles[0].url}
-            className="max-w-4xl mx-auto"
           />
         );
       }
@@ -328,7 +339,6 @@ export default function BlockRouter({
         return (
           <DynamicPDFBlock
             url={presentationFile.url || '#'}
-            className="max-w-4xl mx-auto"
           />
         );
       }
@@ -337,7 +347,6 @@ export default function BlockRouter({
       return (
         <DynamicPDFBlock
           url={files[0]?.url || '#'}
-          className="max-w-4xl mx-auto"
         />
       );
       

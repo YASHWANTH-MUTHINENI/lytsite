@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from './button';
 import { Card, CardContent } from './card';
@@ -48,6 +48,21 @@ export default function ThemeSwitcher({
 }: ThemeSwitcherProps) {
   const { theme, setTheme, availableThemes, toggleDarkMode, changePalette } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
   // Group themes by palette
   const themesByPalette = availableThemes.reduce((acc, themeItem) => {
@@ -68,13 +83,13 @@ export default function ThemeSwitcher({
 
   if (variant === 'minimal') {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg p-1 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
         {/* Quick Dark Mode Toggle */}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleDarkMode}
-          className="w-9 h-9 p-0"
+          className="w-8 h-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
           title={`Switch to ${currentMode === 'light' ? 'dark' : 'light'} mode`}
         >
           {currentMode === 'light' ? (
@@ -84,41 +99,52 @@ export default function ThemeSwitcher({
           )}
         </Button>
 
-        {/* Palette Selector */}
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-9 h-9 p-0"
-              title="Change color palette"
+        {/* Palette Selector - Simple Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-8 h-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-transparent hover:border-gray-300 transition-all"
+            title="Change color palette"
+            onClick={() => {
+              console.log("Button clicked, toggling isOpen from", isOpen, "to", !isOpen);
+              setIsOpen(!isOpen);
+            }}
+          >
+            <div className={`w-5 h-5 rounded-full ${paletteColors[currentPalette as keyof typeof paletteColors]} border-2 border-white shadow-sm ring-1 ring-gray-200 dark:ring-gray-600`} />
+          </Button>
+          
+          {/* Simple dropdown menu */}
+          {isOpen && (
+            <div 
+              className="absolute top-full right-0 mt-1 w-48 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-[9999]"
+              style={{ position: 'absolute', zIndex: 9999 }}
             >
-              <div className={`w-4 h-4 rounded-full ${paletteColors[currentPalette as keyof typeof paletteColors]}`} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="end">
-            <div className="space-y-1">
-              <div className="text-xs font-medium text-gray-500 px-2 py-1">
-                Color Palette
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1">
+                  Color Palette
+                </div>
+                {Object.entries(paletteColors).map(([palette, colorClass]) => (
+                  <button
+                    key={palette}
+                    className="w-full flex items-center justify-start px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      console.log("Changing palette to:", palette);
+                      changePalette(palette);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${colorClass} mr-2`} />
+                    <span className="capitalize">{palette}</span>
+                    {palette === currentPalette && (
+                      <Check className="w-3 h-3 ml-auto" />
+                    )}
+                  </button>
+                ))}
               </div>
-              {Object.entries(paletteColors).map(([palette, colorClass]) => (
-                <Button
-                  key={palette}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => changePalette(palette)}
-                >
-                  <div className={`w-3 h-3 rounded-full ${colorClass} mr-2`} />
-                  <span className="capitalize">{palette}</span>
-                  {palette === currentPalette && (
-                    <Check className="w-3 h-3 ml-auto" />
-                  )}
-                </Button>
-              ))}
             </div>
-          </PopoverContent>
-        </Popover>
+          )}
+        </div>
       </div>
     );
   }

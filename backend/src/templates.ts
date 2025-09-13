@@ -129,6 +129,7 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
       title: project.title,
       subLine: project.description || "Shared via Lytsite",
       tagLine: project.authorName ? `By ${project.authorName}` : "Created with Lytsite",
+      templateType: project.template || 'universal', // Add template type
       files: project.files.map(file => ({
         name: file.name,
         size: formatFileSize(file.size),
@@ -145,6 +146,13 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
       views: project.views,
       createdAt: project.createdAt,
       slug,
+      // Client delivery specific fields (from project data)
+      clientName: (project as any).clientName,
+      deliveryDate: (project as any).deliveryDate,
+      status: (project as any).status,
+      contactEmail: (project as any).contactEmail,
+      contactPhone: (project as any).contactPhone,
+      contactWebsite: (project as any).contactWebsite,
     };
 
     // If JSON is requested, return pure JSON (for API usage)
@@ -191,7 +199,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=103">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=104">
 </head>
 <body class="min-h-screen bg-slate-50">
   <div id="root">
@@ -211,7 +219,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   </script>
 
   <!-- Load React bundle -->
-  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=103"></script>
+  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=104"></script>
 </body>
 </html>`;
 }

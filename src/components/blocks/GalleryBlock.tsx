@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { 
-  useFileUrls
+import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
+import {
+  useFileUrls,
+  DualQualityFile
 } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -24,7 +25,7 @@ import {
 
 interface GalleryBlockProps {
   title: string;
-  files: Array<{ id?: string; url?: string; name: string; type?: string; size?: number }>;
+  files: DualQualityFile[]; // Use the standardized interface
   totalImages?: number;
   onDownload?: () => void;
   metadata?: {
@@ -41,7 +42,7 @@ export default function GalleryBlock({
   onDownload,
   metadata 
 }: GalleryBlockProps) {
-  const { theme } = useTheme();
+  const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('masonry');
   const [isLiked, setIsLiked] = useState(false);

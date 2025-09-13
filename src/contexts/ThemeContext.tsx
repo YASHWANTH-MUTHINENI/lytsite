@@ -45,10 +45,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // Change color palette while keeping current mode
   const changePalette = (palette: string) => {
+    console.log("changePalette called with:", palette);
+    console.log("Current mode:", currentTheme.mode);
     const newThemeKey = `${palette}-${currentTheme.mode}`;
+    console.log("New theme key:", newThemeKey);
+    console.log("Available themes:", Object.keys(themeVariants));
     
     if (themeVariants[newThemeKey]) {
+      console.log("Theme found, setting theme to:", newThemeKey);
       setTheme(newThemeKey);
+    } else {
+      console.error("Theme not found:", newThemeKey);
     }
   };
 
