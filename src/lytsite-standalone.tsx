@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { HashRouter } from 'react-router-dom';
 import UniversalFileTemplate from './components/universal-file-template';
 import ClientDelivery from './components/client-delivery';
 import { EnhancedThemeProvider } from './contexts/EnhancedThemeContext';
@@ -82,9 +83,11 @@ function initializeLytsite() {
   
   root.render(
     <React.StrictMode>
-      <EnhancedThemeProvider defaultThemeKey="professional-light">
-        {renderTemplate()}
-      </EnhancedThemeProvider>
+      <HashRouter>
+        <EnhancedThemeProvider defaultThemeKey="professional-light">
+          {renderTemplate()}
+        </EnhancedThemeProvider>
+      </HashRouter>
     </React.StrictMode>
   );
 }
