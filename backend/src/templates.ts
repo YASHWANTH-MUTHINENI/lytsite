@@ -199,7 +199,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=107">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@latest/dist-standalone/lytsite-template.css?v=107">
 </head>
 <body class="min-h-screen bg-slate-50">
   <div id="root">
@@ -219,7 +219,7 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   </script>
 
   <!-- Load React bundle -->
-  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=107"></script>
+  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@latest/dist-standalone/lytsite-template.iife.js?v=107"></script>
 </body>
 </html>`;
 }
