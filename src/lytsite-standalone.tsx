@@ -2,24 +2,25 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import UniversalFileTemplate from './components/universal-file-template';
 import ClientDelivery from './components/client-delivery';
-import { themeVariants } from './styles/themes';
+import { enhancedThemeVariants } from './styles/enhanced-themes';
+import { EnhancedThemeProvider } from './contexts/EnhancedThemeContext';
 import './index.css';
 
 // Initialize theme CSS variables on document.body
 function initializeTheme() {
-  const defaultTheme = themeVariants['ocean-light'];
+  const defaultTheme = enhancedThemeVariants['ocean-light'];
   
   // Set CSS variables on document body for all theme colors
   Object.entries(defaultTheme.colors).forEach(([key, value]) => {
-    document.body.style.setProperty(`--color-${key}`, value);
+    document.body.style.setProperty(`--color-${key}`, value as string);
   });
   
   Object.entries(defaultTheme.shadows).forEach(([key, value]) => {
-    document.body.style.setProperty(`--shadow-${key}`, value);
+    document.body.style.setProperty(`--shadow-${key}`, value as string);
   });
   
   Object.entries(defaultTheme.gradients).forEach(([key, value]) => {
-    document.body.style.setProperty(`--gradient-${key}`, value);
+    document.body.style.setProperty(`--gradient-${key}`, value as string);
   });
   
   // Also set the CSS custom properties that components might be using directly
@@ -32,8 +33,8 @@ function initializeTheme() {
   document.body.style.setProperty('--input', 'transparent');
   document.body.style.setProperty('--ring', defaultTheme.colors.primary);
   
-  // Apply theme class to body
-  document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '').concat(' theme-ocean-light').trim();
+  // Apply enhanced theme class to body
+  document.body.className = document.body.className.replace(/enhanced-theme-\w+-\w+/g, '').concat(' enhanced-theme-ocean-light').trim();
 }
 
 // Wait for DOM and data to be ready
@@ -100,7 +101,9 @@ function initializeLytsite() {
 
   root.render(
     <React.StrictMode>
-      {templateComponent}
+      <EnhancedThemeProvider>
+        {templateComponent}
+      </EnhancedThemeProvider>
     </React.StrictMode>
   );
 }
