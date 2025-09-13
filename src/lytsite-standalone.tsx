@@ -1,14 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import UniversalFileTemplate from './components/universal-file-template';
-import ClientDelivery from './components/client-delivery';
-import { enhancedThemeVariants } from './styles/enhanced-themes';
 import { EnhancedThemeProvider } from './contexts/EnhancedThemeContext';
+import { enhancedThemeVariants } from './styles/enhanced-themes';
 import './index.css';
 
 // Initialize theme CSS variables on document.body
 function initializeTheme() {
-  const defaultTheme = enhancedThemeVariants['ocean-light'];
+  const defaultTheme = enhancedThemeVariants['professional-light'];
   
   // Set CSS variables on document body for all theme colors
   Object.entries(defaultTheme.colors).forEach(([key, value]) => {
@@ -34,7 +33,7 @@ function initializeTheme() {
   document.body.style.setProperty('--ring', defaultTheme.colors.primary);
   
   // Apply enhanced theme class to body
-  document.body.className = document.body.className.replace(/enhanced-theme-\w+-\w+/g, '').concat(' enhanced-theme-ocean-light').trim();
+  document.body.className = document.body.className.replace(/enhanced-theme-\w+-\w+/g, '').concat(' enhanced-theme-professional-light').trim();
 }
 
 // Wait for DOM and data to be ready
@@ -64,45 +63,13 @@ function initializeLytsite() {
     }
   };
 
-  // Determine which template to render based on data or URL
-  const templateType = data.templateType || 'universal'; // Default to universal
-
-  // Transform data for client delivery if needed
-  const clientDeliveryData = templateType === 'client-delivery' ? {
-    projectName: data.title,
-    clientName: data.clientName || "Client",
-    deliveryDate: data.deliveryDate || new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    }),
-    status: data.status || "Ready for Download",
-    description: data.subLine || `${data.files?.length || 0} files ready for download`,
-    files: data.files?.map((file: any) => ({
-      ...file,
-      size: file.size || "0 MB" // Ensure size is a string
-    })) || [],
-    contactInfo: {
-      email: data.contactEmail || "contact@example.com",
-      phone: data.contactPhone || "+1 (555) 123-4567",
-      website: data.contactWebsite
-    }
-  } : null;
-
-  // Create React root and render appropriate template
+  // Create React root and render
   const root = ReactDOM.createRoot(rootElement);
   
-  let templateComponent;
-  if (templateType === 'client-delivery' && clientDeliveryData) {
-    templateComponent = <ClientDelivery data={clientDeliveryData} />;
-  } else {
-    templateComponent = <UniversalFileTemplate data={templateData} />;
-  }
-
   root.render(
     <React.StrictMode>
-      <EnhancedThemeProvider>
-        {templateComponent}
+      <EnhancedThemeProvider defaultThemeKey="professional-light">
+        <UniversalFileTemplate data={templateData} />
       </EnhancedThemeProvider>
     </React.StrictMode>
   );
