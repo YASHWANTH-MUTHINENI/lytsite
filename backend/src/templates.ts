@@ -183,8 +183,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 800 - Removed React Router dependencies completely
-  const cacheKey = '800';
+  // Version 900 - Systematic deployment with React Router fixes
+  const cacheKey = '900';
   
   return `<!DOCTYPE html>
 <html lang="en">
