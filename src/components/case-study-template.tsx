@@ -15,9 +15,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-interface CaseStudyTemplateProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const projectDetails = {
   duration: "3 months",
@@ -60,7 +58,8 @@ const processSteps = [
   }
 ];
 
-export default function CaseStudyTemplate({ onNavigate }: CaseStudyTemplateProps) {
+export default function CaseStudyTemplate() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -71,7 +70,7 @@ export default function CaseStudyTemplate({ onNavigate }: CaseStudyTemplateProps
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -376,7 +375,7 @@ export default function CaseStudyTemplate({ onNavigate }: CaseStudyTemplateProps
             Created with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

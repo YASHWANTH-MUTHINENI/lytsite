@@ -6,9 +6,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Download, ArrowLeft, X, ChevronLeft, ChevronRight, QrCode, Share2, Heart } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 
-interface PhotoGalleryProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const mockPhotos = [
   {
@@ -70,7 +68,8 @@ const mockPhotos = [
   }
 ];
 
-export default function PhotoGallery({ onNavigate }: PhotoGalleryProps) {
+export default function PhotoGallery() {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -101,7 +100,7 @@ export default function PhotoGallery({ onNavigate }: PhotoGalleryProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -312,7 +311,7 @@ export default function PhotoGallery({ onNavigate }: PhotoGalleryProps) {
             Powered by{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

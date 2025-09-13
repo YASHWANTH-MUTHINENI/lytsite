@@ -1,18 +1,17 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from 'lucide-react';
 
-interface RefundCancellationProps {
-  onNavigate?: (page: string) => void;
-}
+const RefundCancellation: React.FC = () => {
+  const navigate = useNavigate();
 
-const RefundCancellation: React.FC<RefundCancellationProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <button 
-            onClick={() => onNavigate?.('homepage')}
+            onClick={() => navigate('/')}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -97,6 +96,12 @@ const RefundCancellation: React.FC<RefundCancellationProps> = ({ onNavigate }) =
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <p className="text-gray-700 dark:text-gray-300">
                 📧 <a href="mailto:support@lytsite.com" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">support@lytsite.com</a>
+              </p>
+            </div>
+            
+            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong>⏱️ Refund Timeline:</strong> If your refund request is approved, the amount will be credited back to your original payment method within 7 to 14 banking days from the date of approval.
               </p>
             </div>
           </section>

@@ -1,13 +1,11 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from './ui/button';
-import { Upload, Calendar, Clock, ArrowRight, User, Tag } from 'lucide-react';
+import { Upload, Calendar, Clock, ArrowRight, User, Tag, ArrowLeft } from 'lucide-react';
 import Navbar from './Navbar';
 
-interface BlogPageProps {
-  onNavigate: (page: string) => void;
-}
-
-const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
+const BlogPage = () => {
+  const navigate = useNavigate();
   const blogPosts = [
     {
       id: 'photographer-client-galleries',
@@ -39,21 +37,35 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar onNavigate={onNavigate} />
+      <Navbar />
       
       <main className="pt-20">
         {/* Header */}
         <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-white">
-          <div className="container mx-auto px-4 text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                <Upload className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">Lytsite Blog</h1>
+          <div className="container mx-auto px-4">
+            {/* Back to Home Button */}
+            <div className="mb-8">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
+              </Button>
             </div>
-            <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Tips, insights, and best practices for creating professional file sharing experiences that wow your clients.
-            </p>
+            
+            <div className="text-center">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">Lytsite Blog</h1>
+              </div>
+              <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                Tips, insights, and best practices for creating professional file sharing experiences that wow your clients.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -148,7 +160,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
                         </div>
                         
                         <Button 
-                          onClick={() => onNavigate(`blog-${post.id}`)}
+                          onClick={() => navigate(`/${`blog-${post.id}`}`)}
                           className="w-full sm:w-fit bg-primary hover:bg-primary/90 text-white group"
                         >
                           Read Full Article
@@ -188,13 +200,13 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => onNavigate('homepage')}
+                  onClick={() => navigate('/')}
                   className="bg-primary hover:bg-primary/90 text-white px-6 md:px-8 py-3 text-sm md:text-base"
                 >
                   Get Started Free
                 </Button>
                 <Button 
-                  onClick={() => onNavigate('templates-page')}
+                  onClick={() => navigate('/templates')}
                   variant="outline" 
                   className="border-slate-300 text-slate-700 hover:bg-slate-50 px-6 md:px-8 py-3 text-sm md:text-base"
                 >

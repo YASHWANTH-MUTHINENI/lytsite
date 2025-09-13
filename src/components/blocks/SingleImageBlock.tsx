@@ -3,7 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { useFileUrls, DownloadButton } from "../../hooks/useDualQuality";
+import { useFileUrls, formatFileSize } from "../../hooks/useDualQuality";
 import { 
   Download, 
   Eye,
@@ -46,11 +46,43 @@ export default function SingleImageBlock({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
-  // Get appropriate URLs for dual-quality serving
-  // If fileId is provided, use dual-quality; otherwise fallback to legacy image URL
-  const fileUrls = fileId ? useFileUrls(fileId) : null;
-  const viewImageUrl = fileUrls?.viewUrl || image || '';
-  const downloadUrl = fileUrls?.downloadUrl;
+  // Phase 1 Dual-Quality System - Convert single file props to array format for useFileUrls
+  const files = fileId || image ? [{
+    id: fileId,
+    url: image,
+    name: fileName || title,
+    type: metadata?.format
+  }] : [];
+
+  // Get optimized preview and original download URLs
+  const fileUrls = useFileUrls(files);
+  
+  // Helper function to get optimized preview URL (WebP for images)
+  const getPreviewUrl = () => {
+    if (files.length === 0) return '';
+    const file = files[0];
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id && fileUrls[file.id]) {
+      return fileUrls[file.id].previewUrl;
+    }
+    // Fallback to legacy URL or construct preview URL
+    return file.url || (file.id ? `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=preview` : '');
+  };
+
+  // Helper function to get original download URL
+  const getDownloadUrl = () => {
+    if (files.length === 0) return '';
+    const file = files[0];
+    // Use Phase 1 dual-quality system when file.id is available
+    if (file.id && fileUrls[file.id]) {
+      return fileUrls[file.id].downloadUrl;
+    }
+    // Fallback for legacy URLs or construct download URL
+    return file.url || (file.id ? `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/files/${file.id}?mode=download` : '');
+  };
+
+  const viewImageUrl = getPreviewUrl();
+  const downloadUrl = getDownloadUrl();
 
   const openLightbox = () => {
     setIsLightboxOpen(true);
@@ -151,12 +183,17 @@ export default function SingleImageBlock({
               Share
             </Button>
 
-            {/* Smart download button - uses dual-quality if available, fallback to legacy */}
+            {/* Smart download button - uses Phase 1 dual-quality system */}
             {fileId && fileName ? (
-              <DownloadButton
-                fileId={fileId}
-                fileName={fileName}
-                className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 px-4 py-2 text-sm font-medium flex items-center"
+              <Button
+                size="sm"
+                onClick={() => {
+                  const url = getDownloadUrl();
+                  if (url) {
+                    window.open(url, '_blank');
+                  }
+                }}
+                className="rounded-xl shadow-md transition-all duration-300 hover:scale-105"
                 style={{
                   backgroundColor: theme.colors.primary,
                   color: theme.colors.surface
@@ -164,7 +201,7 @@ export default function SingleImageBlock({
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download
-              </DownloadButton>
+              </Button>
             ) : (
               <Button
                 size="sm"

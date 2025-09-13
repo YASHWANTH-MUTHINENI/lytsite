@@ -4,9 +4,7 @@ import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Download, FileText, Image, Video, Archive, Eye, ArrowLeft } from "lucide-react";
 
-interface ClientDeliveryProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const mockFiles = [
   {
@@ -72,7 +70,8 @@ const getFileIcon = (type: string) => {
   }
 };
 
-export default function ClientDelivery({ onNavigate }: ClientDeliveryProps) {
+export default function ClientDelivery() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -83,7 +82,7 @@ export default function ClientDelivery({ onNavigate }: ClientDeliveryProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -244,7 +243,7 @@ export default function ClientDelivery({ onNavigate }: ClientDeliveryProps) {
             Sent with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

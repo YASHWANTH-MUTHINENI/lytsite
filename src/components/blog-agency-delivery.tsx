@@ -1,9 +1,8 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2, Clock, Calendar, User } from 'lucide-react';
 
-interface BlogAgencyDeliveryProps {
-  onBack: () => void;
-}
+
 
 const BlogAgencyDelivery: React.FC<BlogAgencyDeliveryProps> = ({ onBack }) => {
   return (

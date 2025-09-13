@@ -1,16 +1,15 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from './ui/button';
 import { Upload, Calendar, Clock, ArrowLeft, User, Share2, Heart, MessageCircle, Tag } from 'lucide-react';
 import Navbar from './Navbar';
 
-interface BlogPostProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar onNavigate={onNavigate} />
+      <Navbar />
       
       <main className="pt-20">
         {/* Article Header */}
@@ -21,7 +20,7 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
               <div className="mb-8">
                 <Button 
                   variant="ghost" 
-                  onClick={() => onNavigate('blog-page')}
+                  onClick={() => navigate('/blog-page')}
                   className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors px-4 py-2 rounded-lg"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -297,7 +296,7 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
                     </Button>
                   </div>
                   <Button 
-                    onClick={() => onNavigate('blog')}
+                    onClick={() => navigate('/blog')}
                     variant="ghost"
                     className="text-slate-600 hover:text-slate-900"
                   >
@@ -316,13 +315,13 @@ const PhotographerGalleriesPost: React.FC<BlogPostProps> = ({ onNavigate }) => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
-                    onClick={() => onNavigate('homepage')}
+                    onClick={() => navigate('/')}
                     className="bg-primary hover:bg-primary/90 text-white px-8 py-3"
                   >
                     Start Creating Galleries
                   </Button>
                   <Button 
-                    onClick={() => onNavigate('templates-page')}
+                    onClick={() => navigate('/templates')}
                     variant="outline" 
                     className="border-slate-300 text-slate-700 hover:bg-white px-8 py-3"
                   >

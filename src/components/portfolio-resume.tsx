@@ -18,9 +18,7 @@ import {
   Camera
 } from "lucide-react";
 
-interface PortfolioResumeProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const skills = [
   { name: "UI/UX Design", icon: <Figma className="w-5 h-5" />, level: 95 },
@@ -61,7 +59,8 @@ const portfolioItems = [
   }
 ];
 
-export default function PortfolioResume({ onNavigate }: PortfolioResumeProps) {
+export default function PortfolioResume() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -72,7 +71,7 @@ export default function PortfolioResume({ onNavigate }: PortfolioResumeProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -342,7 +341,7 @@ export default function PortfolioResume({ onNavigate }: PortfolioResumeProps) {
             Built with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

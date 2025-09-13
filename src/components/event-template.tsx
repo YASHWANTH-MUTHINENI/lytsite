@@ -16,9 +16,7 @@ import {
   Star
 } from "lucide-react";
 
-interface EventTemplateProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const eventSchedule = [
   {
@@ -87,7 +85,8 @@ const getSessionTypeColor = (type: string) => {
   }
 };
 
-export default function EventTemplate({ onNavigate }: EventTemplateProps) {
+export default function EventTemplate() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -98,7 +97,7 @@ export default function EventTemplate({ onNavigate }: EventTemplateProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -336,7 +335,7 @@ export default function EventTemplate({ onNavigate }: EventTemplateProps) {
             Organized with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

@@ -18,9 +18,7 @@ import {
   Download
 } from "lucide-react";
 
-interface ProductTemplateProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const productImages = [
   "https://images.unsplash.com/photo-1664262283644-bfbc54a88c90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9kdWN0JTIwc2hvd2Nhc2UlMjBkaXNwbGF5fGVufDF8fHx8MTc1NzI0NDg3Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
@@ -81,7 +79,8 @@ const specifications = [
   { label: "Assembly Time", value: "15 minutes" }
 ];
 
-export default function ProductTemplate({ onNavigate }: ProductTemplateProps) {
+export default function ProductTemplate() {
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState("Black");
 
@@ -103,7 +102,7 @@ export default function ProductTemplate({ onNavigate }: ProductTemplateProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -389,7 +388,7 @@ export default function ProductTemplate({ onNavigate }: ProductTemplateProps) {
             Powered by{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

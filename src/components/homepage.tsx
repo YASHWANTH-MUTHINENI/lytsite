@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -36,19 +37,25 @@ import {
   ExternalLink
 } from "lucide-react";
 
-interface HomepageProps {
-  onNavigate: (page: string) => void;
-}
-
-export default function Homepage({ onNavigate }: HomepageProps) {
+export default function Homepage() {
+  const navigate = useNavigate();
+  const [showTrialModal, setShowTrialModal] = React.useState(false);
+  
   const handleUploadSuccess = (templateRoute: string) => {
-    onNavigate(templateRoute);
+    navigate(`/${templateRoute}`);
+  };
+
+  const handleFreeTrialClick = () => {
+    setShowTrialModal(true);
+    setTimeout(() => {
+      setShowTrialModal(false);
+    }, 3000); // Auto close after 3 seconds
   };
 
   return (
     <div className="min-h-screen bg-ocean-gradient dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800 isolate">
       {/* Header */}
-      <Navbar onNavigate={onNavigate} />
+      <Navbar />
 
       {/* Hero Section with Upload Component in Whitespace - Isolated from navbar */}
       <main className="relative pt-6" style={{ zIndex: 10 }}>
@@ -107,15 +114,15 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-2 lg:pt-4">
-                <Button 
+                {/* <Button 
                   variant="outline" 
                   size="lg" 
-                  onClick={() => onNavigate('universal-file-template')}
+                  onClick={() => navigate('/universal-file-template')}
                   className="h-12 lg:h-14 px-6 lg:px-8 font-semibold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm hover:shadow-md min-h-[44px] min-w-[44px]"
                 >
-                  View Live Demo
+                  Try Now
                   <ArrowRight className="w-4 lg:w-5 h-4 lg:h-5 ml-2" />
-                </Button>
+                </Button> */}
               </div>
             </div>
 
@@ -767,7 +774,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => onNavigate('universal-file-template')} 
+                    onClick={() => navigate('/universal-file-template')} 
                     size="lg" 
                     className="w-full"
                   >
@@ -806,7 +813,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
           <div className="text-center">
             <div className="mb-6">
               <Button 
-                onClick={() => onNavigate('templates-page')}
+                onClick={() => navigate('/templates')}
                 variant="outline"
                 size="lg"
                 className="bg-white hover:bg-slate-50 border-2 border-primary text-primary hover:text-primary"
@@ -848,7 +855,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               variant="outline" 
               size="lg"
               className="h-14 px-8 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold text-lg transition-all"
-              onClick={() => onNavigate('templates')}
+              onClick={() => navigate('/templates')}
             >
               View Templates
               <ExternalLink className="w-5 h-5 ml-2" />
@@ -877,7 +884,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Free</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">$0</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">₹0</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
@@ -908,7 +915,11 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   </li>
                 </ul>
                 
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open('https://lytsite.com', '_blank')}
+                >
                   Get Started
                 </Button>
               </div>
@@ -921,7 +932,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                 
                 <div className="text-center mb-6 pt-2">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Standard</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">$9</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">₹749</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
@@ -952,7 +963,10 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   </li>
                 </ul>
                 
-                <Button className="w-full bg-primary text-white hover:bg-primary/90">
+                <Button 
+                  className="w-full bg-primary text-white hover:bg-primary/90"
+                  onClick={handleFreeTrialClick}
+                >
                   Start Free Trial
                 </Button>
               </div>
@@ -961,7 +975,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Pro</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">$29</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">₹2,399</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
@@ -992,7 +1006,11 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   </li>
                 </ul>
                 
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate('/payment')}
+                >
                   Upgrade to Pro
                 </Button>
               </div>
@@ -1001,7 +1019,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Business</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">$99</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">₹8,199</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
@@ -1032,7 +1050,11 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   </li>
                 </ul>
                 
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate('/payment')}
+                >
                   Contact Sales
                 </Button>
               </div>
@@ -1046,7 +1068,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               <p className="text-slate-600 mb-6">
                 Have questions about our pricing? We're here to help.
               </p>
-              <Button variant="outline" onClick={() => onNavigate('faq')}>
+              <Button variant="outline" onClick={() => navigate('/faq')}>
                 View FAQ
               </Button>
             </div>
@@ -1073,7 +1095,7 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                 <p className="text-slate-400 mb-6 leading-relaxed text-sm">
                   Professional file sharing made simple. Transform how you deliver work to clients with beautiful, secure sharing pages.
                 </p>
-                <div className="flex space-x-3">
+                {/* <div className="flex space-x-3">
                   <a href="#" className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
@@ -1089,28 +1111,17 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                       <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.347-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.758-1.378l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.624 0 11.99-5.367 11.99-11.99C24.007 5.367 18.641.001 12.017.001z"/>
                     </svg>
                   </a>
-                </div>
-              </div>
-
-              {/* Product Links */}
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Product</h3>
-                <ul className="space-y-3">
-                  <li><a href="#features" className="text-slate-400 hover:text-white transition-colors text-sm">Features</a></li>
-                  <li><a href="#pricing" className="text-slate-400 hover:text-white transition-colors text-sm">Pricing</a></li>
-                  <li><a href="#templates" className="text-slate-400 hover:text-white transition-colors text-sm">Templates</a></li>
-                  <li><a href="#api" className="text-slate-400 hover:text-white transition-colors text-sm">API</a></li>
-                </ul>
+                </div> */}
               </div>
 
               {/* Company Links */}
               <div>
                 <h3 className="font-semibold text-lg mb-4">Company</h3>
                 <ul className="space-y-3">
-                  <li><a href="#about" className="text-slate-400 hover:text-white transition-colors text-sm">About Us</a></li>
-                  <li><button onClick={() => onNavigate('blog')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Blog</button></li>
-                  <li><a href="#contact" className="text-slate-400 hover:text-white transition-colors text-sm">Contact</a></li>
-                  <li><button onClick={() => onNavigate('faq')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">FAQs</button></li>
+                  <li><button onClick={() => navigate('/about-us')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">About Us</button></li>
+                  <li><button onClick={() => navigate('/blog')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Blog</button></li>
+                  <li><button onClick={() => navigate('/contact')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Contact</button></li>
+                  <li><button onClick={() => navigate('/faq')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">FAQs</button></li>
                 </ul>
               </div>
 
@@ -1118,11 +1129,10 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               <div>
                 <h3 className="font-semibold text-lg mb-4">Support & Legal</h3>
                 <ul className="space-y-3">
-                  <li><a href="#help" className="text-slate-400 hover:text-white transition-colors text-sm">Help Center</a></li>
-                  <li><a href="#documentation" className="text-slate-400 hover:text-white transition-colors text-sm">Documentation</a></li>
-                  <li><button onClick={() => onNavigate('privacy-policy')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Privacy Policy</button></li>
-                  <li><button onClick={() => onNavigate('terms-conditions')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Terms & Conditions</button></li>
-                  <li><button onClick={() => onNavigate('refund-cancellation')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Refund & Cancellation</button></li>
+                  <li><button onClick={() => navigate('/help')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Help Center</button></li>
+                  <li><button onClick={() => navigate('/privacy-policy')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Privacy Policy</button></li>
+                  <li><button onClick={() => navigate('/terms-conditions')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Terms & Conditions</button></li>
+                  <li><button onClick={() => navigate('/refund-cancellation')} className="text-slate-400 hover:text-white transition-colors text-sm text-left">Refund & Cancellation</button></li>
                 </ul>
               </div>
             </div>
@@ -1172,6 +1182,37 @@ export default function Homepage({ onNavigate }: HomepageProps) {
         </div>
       </footer>
       </main>
+
+      {/* Free Trial Modal */}
+      {showTrialModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-auto shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Free Trial Started! 🎉
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your free trial has been activated and is valid for <strong>14 days</strong>. 
+                Enjoy full access to all Standard plan features!
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Trial expires:</strong> {new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                </p>
+              </div>
+              <Button 
+                onClick={() => setShowTrialModal(false)}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                Get Started
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

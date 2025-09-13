@@ -49,6 +49,27 @@ interface MinimalUploadModalProps {
   onSuccess: (templateId: string) => void;
 }
 
+// Upload stages for better UX feedback
+const uploadStages = [
+  { id: 'analyzing', message: "Analyzing files...", progress: 10 },
+  { id: 'processing', message: "Processing content...", progress: 30 },
+  { id: 'uploading', message: "Uploading to storage...", progress: 60 },
+  { id: 'generating', message: "Generating website...", progress: 80 },
+  { id: 'finalizing', message: "Finalizing your site...", progress: 95 }
+];
+
+// Educational tips during upload
+const uploadTips = [
+  "💡 Your files are automatically optimized for web performance",
+  "🔒 All uploads are encrypted with enterprise-grade security", 
+  "📱 Your site will work perfectly on desktop, tablet, and mobile",
+  "⚡ Powered by Cloudflare's global network for maximum speed",
+  "🎨 Professional themes are applied automatically",
+  "📊 Built-in analytics help you track visitor engagement",
+  "🌐 Custom domains can be added to any plan",
+  "🔄 Version history keeps your files safe and accessible"
+];
+
 interface UploadResult {
   success: boolean;
   slug?: string;
@@ -260,6 +281,10 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState('');
+  const [currentFile, setCurrentFile] = useState<{ name: string; index: number; total: number } | null>(null);
+  const [uploadTip, setUploadTip] = useState('');
+  const [isOptimisticSuccess, setIsOptimisticSuccess] = useState(false);
   const [step, setStep] = useState<'upload' | 'template' | 'details' | 'preview' | 'success'>('upload');
   const [selectedTemplate, setSelectedTemplate] = useState('universal');
   const [showFilesModal, setShowFilesModal] = useState(false);
@@ -284,6 +309,9 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   
   // Phase 2: Track upload method for UI feedback
   const [uploadMethod, setUploadMethod] = useState<'regular' | 'chunked' | 'direct' | 'direct-chunked' | null>(null);
+  
+  // Copy feedback state
+  const [isCopied, setIsCopied] = useState(false);
   
 // Helper function to check if any uploaded file is a PowerPoint
 const hasPowerPointFiles = (files: File[]) => {
@@ -443,12 +471,43 @@ useEffect(() => {
     }
   };
 
-  // Smart upload handler with Direct-to-Storage support
+  // Smart upload handler with optimistic UI
   const handleUpload = async () => {
     if (uploadedFiles.length === 0) return;
     
     setIsUploading(true);
     setUploadProgress(0);
+
+    // OPTIMISTIC UI: Immediately show success screen
+    setStep('success');
+    setIsOptimisticSuccess(true);
+    
+    // Generate optimistic placeholder data
+    const optimisticUrl = `https://lytsite.com/${Math.random().toString(36).substr(2, 8)}`;
+    setGeneratedUrl(optimisticUrl);
+    
+    // Generate optimistic QR code
+    try {
+      const qrDataUrl = await QRCode.toDataURL(optimisticUrl, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff',
+        },
+      });
+      setQrCodeDataUrl(qrDataUrl);
+    } catch (qrError) {
+      console.log('Optimistic QR generation skipped');
+    }
+    
+    // Start tips rotation during background upload
+    let tipIndex = 0;
+    setUploadTip(uploadTips[tipIndex]);
+    const tipInterval = setInterval(() => {
+      tipIndex = (tipIndex + 1) % uploadTips.length;
+      setUploadTip(uploadTips[tipIndex]);
+    }, 4000);
 
     try {
       // Smart upload selection priority:
@@ -469,34 +528,48 @@ useEffect(() => {
       const shouldUseChunked = !shouldUseDirectChunked && !shouldUseDirect && ChunkedUploader.shouldUseChunkedUpload(uploadedFiles);
       
       // Set upload method for UI feedback
+      let uploadPromise;
       if (shouldUseDirectChunked) {
         setUploadMethod('direct-chunked');
         console.log(`Upload strategy: DIRECT-CHUNKED for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
         console.log(`Direct Chunked Mode: Maximum speed + reliability for very large files`);
-        await handleDirectChunkedUpload();
+        uploadPromise = handleDirectChunkedUpload();
       } else if (shouldUseDirect) {
         setUploadMethod('direct');
         console.log(`Upload strategy: DIRECT-TO-STORAGE for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
         console.log(`Direct Storage Mode: Bypass Worker for maximum speed`);
-        await handleDirectUpload();
+        uploadPromise = handleDirectUpload();
       } else if (shouldUseChunked) {
         setUploadMethod('chunked');
         console.log(`Upload strategy: CHUNKED for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
         console.log(`Chunked Mode: Parallel chunk processing active`);
-        await handleChunkedUpload();
+        uploadPromise = handleChunkedUpload();
       } else {
         setUploadMethod('regular');
         console.log(`Upload strategy: REGULAR for ${uploadedFiles.length} files (${formatFileSize(totalSize)})`);
         console.log(`Regular Mode: Standard Worker upload`);
-        await handleRegularUpload();
+        uploadPromise = handleRegularUpload();
       }
+
+      // Wait for background upload to complete
+      await uploadPromise;
+      
+      // Upload completed! Remove optimistic state
+      setIsOptimisticSuccess(false);
 
     } catch (error) {
       console.error('Upload error:', error);
       alert('Upload failed. Please try again.');
+      // Reset to upload step on error
+      setStep('upload');
+      setIsOptimisticSuccess(false);
     } finally {
+      clearInterval(tipInterval);
       setIsUploading(false);
       setUploadMethod(null);
+      setUploadStage('');
+      setUploadTip('');
+      setUploadProgress(100);
     }
   };
 
@@ -506,7 +579,14 @@ useEffect(() => {
       onProgress: (progress, fileIndex) => {
         // Update overall progress based on all files
         const overallProgress = uploader.getOverallProgress();
-        setUploadProgress(Math.min(overallProgress, 95)); // Reserve 5% for completion
+        // During actual upload, show real progress between 30-90%
+        const realProgress = 30 + (overallProgress * 0.6); // Map 0-100% to 30-90%
+        setUploadProgress(Math.min(realProgress, 90));
+        
+        // Keep the upload stage message active during real progress
+        if (overallProgress > 0) {
+          setUploadStage("Uploading to storage...");
+        }
       },
       onFileComplete: (fileIndex, fileId) => {
         console.log(`File ${fileIndex} (${fileId}) uploaded successfully`);
@@ -562,6 +642,14 @@ useEffect(() => {
   
   const handleDirectUpload = async () => {
     try {
+      // Simulate realistic progress for direct upload
+      let currentProgress = 30;
+      const progressInterval = setInterval(() => {
+        currentProgress += Math.random() * 12 + 8; // Faster increments for direct upload
+        if (currentProgress > 88) currentProgress = 88;
+        setUploadProgress(currentProgress);
+      }, 600);
+
       const result = await directUploadFiles(uploadedFiles, {
         title,
         description,
@@ -570,6 +658,8 @@ useEffect(() => {
         password: password || undefined,
         expiryDate: expiryDate || undefined
       });
+
+      clearInterval(progressInterval);
 
       if (result.success && result.url && result.slug) {
         setGeneratedUrl(result.url);
@@ -604,6 +694,14 @@ useEffect(() => {
   // Direct Chunked Upload for very large files
   const handleDirectChunkedUpload = async () => {
     try {
+      // Simulate progress for chunked upload with more detailed updates
+      let currentProgress = 30;
+      const progressInterval = setInterval(() => {
+        currentProgress += Math.random() * 8 + 4; // Steady progress for chunked
+        if (currentProgress > 87) currentProgress = 87;
+        setUploadProgress(currentProgress);
+      }, 400);
+
       const result = await directChunkedUploadFiles(uploadedFiles, {
         title,
         description,
@@ -612,6 +710,8 @@ useEffect(() => {
         password: password || undefined,
         expiryDate: expiryDate || undefined
       });
+
+      clearInterval(progressInterval);
 
       if (result.success && result.url && result.slug) {
         setGeneratedUrl(result.url);
@@ -679,10 +779,13 @@ useEffect(() => {
       uploadFormData.append('expiryDate', expiryDate);
     }
     
-    // Upload progress simulation (real progress tracking would require chunked uploads)
+    // Start realistic progress tracking
+    let currentProgress = 30; // Start after processing stage
     const progressInterval = setInterval(() => {
-      setUploadProgress(prev => Math.min(prev + 15, 90));
-    }, 300);
+      currentProgress += Math.random() * 10 + 5; // Increment 5-15% randomly
+      if (currentProgress > 85) currentProgress = 85; // Cap before completion
+      setUploadProgress(currentProgress);
+    }, 800);
     
     // Make upload request to Cloudflare Worker
     const response = await fetch(`${API_BASE}/api/upload`, {
@@ -836,7 +939,6 @@ useEffect(() => {
                     <div className="flex-1 overflow-y-auto">
                       <UniversalFileTemplate 
                         data={templateData}
-                        onNavigate={() => {}}
                       />
                     </div>
                   </div>
@@ -913,13 +1015,13 @@ useEffect(() => {
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
                         <span className="hidden sm:inline">
-                          Publishing{
+                          {uploadStage || `Publishing${
                             uploadMethod === 'direct-chunked' ? ' (Ultra-Fast Chunked)' :
                             uploadMethod === 'direct' ? ' (Direct Storage)' :
                             uploadMethod === 'chunked' ? ' (Fast Mode)' : ''
-                          }...
+                          }...`}
                         </span>
-                        <span className="sm:hidden">Publishing</span>
+                        <span className="sm:hidden">{uploadStage ? uploadStage.split(' ').slice(0, 2).join(' ') : 'Publishing'}</span>
                       </>
                     ) : (
                       <>
@@ -1339,71 +1441,72 @@ useEffect(() => {
           )}
 
           {step === 'success' && (
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="relative p-6 text-center">
+              {/* Optimistic Success Content */}
+              <div className={`transition-all duration-500 ${isOptimisticSuccess ? 'filter blur-sm opacity-70' : 'filter blur-0 opacity-100'}`}>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Lytsite Created Successfully!</h3>
+                <p className="text-slate-600 mb-4 max-w-md mx-auto text-sm">
+                  Your professional file sharing site is live! Share the link to give anyone instant access to your content.
+                </p>
+                
+                {generatedUrl && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 text-left">
+                        <p className="text-xs font-medium text-slate-700 mb-1">Your Lytsite URL:</p>
+                        <p className="text-xs text-blue-600 font-mono break-all">{generatedUrl}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(generatedUrl);
+                            setIsCopied(true);
+                            setTimeout(() => setIsCopied(false), 2000);
+                          } catch (err) {
+                            console.error('Failed to copy link:', err);
+                          }
+                        }}
+                        className="ml-3 h-8 w-8 p-0"
+                      >
+                        {isCopied ? (
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* QR Code Display */}
+                {qrCodeDataUrl && (
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 mb-4 max-w-xs mx-auto">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center mb-2">
+                        <QrCode className="w-3 h-3 mr-1 text-slate-600" />
+                        <p className="text-xs font-medium text-slate-700">QR Code</p>
+                      </div>
+                      <img 
+                        src={qrCodeDataUrl} 
+                        alt="QR Code for Lytsite" 
+                        className="w-24 h-24 mx-auto mb-2 rounded-lg"
+                      />
+                      <p className="text-xs text-slate-500">Scan to access on mobile</p>
+                    </div>
+                  </div>
+                )}
               </div>
               
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Lytsite Created Successfully!</h3>
-              <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                Your professional file sharing site is live! Share the link to give anyone instant access to your content.
-              </p>
-              
-              {generatedUrl && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-slate-700 mb-1">Your Lytsite URL:</p>
-                      <p className="text-sm text-blue-600 font-mono break-all">{generatedUrl}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedUrl);
-                        // You could add a toast notification here
-                      }}
-                      className="ml-3"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {/* QR Code Display */}
-              {qrCodeDataUrl && (
-                <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 max-w-xs mx-auto">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-3">
-                      <QrCode className="w-4 h-4 mr-2 text-slate-600" />
-                      <p className="text-sm font-medium text-slate-700">QR Code</p>
-                    </div>
-                    <img 
-                      src={qrCodeDataUrl} 
-                      alt="QR Code for Lytsite" 
-                      className="w-32 h-32 mx-auto mb-3 rounded-lg"
-                    />
-                    <p className="text-xs text-slate-500">Scan to access on mobile</p>
-                  </div>
-                </div>
-              )}
-              
-              <div className="bg-slate-50 rounded-xl p-4 mb-8">
-                <h4 className="font-medium text-slate-900 mb-2">Your site includes:</h4>
-                <div className="text-sm text-slate-600 space-y-1">
-                  <p>📄 Interactive file preview & download</p>
-                  <p>📊 Built-in analytics & view tracking</p>
-                  <p>🔗 Professional shareable link</p>
-                  <p>📱 Mobile-responsive design</p>
-                  <p>🌐 Global CDN distribution</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Button 
                   onClick={handleComplete}
-                  size="lg"
+                  size="default"
                   className="w-full bg-blue-600 hover:bg-blue-700"
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -1413,7 +1516,7 @@ useEffect(() => {
                 {generatedUrl && (
                   <Button 
                     variant="outline"
-                    size="lg"
+                    size="default"
                     onClick={() => {
                       const shareData = {
                         title: title || 'My Lytsite',
@@ -1438,11 +1541,26 @@ useEffect(() => {
                 <Button 
                   variant="ghost" 
                   onClick={resetModal}
-                  className="w-full text-slate-600"
+                  className="w-full text-slate-600 h-8 text-sm"
                 >
                   Create Another Site
                 </Button>
               </div>
+
+              {/* Optimistic Loading Overlay */}
+              {isOptimisticSuccess && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl animate-in fade-in duration-300">
+                  <div className="text-center">
+                    <div className="inline-flex items-center space-x-3 mb-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <span className="text-lg font-medium text-slate-700">Almost done...</span>
+                    </div>
+                    <p className="text-sm text-slate-500 max-w-xs">
+                      {uploadTip || 'Finalizing your professional site...'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
             </CardContent>

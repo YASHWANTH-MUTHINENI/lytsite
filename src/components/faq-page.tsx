@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from './ui/button';
 import { Upload, ChevronDown, ChevronUp, Mail, ArrowLeft, Home, Plus, Minus } from 'lucide-react';
 import Navbar from './Navbar';
 
-interface FAQPageProps {
-  onNavigate: (page: string) => void;
-}
-
-const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
+const FAQPage = () => {
+  const navigate = useNavigate();
   const [openSection, setOpenSection] = useState<string | null>('general');
 
   const faqSections = [
@@ -149,7 +147,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar onNavigate={onNavigate} />
+      <Navbar />
       
       <main className="pt-6">
         {/* Header */}
@@ -159,7 +157,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
             <div className="mb-8">
               <Button 
                 variant="ghost" 
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -235,13 +233,13 @@ const FAQPage: React.FC<FAQPageProps> = ({ onNavigate }) => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => onNavigate('homepage')}
+                  onClick={() => navigate('/')}
                   className="bg-primary hover:bg-primary/90 text-white px-8 py-3"
                 >
                   Back to Home
                 </Button>
                 <Button 
-                  onClick={() => onNavigate('templates-page')}
+                  onClick={() => navigate('/templates')}
                   variant="outline" 
                   className="border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3"
                 >

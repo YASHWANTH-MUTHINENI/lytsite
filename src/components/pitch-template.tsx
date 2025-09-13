@@ -18,9 +18,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-interface PitchTemplateProps {
-  onNavigate: (page: string) => void;
-}
+
 
 const marketMetrics = [
   { label: "Market Size", value: "$2.5B", subtext: "Total addressable market", icon: <TrendingUp className="w-5 h-5" /> },
@@ -64,7 +62,8 @@ const fundingBreakdown = [
   { category: "Operations", percentage: 10, amount: "$200K" }
 ];
 
-export default function PitchTemplate({ onNavigate }: PitchTemplateProps) {
+export default function PitchTemplate() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -75,7 +74,7 @@ export default function PitchTemplate({ onNavigate }: PitchTemplateProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onNavigate('homepage')}
+                onClick={() => navigate('/')}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -449,7 +448,7 @@ export default function PitchTemplate({ onNavigate }: PitchTemplateProps) {
             Crafted with{" "}
             <span 
               className="text-primary font-medium cursor-pointer hover:underline"
-              onClick={() => onNavigate('homepage')}
+              onClick={() => navigate('/')}
             >
               Lytsite
             </span>

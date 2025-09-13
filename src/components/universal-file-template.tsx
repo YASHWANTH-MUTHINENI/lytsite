@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import HeroBlock from "./blocks/HeroBlock";
 import BlockRouter, { getFileType, getMultipleFileTypes, FileMetadata } from "./blocks/BlockRouter";
@@ -20,7 +21,6 @@ interface TemplateData {
 
 interface UniversalFileTemplateProps {
   data?: TemplateData; // Optional - falls back to mockData if not provided
-  onNavigate: (page: string) => void;
 }
 
 // This would be auto-populated from file upload and minimal user inputs
@@ -85,7 +85,8 @@ const mockData = {
   }
 };
 
-export default function UniversalFileTemplate({ data, onNavigate }: UniversalFileTemplateProps) {
+export default function UniversalFileTemplate({ data }: UniversalFileTemplateProps) {
+  const navigate = useNavigate();
   // Use provided data or fall back to mockData for testing
   const templateData = data || mockData;
   
@@ -497,7 +498,7 @@ Version: 1.0`;
             action: handleDownloadAll
           }}
           showLytsiteBranding={true}
-          onNavigateHome={() => onNavigate('homepage')}
+          onNavigateHome={() => navigate('/')}
         />
       </div>
     </ThemeProvider>
