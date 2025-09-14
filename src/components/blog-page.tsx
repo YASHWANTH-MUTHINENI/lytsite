@@ -160,7 +160,7 @@ const BlogPage = () => {
                         </div>
                         
                         <Button 
-                          onClick={() => navigate(`/${`blog-${post.id}`}`)}
+                          onClick={() => window.location.href = `/${`blog-${post.id}`}`}
                           className="w-full sm:w-fit bg-primary hover:bg-primary/90 text-white group"
                         >
                           Read Full Article

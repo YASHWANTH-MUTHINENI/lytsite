@@ -89,12 +89,7 @@ const mockData = {
 export default function UniversalFileTemplate({ data }: UniversalFileTemplateProps) {
   // Use provided data or fall back to mockData for testing
   const templateData = data || mockData;
-  
-  // Function to scroll to top instead of navigation
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  
+
   // Sample document content for text/document files
   const getSampleDocumentContent = () => {
     const textFiles = templateData.files.filter(file => 
@@ -472,28 +467,6 @@ Version: 1.0`;
           <EnhancedThemeSwitcher variant="minimal" showLabel={false} />
         </div>
 
-        {/* Header with Back to Homepage */}
-        <header className="relative z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
-            <div className="flex items-center justify-between">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={scrollToTop}
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all duration-200"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Top
-              </Button>
-              
-              <div className="flex items-center space-x-2 text-sm text-slate-500">
-                <Home className="w-4 h-4" />
-                <span>Lytsite</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Universal 3-Input Hero Block */}
         <HeroBlock
           title={templateData.title}
@@ -525,7 +498,6 @@ Version: 1.0`;
             action: handleDownloadAll
           }}
           showLytsiteBranding={true}
-          onNavigateHome={scrollToTop}
         />
       </div>
     </EnhancedThemeProvider>

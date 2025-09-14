@@ -19,8 +19,8 @@ export default defineConfig({
         inlineDynamicImports: true,
         manualChunks: undefined
       },
-      // Don't externalize any dependencies for standalone build
-      external: [],
+      // Exclude React Router completely from standalone build
+      external: ['react-router-dom', 'react-router'],
       // Suppress warnings about external dependencies
       onwarn(warning, warn) {
         if (warning.code === 'UNRESOLVED_IMPORT') return;

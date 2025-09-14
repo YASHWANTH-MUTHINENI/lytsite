@@ -182,7 +182,7 @@ export default function FooterBlock({
           >
             <div className="flex items-center justify-center space-x-3 mb-2">
               <img 
-                src="/logo.png" 
+                src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/public/logo.png" 
                 alt="Lytsite" 
                 className="w-8 h-8 object-contain flex-shrink-0"
               />
@@ -191,13 +191,12 @@ export default function FooterBlock({
                 style={{ color: theme.colors.textSecondary }}
               >
                 Powered by{" "}
-                <button
-                  onClick={onNavigateHome}
-                  className="font-bold hover:underline transition-colors"
+                <span
+                  className="font-bold"
                   style={{ color: theme.colors.primary }}
                 >
                   Lytsite
-                </button>
+                </span>
               </span>
             </div>
             <p 

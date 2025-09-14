@@ -183,8 +183,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 902 - Fixed all React Router navigation across 18 components (50 calls replaced)
-  const cacheKey = '902';
+  // Version 1006 - Removed Back to Top button, fixed logo CDN path
+  const cacheKey = '1006';
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -202,7 +202,6 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.css?v=${cacheKey}">
 </head>
 <body class="min-h-screen bg-slate-50">
   <div id="root">
