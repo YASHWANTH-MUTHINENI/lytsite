@@ -183,8 +183,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 1006 - Removed Back to Top button, fixed logo CDN path
-  const cacheKey = '1006';
+  // Version 1009 - Fresh rebuild after deleting all build files
+  const cacheKey = '1009';
   
   return `<!DOCTYPE html>
 <html lang="en">
