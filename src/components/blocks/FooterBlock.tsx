@@ -182,7 +182,7 @@ export default function FooterBlock({
           >
             <div className="flex items-center justify-center space-x-3 mb-2">
               <img 
-                src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/public/logo.png" 
+                src="/logo.png" 
                 alt="Lytsite" 
                 className="w-8 h-8 object-contain flex-shrink-0"
               />
