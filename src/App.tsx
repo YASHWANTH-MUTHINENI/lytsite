@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeProvider';
 import Homepage from './components/homepage';
 import TemplatesPage from './components/templates-page';
-import ClientDelivery from './components/client-delivery';
 import PhotoGallery from './components/photo-gallery';
 import PortfolioResume from './components/portfolio-resume';
 import EventTemplate from './components/event-template';
@@ -35,7 +34,6 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/templates" element={<TemplatesPage />} />
-            <Route path="/client-delivery" element={<ClientDelivery />} />
             <Route path="/photo-gallery" element={<PhotoGallery />} />
             <Route path="/portfolio-resume" element={<PortfolioResume />} />
             <Route path="/event-template" element={<EventTemplate />} />

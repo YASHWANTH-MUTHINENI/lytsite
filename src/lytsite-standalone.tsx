@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import UniversalFileTemplate from './components/universal-file-template';
-import ClientDelivery from './components/client-delivery';
+// Removed ClientDelivery import to prevent inclusion in bundle
 import { EnhancedThemeProvider } from './contexts/EnhancedThemeContext';
 import { enhancedThemeVariants } from './styles/enhanced-themes';
 import './index.css';
@@ -64,18 +64,8 @@ function initializeLytsite() {
     }
   };
 
-  // Determine which template to render based on templateType
-  const renderTemplate = () => {
-    const templateType = data.templateType || 'universal';
-    
-    switch (templateType) {
-      case 'client-delivery':
-        return <ClientDelivery data={data} />;
-      case 'universal':
-      default:
-        return <UniversalFileTemplate data={templateData} />;
-    }
-  };
+  // Always render UniversalFileTemplate for standalone builds
+  const renderTemplate = () => <UniversalFileTemplate data={templateData} />;
 
   // Create React root and render
   const root = ReactDOM.createRoot(rootElement);
