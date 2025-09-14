@@ -27,6 +27,11 @@ binding = "LYTSITE_STORAGE"
 bucket_name = "lytsite-files"
 preview_bucket_name = "lytsite-files-preview"
 
+# Serve static assets from dist-standalone directory
+[assets]
+directory = "../dist-standalone"
+binding = "ASSETS"
+
 [env.production]
 name = "lytsite-backend-prod"
 

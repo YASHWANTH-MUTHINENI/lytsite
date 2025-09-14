@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block API endpoints and admin areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /backend/
+
+# Allow crawling of generated sites that are marked as discoverable
+# Individual sites can override with meta robots tags
+Allow: /[a-zA-Z0-9]{8}
+
+# Sitemap location
+Sitemap: https://lytsite.com/sitemap.xml
+
+# Crawl delay to be respectful
+Crawl-delay: 1
