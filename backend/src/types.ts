@@ -5,6 +5,10 @@ export interface Env {
   LYTSITE_ORIGINALS: R2Bucket;
   LYTSITE_PREVIEWS: R2Bucket;
   ENVIRONMENT: string;
+  // Assets binding for serving static files from dist-standalone
+  ASSETS?: {
+    fetch(request: Request): Promise<Response>;
+  };
 }
 
 export interface ProjectData {

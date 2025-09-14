@@ -157,8 +157,24 @@ export default {
       });
     }
     
+    // Serve static assets from dist-standalone (JS, CSS, images, etc.)
+    if (url.pathname.match(/^\/[a-zA-Z0-9._-]+\.(js|css|png|jpg|jpeg|gif|svg|ico)$/)) {
+      // Try to serve from ASSETS binding if configured
+      if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+        try {
+          const assetResponse = await env.ASSETS.fetch(request);
+          if (assetResponse.status === 200) {
+            return assetResponse;
+          }
+        } catch (error) {
+          console.log('Asset serving error:', error);
+        }
+      }
+      return new Response('Asset not found', { status: 404 });
+    }
+    
     // Static files (for development)
-    if (url.pathname.startsWith('/static/') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    if (url.pathname.startsWith('/static/')) {
       return new Response('Not found', { status: 404 });
     }
     

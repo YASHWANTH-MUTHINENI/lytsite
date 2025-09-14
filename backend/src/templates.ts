@@ -183,8 +183,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 1900 - Clean bundle, force CDN refresh
-  const cacheKey = '1950';
+  // Version 2001 - Clean build without "Back to Top" functionality
+  const cacheKey = '2001';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -220,8 +220,8 @@ function generateHtmlWrapper(projectData: any, slug: string): string {
     window.LYTSITE_SLUG = "${slug}";
   </script>
 
-  <!-- Load React bundle -->
-  <script src="https://cdn.jsdelivr.net/gh/YASHWANTH-MUTHINENI/lytsite@master/dist-standalone/lytsite-template.iife.js?v=${cacheKey}"></script>
+  <!-- Load React bundle from local assets -->
+  <script src="/lytsite-template.iife.js?v=${cacheKey}"></script>
 </body>
 </html>`;
 }
