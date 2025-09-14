@@ -33,6 +33,16 @@ export default {
       return handleCORS();
     }
     
+    // Serve static files from dist-standalone/ directory (e.g., /logo.png, /favicon.ico, etc.)
+    // Wrangler assets binding (ASSETS) must be configured in wrangler.toml to point to dist-standalone
+    if (url.pathname.match(/^\/[a-zA-Z0-9._-]+\.(png|jpg|jpeg|gif|svg|ico)$/)) {
+      if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+        const assetResponse = await env.ASSETS.fetch(request);
+        if (assetResponse.status === 200) return assetResponse;
+      }
+      return new Response('Not found', { status: 404 });
+    }
+
     // API Routes
     if (url.pathname.startsWith('/api/upload')) {
       if (request.method !== 'POST') {

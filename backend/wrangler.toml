@@ -44,3 +44,8 @@ id = "db777c41abe84ba1813134377bc23808"
 [[env.production.r2_buckets]]
 binding = "LYTSITE_STORAGE"
 bucket_name = "lytsite-files-prod"
+
+
+[env.production.assets]
+binding = "ASSETS"
+directory = "../dist-standalone"

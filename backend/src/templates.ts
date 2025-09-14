@@ -183,8 +183,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 1900 - Clean bundle, force CDN refresh
-  const cacheKey = '1950';
+  // Version 1955 - Clean bundle, force CDN refresh
+  const cacheKey = '1955';
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -1,3 +1,8 @@
+// Wrangler asset Fetcher type for static asset binding
+export interface Fetcher {
+  fetch(request: Request): Promise<Response>;
+}
+
 export interface Env {
   LYTSITE_KV: KVNamespace;
   LYTSITE_STORAGE: R2Bucket;
@@ -5,6 +10,7 @@ export interface Env {
   LYTSITE_ORIGINALS: R2Bucket;
   LYTSITE_PREVIEWS: R2Bucket;
   ENVIRONMENT: string;
+  ASSETS: Fetcher; // Wrangler asset binding for dist-standalone
 }
 
 export interface ProjectData {
