@@ -130,7 +130,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
       subLine: project.description || "Shared via Lytsite",
       tagLine: project.authorName ? `By ${project.authorName}` : "Created with Lytsite",
       templateType: project.template || 'universal', // Add template type
-      files: project.files.map(file => ({
+      files: project.files.map((file, index) => ({
+        id: file.id || `file-${index}`, // Ensure each file has an ID for advanced features
         name: file.name,
         size: formatFileSize(file.size),
         type: file.type,
@@ -146,6 +147,14 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
       views: project.views,
       createdAt: project.createdAt,
       slug,
+      // Advanced features settings (NEW)
+      settings: project.settings || {
+        enableFavorites: false,
+        enableComments: false,
+        enableApprovals: false,
+        enableAnalytics: false,
+        enableNotifications: false
+      },
       // Client delivery specific fields (from project data)
       clientName: (project as any).clientName,
       deliveryDate: (project as any).deliveryDate,
@@ -183,8 +192,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 2001 - Clean build without "Back to Top" functionality
-  const cacheKey = '2001';
+  // Version 2002 - Instagram-style per-item features update
+  const cacheKey = '2002';
 
   return `<!DOCTYPE html>
 <html lang="en">

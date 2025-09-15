@@ -35,6 +35,7 @@ export interface UploadSession {
     authorName?: string;
     password?: string;
     expiryDate?: string;
+    settings?: any; // ProjectSettings from types.ts
   };
   createdAt: string;
   status: 'initialized' | 'uploading' | 'assembling' | 'completed' | 'failed';
@@ -125,9 +126,7 @@ export async function initializeChunkedUpload(request: Request, env: Env): Promi
     }
 
     // Store session in KV for tracking
-    await env.LYTSITE_KV.put(`upload-session:${sessionId}`, JSON.stringify(session), {
-      expirationTtl: 24 * 60 * 60 // 24 hours
-    });
+    await env.LYTSITE_KV.put(`upload-session:${sessionId}`, JSON.stringify(session));
 
     return Response.json({
       success: true,
@@ -362,11 +361,35 @@ export async function completeChunkedUpload(request: Request, env: Env): Promise
       expiryDate: session.metadata.expiryDate,
       createdAt: new Date().toISOString(),
       views: 0,
-      isChunkedUpload: true // Flag to indicate this was a chunked upload
+      isChunkedUpload: true, // Flag to indicate this was a chunked upload
+      settings: session.metadata.settings || undefined
     };
 
     // Store project in KV
     await env.LYTSITE_KV.put(`project:${session.projectSlug}`, JSON.stringify(projectData));
+
+    // Store project settings in database if provided
+    if (session.metadata?.settings && env.LYTSITE_DB) {
+      try {
+        const settings = session.metadata.settings;
+        await env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO project_settings 
+          (project_id, enable_favorites, enable_comments, enable_approvals, enable_analytics, enable_notifications, notification_email, slack_webhook)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          session.projectSlug,
+          settings.enableFavorites ? 1 : 0,
+          settings.enableComments ? 1 : 0,
+          settings.enableApprovals ? 1 : 0,
+          settings.enableAnalytics ? 1 : 0,
+          settings.enableNotifications ? 1 : 0,
+          settings.notificationEmail || null,
+          settings.slackWebhook || null
+        ).run();
+      } catch (error) {
+        console.warn('Failed to store project settings:', error);
+      }
+    }
 
     // Generate project URL
     const baseUrl = new URL(request.url).origin;
@@ -469,9 +492,7 @@ async function scheduleOptimization(env: Env, projectSlug: string, fileId: strin
     scheduledAt: new Date().toISOString()
   };
 
-  await env.LYTSITE_KV.put(`task:optimize:${fileId}`, JSON.stringify(optimizationTask), {
-    expirationTtl: 24 * 60 * 60 // 24 hours
-  });
+  await env.LYTSITE_KV.put(`task:optimize:${fileId}`, JSON.stringify(optimizationTask));
 
   console.log(`Scheduled optimization for file ${fileId}: ${fileName}`);
 }

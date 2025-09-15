@@ -27,6 +27,12 @@ binding = "LYTSITE_STORAGE"
 bucket_name = "lytsite-files"
 preview_bucket_name = "lytsite-files-preview"
 
+# D1 Database for advanced features
+[[d1_databases]]
+binding = "LYTSITE_DB"
+database_name = "lytsite-advanced"
+database_id = "9a6c141f-f6a2-4e0b-9026-d76af0491672"
+
 # Serve static assets from dist-standalone directory
 [assets]
 directory = "../dist-standalone"
@@ -49,6 +55,12 @@ id = "db777c41abe84ba1813134377bc23808"
 [[env.production.r2_buckets]]
 binding = "LYTSITE_STORAGE"
 bucket_name = "lytsite-files"
+
+# Production D1 Database
+[[env.production.d1_databases]]
+binding = "LYTSITE_DB"
+database_name = "lytsite-advanced-prod"
+database_id = "9bc937ea-c481-4ad3-b548-50a3b3cf9a7a"
 
 # Serve static assets from dist-standalone directory
 [env.production.assets]

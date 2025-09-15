@@ -23,6 +23,7 @@ export interface DirectChunkSession {
     authorName?: string;
     password?: string;
     expiryDate?: string;
+    settings?: any; // ProjectSettings from types.ts
   };
   createdAt: string;
   totalSize: number;
@@ -110,9 +111,7 @@ export async function initializeDirectChunkedUpload(request: Request, env: Env):
     };
 
     // Store session in KV
-    await env.LYTSITE_KV.put(`direct-session:${sessionId}`, JSON.stringify(session), {
-      expirationTtl: 24 * 60 * 60 // 24 hours
-    });
+    await env.LYTSITE_KV.put(`direct-session:${sessionId}`, JSON.stringify(session));
 
     console.log(`Direct chunked session created: ${sessionId}`);
 
@@ -288,9 +287,7 @@ export async function handleDirectChunkUpload(request: Request, env: Env, sessio
     }
 
     // Update session
-    await env.LYTSITE_KV.put(`direct-session:${sessionId}`, JSON.stringify(session), {
-      expirationTtl: 24 * 60 * 60
-    });
+    await env.LYTSITE_KV.put(`direct-session:${sessionId}`, JSON.stringify(session));
 
     console.log(`Direct chunk uploaded: ${fileInfo.fileName} chunk ${chunkIndexNum} (${Math.round(chunkData.byteLength / 1024)}KB)`);
 
@@ -449,6 +446,29 @@ export async function completeDirectChunkedUpload(request: Request, env: Env): P
 
     // Store project metadata
     await env.LYTSITE_KV.put(`project:${session.projectSlug}`, JSON.stringify(projectData));
+
+    // Store project settings in database if provided
+    if (session.metadata?.settings && env.LYTSITE_DB) {
+      try {
+        const settings = session.metadata.settings;
+        await env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO project_settings 
+          (project_id, enable_favorites, enable_comments, enable_approvals, enable_analytics, enable_notifications, notification_email, slack_webhook)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          session.projectSlug,
+          settings.enableFavorites ? 1 : 0,
+          settings.enableComments ? 1 : 0,
+          settings.enableApprovals ? 1 : 0,
+          settings.enableAnalytics ? 1 : 0,
+          settings.enableNotifications ? 1 : 0,
+          settings.notificationEmail || null,
+          settings.slackWebhook || null
+        ).run();
+      } catch (error) {
+        console.warn('Failed to store project settings:', error);
+      }
+    }
 
     // Clean up session
     await env.LYTSITE_KV.delete(`direct-session:${sessionId}`);

@@ -2,6 +2,9 @@ import { Env } from './types';
 import { handleUpload, handleFileServing } from './upload';
 import { serveLytsite } from './templates';
 import { handleCORS } from './utils';
+import { AdvancedFeaturesAPI } from './api';
+import { handleCreatorAPI } from './creator-api';
+import { handleEmailCollection } from './email-collection';
 // Phase 2: Import chunked upload handlers
 import { 
   initializeChunkedUpload, 
@@ -157,6 +160,49 @@ export default {
     
     if (url.pathname.startsWith('/api/track/')) {
       return handleDownloadTracking(request, env);
+    }
+
+    // Anonymous projects route
+    if (url.pathname.startsWith('/api/projects/anonymous/')) {
+      if (request.method === 'GET') {
+        const sessionId = url.pathname.split('/').pop();
+        if (!sessionId) {
+          return new Response('Session ID required', { status: 400 });
+        }
+        
+        try {
+          const { CreatorAPI } = await import('./creator-api');
+          const api = new CreatorAPI(env);
+          const projects = await api.getAnonymousProjects(sessionId);
+          return new Response(JSON.stringify({ projects }), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error('Failed to fetch anonymous projects:', error);
+          return new Response('Internal server error', { status: 500 });
+        }
+      }
+    }
+
+    // Email collection route
+    if (url.pathname === '/api/email-collection') {
+      return handleEmailCollection(request, env);
+    }
+
+    // Creator API routes
+    if (url.pathname.startsWith('/api/creators')) {
+      return handleCreatorAPI(request, env);
+    }
+
+    // Advanced Features API routes
+    if (url.pathname.startsWith('/api/favorites') || 
+        url.pathname.startsWith('/api/comments') || 
+        url.pathname.startsWith('/api/approvals') || 
+        url.pathname.startsWith('/api/analytics') || 
+        url.pathname.startsWith('/api/notifications') || 
+        url.pathname.startsWith('/api/project-settings')) {
+      const api = new AdvancedFeaturesAPI(env);
+      return api.handleRequest(request);
     }
     
     if (url.pathname === '/api/health') {

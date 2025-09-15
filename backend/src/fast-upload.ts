@@ -25,6 +25,7 @@ export async function handleFastUpload(request: Request, env: Env): Promise<Resp
     const template = formData.get('template') as string || 'universal-file-template';
     const authorName = formData.get('authorName') as string;
     const skipOptimization = formData.get('skipOptimization') === 'true';
+    const settingsJson = formData.get('settings') as string;
 
     if (!files.length || !title) {
       return Response.json({ 
@@ -34,6 +35,16 @@ export async function handleFastUpload(request: Request, env: Env): Promise<Resp
         status: 400,
         headers: corsHeaders()
       });
+    }
+
+    // Parse project settings if provided
+    let projectSettings: any = null;
+    if (settingsJson) {
+      try {
+        projectSettings = JSON.parse(settingsJson);
+      } catch (error) {
+        console.warn('Failed to parse project settings:', error);
+      }
     }
 
     const projectSlug = generateSlug();
@@ -65,9 +76,9 @@ export async function handleFastUpload(request: Request, env: Env): Promise<Resp
       // Skip optimization for fastest upload (can be done later asynchronously)
       if (!skipOptimization) {
         // Queue optimization for background processing
-        env.ctx?.waitUntil(
-          optimizeFileInBackground(env, fileBuffer, file.type, file.name, storageKeys, fileId)
-        );
+        // Note: Background optimization will be handled separately
+        optimizeFileInBackground(env, fileBuffer, file.type, file.name, storageKeys, fileId)
+          .catch(error => console.error('Background optimization failed:', error));
       }
 
       fileMetadata.push({
@@ -88,10 +99,33 @@ export async function handleFastUpload(request: Request, env: Env): Promise<Resp
       template,
       authorName: authorName || '',
       files: fileMetadata,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      settings: projectSettings || undefined
     };
 
     await env.LYTSITE_KV.put(`project:${projectSlug}`, JSON.stringify(projectData));
+
+    // Store project settings in database if provided
+    if (projectSettings && env.LYTSITE_DB) {
+      try {
+        await env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO project_settings 
+          (project_id, enable_favorites, enable_comments, enable_approvals, enable_analytics, enable_notifications, notification_email, slack_webhook)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          projectSlug,
+          projectSettings.enableFavorites ? 1 : 0,
+          projectSettings.enableComments ? 1 : 0,
+          projectSettings.enableApprovals ? 1 : 0,
+          projectSettings.enableAnalytics ? 1 : 0,
+          projectSettings.enableNotifications ? 1 : 0,
+          projectSettings.notificationEmail || null,
+          projectSettings.slackWebhook || null
+        ).run();
+      } catch (error) {
+        console.warn('Failed to store project settings:', error);
+      }
+    }
 
     // Return immediately - optimization happens in background
     const baseUrl = new URL(request.url).origin;

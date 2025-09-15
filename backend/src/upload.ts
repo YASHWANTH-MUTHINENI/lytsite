@@ -20,7 +20,9 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
     const authorEmail = formData.get('authorEmail') as string;
     const password = formData.get('password') as string || undefined;
     const expiryDate = formData.get('expiryDate') as string || undefined;
+    const anonymousSessionId = formData.get('anonymousSessionId') as string || undefined;
     const filesMetadataJson = formData.get('filesMetadata') as string;
+    const settingsJson = formData.get('settings') as string;
 
     // Parse additional file metadata if provided (includes presentation data)
     let additionalMetadata: any[] = [];
@@ -29,6 +31,16 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
         additionalMetadata = JSON.parse(filesMetadataJson);
       } catch (error) {
         console.warn('Failed to parse files metadata:', error);
+      }
+    }
+
+    // Parse project settings if provided
+    let projectSettings: any = null;
+    if (settingsJson) {
+      try {
+        projectSettings = JSON.parse(settingsJson);
+      } catch (error) {
+        console.warn('Failed to parse project settings:', error);
       }
     }
 
@@ -240,11 +252,52 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
       authorName,
       authorEmail,
       password: password || undefined,
-      expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined
+      expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined,
+      settings: projectSettings || undefined
     };
 
     // Store project metadata in KV
     await env.LYTSITE_KV.put(`project:${projectSlug}`, JSON.stringify(projectData));
+
+    // Store project in database with anonymous session support
+    if (env.LYTSITE_DB) {
+      try {
+        // Insert project record
+        await env.LYTSITE_DB.prepare(`
+          INSERT INTO projects 
+          (id, slug, title, description, author_name, anonymous_session_id, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `).bind(
+          projectSlug,
+          projectSlug,
+          title,
+          description,
+          authorName || null,
+          anonymousSessionId || null
+        ).run();
+
+        // Store project settings if provided
+        if (projectSettings) {
+          await env.LYTSITE_DB.prepare(`
+            INSERT OR REPLACE INTO project_settings 
+            (project_id, enable_favorites, enable_comments, enable_approvals, enable_analytics, enable_notifications, notification_email, slack_webhook, anonymous_session_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            projectSlug,
+            projectSettings.enableFavorites ? 1 : 0,
+            projectSettings.enableComments ? 1 : 0,
+            projectSettings.enableApprovals ? 1 : 0,
+            projectSettings.enableAnalytics ? 1 : 0,
+            projectSettings.enableNotifications ? 1 : 0,
+            projectSettings.notificationEmail || null,
+            projectSettings.slackWebhook || null,
+            anonymousSessionId || null
+          ).run();
+        }
+      } catch (error) {
+        console.warn('Failed to store project in database:', error);
+      }
+    }
 
     const baseUrl = new URL(request.url).origin;
     const projectUrl = `${baseUrl}/${projectSlug}`;
@@ -326,8 +379,6 @@ export async function handleFileServing(request: Request, env: Env): Promise<Res
     headers.set('Content-Length', object.size.toString());
     headers.set('Content-Disposition', disposition);
     headers.set('Cache-Control', 'public, max-age=31536000');
-    headers.set('ETag', object.etag);
-    headers.set('Last-Modified', object.uploaded.toUTCString());
     
     // Add custom headers to indicate file version
     headers.set('X-Lytsite-Version', mode === 'download' ? 'original' : 'optimized');
@@ -351,8 +402,7 @@ async function handleLegacyFileServing(fileId: string, env: Env): Promise<Respon
     }
 
     const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set('etag', object.httpEtag);
+    headers.set('Content-Length', object.size.toString());
     
     return new Response(object.body, {
       headers
