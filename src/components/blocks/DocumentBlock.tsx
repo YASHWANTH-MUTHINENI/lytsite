@@ -3,6 +3,7 @@ import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   Share2, 
@@ -22,6 +23,12 @@ import {
   Printer
 } from "lucide-react";
 
+export interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface DocumentBlockProps {
   title: string;
   content: string;
@@ -35,13 +42,17 @@ interface DocumentBlockProps {
     characters?: number;
     language?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export default function DocumentBlock({ 
   title, 
   content, 
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: DocumentBlockProps) {
   const { theme } = useEnhancedTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -567,6 +578,16 @@ export default function DocumentBlock({
           </div>
         )}
       </div>
+
+      {/* Instagram-style integrated features */}
+      {projectId && settings && (
+        <CompactFeatures
+          fileId="document"
+          projectId={projectId}
+          settings={settings}
+          onDownload={onDownload}
+        />
+      )}
     </section>
   );
 }

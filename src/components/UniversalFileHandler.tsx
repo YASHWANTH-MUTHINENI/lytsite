@@ -9,18 +9,28 @@ import FileHandlingBlock from './blocks/FileHandlingBlock';
 import ArchiveBlock from './blocks/ArchiveBlock';
 import GalleryBlock from './blocks/GalleryBlock';
 
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface UniversalFileHandlerProps {
   files: File[];
   onClose?: () => void;
   title?: string;
   showUploadProgress?: boolean;
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
   files,
   onClose,
   title = 'Files',
-  showUploadProgress = true
+  showUploadProgress = true,
+  projectId,
+  settings
 }) => {
   const {
     files: processedFiles,
@@ -76,8 +86,9 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
         case 'pdf':
           return (
             <DynamicPDFBlock 
-              url={file.url} 
-              className="max-w-4xl mx-auto"
+              url={file.url}
+              projectId={projectId}
+              settings={settings}
             />
           );
         case 'image':
@@ -90,6 +101,8 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
                 format: file.extension.toUpperCase(),
                 dimensions: file.metadata.dimensions || 'Unknown'
               }}
+              projectId={projectId}
+              settings={settings}
             />
           );
         case 'document':
@@ -102,6 +115,8 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
                 format: file.extension.toUpperCase(),
                 encoding: 'UTF-8'
               }}
+              projectId={projectId}
+              settings={settings}
             />
           );
         case 'video':
@@ -113,35 +128,49 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
                 size: file.size,
                 format: file.extension.toUpperCase()
               }}
+              projectId={projectId}
+              settings={settings}
             />
           );
         default:
-          return <FileHandlingBlock files={[{
-            id: file.id,
-            type: file.type as any,
-            name: file.name,
-            size: file.size,
-            url: file.url,
-            thumbnails: file.thumbnails
-          }]} />;
+          return <FileHandlingBlock 
+            files={[{
+              id: file.id,
+              type: file.type as any,
+              name: file.name,
+              size: file.size,
+              url: file.url,
+              thumbnails: file.thumbnails
+            }]} 
+            projectId={projectId}
+            settings={settings}
+          />;
       }
     }
 
     // Multiple files of same type
     switch (primaryFileType) {
       case 'pdf':
-        return <MultiDynamicPDFBlock files={filesByType.pdf.map(f => ({
-          id: f.id || f.name,
-          name: f.name,
-          url: f.url,
-          size: f.size,
-          pages: (f as any).pages
-        }))} />;
+        return <MultiDynamicPDFBlock 
+          files={filesByType.pdf.map(f => ({
+            id: f.id || f.name,
+            name: f.name,
+            url: f.url,
+            size: f.size,
+            pages: (f as any).pages
+          }))} 
+          projectId={projectId}
+          settings={settings}
+        />;
       case 'image':
         return (
           <GalleryBlock 
             title="Image Gallery"
-            images={filesByType.image.map(f => f.url)} 
+            files={filesByType.image.map(f => ({ 
+              id: f.id, 
+              name: f.name, 
+              url: f.url 
+            }))} 
             totalImages={filesByType.image.length}
             metadata={{
               size: filesByType.image.reduce((acc, f) => {
@@ -150,6 +179,8 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
               }, 0).toFixed(1) + ' MB',
               format: 'Mixed Images'
             }}
+            projectId={projectId}
+            settings={settings}
           />
         );
       case 'mixed':
@@ -196,8 +227,7 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
                 <div className="bg-white rounded-lg overflow-hidden">
                   {activeFile.type === 'pdf' && (
                     <DynamicPDFBlock 
-                      url={activeFile.url} 
-                      className="max-w-4xl mx-auto"
+                      url={activeFile.url}
                     />
                   )}
                   {activeFile.type === 'image' && (
@@ -257,7 +287,14 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
           </div>
         );
       default:
-        return <FileHandlingBlock files={processedFiles} />;
+        return <FileHandlingBlock 
+          files={processedFiles.map(file => ({
+            ...file,
+            type: file.type === 'presentation' ? 'document' as const : file.type as any
+          }))} 
+          projectId={projectId}
+          settings={settings}
+        />;
     }
   };
 
@@ -287,6 +324,6 @@ export const UniversalFileHandler: React.FC<UniversalFileHandlerProps> = ({
 };
 
 // Add a factory function for easy creation
-export const createFileHandler = (files: File[]) => {
-  return <UniversalFileHandler files={files} />;
+export const createFileHandler = (files: File[], projectId?: string, settings?: ProjectSettings) => {
+  return <UniversalFileHandler files={files} projectId={projectId} settings={settings} />;
 };

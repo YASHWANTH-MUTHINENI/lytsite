@@ -3,6 +3,7 @@ import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   Eye,
@@ -20,6 +21,12 @@ import {
   Video as VideoIcon
 } from "lucide-react";
 
+export interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface VideoBlockProps {
   title: string;
   url: string;
@@ -32,6 +39,8 @@ interface VideoBlockProps {
     resolution?: string;
     bitrate?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export default function VideoBlock({ 
@@ -40,7 +49,9 @@ export default function VideoBlock({
   poster, 
   duration, 
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: VideoBlockProps) {
   const { theme } = useEnhancedTheme();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -232,7 +243,7 @@ export default function VideoBlock({
                       <div 
                         className="h-1 rounded-full cursor-pointer"
                         style={{ backgroundColor: theme.colors.overlay }}
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const position = (e.clientX - rect.left) / rect.width;
                           handleSeek(position * totalDuration);
@@ -260,7 +271,7 @@ export default function VideoBlock({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             handlePlayPause();
                           }}
@@ -273,7 +284,7 @@ export default function VideoBlock({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             skipTime(-10);
                           }}
@@ -285,7 +296,7 @@ export default function VideoBlock({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             skipTime(10);
                           }}
@@ -299,7 +310,7 @@ export default function VideoBlock({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                               e.stopPropagation();
                               setIsMuted(!isMuted);
                             }}
@@ -316,7 +327,7 @@ export default function VideoBlock({
                               value={isMuted ? 0 : volume}
                               onChange={(e) => handleVolumeChange(Number(e.target.value))}
                               className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
                             />
                           </div>
                         </div>
@@ -334,7 +345,7 @@ export default function VideoBlock({
                             variant="ghost"
                             size="sm"
                             className="text-white hover:bg-white/20 text-xs"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
                           >
                             {playbackSpeed}x
                           </Button>
@@ -343,7 +354,7 @@ export default function VideoBlock({
                               {playbackSpeeds.map(speed => (
                                 <button
                                   key={speed}
-                                  onClick={(e) => {
+                                  onClick={(e: React.MouseEvent) => {
                                     e.stopPropagation();
                                     setPlaybackSpeed(speed);
                                   }}
@@ -363,7 +374,7 @@ export default function VideoBlock({
                           variant="ghost"
                           size="sm"
                           className="w-8 h-8 rounded-full text-white hover:bg-white/20"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         >
                           <Settings className="w-4 h-4" />
                         </Button>
@@ -372,7 +383,7 @@ export default function VideoBlock({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             setIsFullscreen(!isFullscreen);
                           }}
@@ -502,6 +513,16 @@ export default function VideoBlock({
           </div>
         </div>
       </div>
+
+      {/* Instagram-style integrated features */}
+      {projectId && settings && (
+        <CompactFeatures
+          fileId="video"
+          projectId={projectId}
+          settings={settings}
+          onDownload={onDownload}
+        />
+      )}
     </section>
   );
 }

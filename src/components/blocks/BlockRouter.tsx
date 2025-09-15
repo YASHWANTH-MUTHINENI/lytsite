@@ -38,6 +38,14 @@ export interface FileMetadata {
   };
 }
 
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+  enableAnalytics?: boolean;
+  enableNotifications?: boolean;
+}
+
 interface BlockRouterProps {
   fileType: 'gallery' | 'pdf' | 'video' | 'archive' | 'document' | 'presentation' | 'mixed';
   title: string;
@@ -46,6 +54,8 @@ interface BlockRouterProps {
   content?: string;
   onDownload?: () => void;
   metadata?: any;
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 // Utility function to determine file type from file extension or MIME type
@@ -114,7 +124,9 @@ export default function BlockRouter({
   files = [],
   content = "",
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings 
 }: BlockRouterProps) {
   
   // Helper function to convert FileMetadata to DualQualityFile format
@@ -146,6 +158,8 @@ export default function BlockRouter({
             credit={metadata?.credit}
             onDownload={onDownload}
             metadata={metadata}
+            projectId={projectId}
+            settings={settings}
           />
         );
       }
@@ -158,6 +172,8 @@ export default function BlockRouter({
             files={convertFilesToDualQuality(files)}
             onDownload={onDownload}
             metadata={metadata}
+            projectId={projectId}
+            settings={settings}
           />
         );
       }
@@ -170,6 +186,8 @@ export default function BlockRouter({
             files={convertFilesToDualQuality(files)}
             onDownload={onDownload}
             metadata={metadata}
+            projectId={projectId}
+            settings={settings}
           />
         );
       }
@@ -183,6 +201,8 @@ export default function BlockRouter({
             totalImages={files.length}
             onDownload={onDownload}
             metadata={metadata}
+            projectId={projectId}
+            settings={settings}
           />
         );
       }
@@ -195,6 +215,8 @@ export default function BlockRouter({
           totalImages={files.length}
           onDownload={onDownload}
           metadata={metadata}
+          projectId={projectId}
+          settings={settings}
         />
       );
       
@@ -238,6 +260,8 @@ export default function BlockRouter({
               onDownload?.();
             }}
             className="max-w-6xl mx-auto"
+            projectId={projectId}
+            settings={settings}
           />
         );
       }
@@ -247,6 +271,9 @@ export default function BlockRouter({
         return (
           <DynamicPDFBlock
             url={pdfFiles[0].url}
+            projectId={projectId}
+            settings={settings}
+            onDownload={onDownload}
           />
         );
       }
@@ -263,6 +290,8 @@ export default function BlockRouter({
           duration={metadata?.duration}
           onDownload={onDownload}
           metadata={metadata}
+          projectId={projectId}
+          settings={settings}
         />
       );
       
@@ -284,6 +313,8 @@ export default function BlockRouter({
           totalFiles={files.length}
           onDownload={onDownload}
           metadata={metadata}
+          projectId={projectId}
+          settings={settings}
         />
       );
       
@@ -339,6 +370,9 @@ export default function BlockRouter({
         return (
           <DynamicPDFBlock
             url={presentationFile.url || '#'}
+            projectId={projectId}
+            settings={settings}
+            onDownload={onDownload}
           />
         );
       }
@@ -347,6 +381,9 @@ export default function BlockRouter({
       return (
         <DynamicPDFBlock
           url={files[0]?.url || '#'}
+          projectId={projectId}
+          settings={settings}
+          onDownload={onDownload}
         />
       );
       
@@ -357,6 +394,8 @@ export default function BlockRouter({
           content={content}
           onDownload={onDownload}
           metadata={metadata}
+          projectId={projectId}
+          settings={settings}
         />
       );
       
@@ -368,6 +407,8 @@ export default function BlockRouter({
           content={content}
           onDownload={onDownload}
           metadata={metadata}
+          projectId={projectId}
+          settings={settings}
         />
       );
   }

@@ -56,6 +56,7 @@ export class ChunkedUploader {
     authorName?: string;
     password?: string;
     expiryDate?: string;
+    settings?: any; // ProjectSettings from types.ts
   }): Promise<string> {
     try {
       const fileInfo = files.map(file => ({

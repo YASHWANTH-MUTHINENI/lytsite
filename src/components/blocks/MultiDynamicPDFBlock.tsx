@@ -5,6 +5,13 @@ import { Badge } from '../ui/badge';
 import { ChevronLeft, ChevronRight, Download, Eye, FileText, Grid, List } from 'lucide-react';
 import DynamicPDFBlock from './DynamicPDFBlock';
 import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
+import { CompactFeatures } from '../features/CompactFeatures';
+
+export interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
 
 interface MultiDynamicPDFBlockProps {
   files: Array<{
@@ -18,6 +25,8 @@ interface MultiDynamicPDFBlockProps {
   title?: string;
   className?: string;
   onDownload?: (fileId: string) => void;
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 type ViewMode = 'grid' | 'list' | 'preview';
@@ -26,7 +35,9 @@ export default function MultiDynamicPDFBlock({
   files, 
   title, 
   className = '',
-  onDownload 
+  onDownload,
+  projectId,
+  settings
 }: MultiDynamicPDFBlockProps) {
   const { theme } = useEnhancedTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -228,6 +239,18 @@ export default function MultiDynamicPDFBlock({
                     </div>
                   </div>
                 </div>
+
+                {/* Instagram-style features for each PDF */}
+                {projectId && settings && (
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: theme.colors.border }}>
+                    <CompactFeatures
+                      fileId={`multi-pdf-${file.id}`}
+                      projectId={projectId}
+                      settings={settings}
+                      onDownload={() => onDownload?.(file.id)}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -295,6 +318,18 @@ export default function MultiDynamicPDFBlock({
                     )}
                   </div>
                 </div>
+
+                {/* Instagram-style features for each PDF */}
+                {projectId && settings && (
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: theme.colors.border }}>
+                    <CompactFeatures
+                      fileId={`multi-pdf-list-${file.id}`}
+                      projectId={projectId}
+                      settings={settings}
+                      onDownload={() => onDownload?.(file.id)}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ClerkProvider } from '@clerk/clerk-react';
 import { ThemeProvider } from './contexts/ThemeProvider';
 import Homepage from './components/homepage';
 import TemplatesPage from './components/templates-page';
@@ -25,12 +26,22 @@ import Contact from './components/contact';
 import HelpCenter from './components/help-center';
 import Feedback from './components/feedback';
 import Payment from './components/Payment';
+import { CreatorDashboard } from './components/CreatorDashboard';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+
+// Import the publishable key
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key")
+}
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <ThemeProvider>
+        <Router>
+          <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/templates" element={<TemplatesPage />} />
@@ -57,9 +68,17 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/payment" element={<Payment />} />
+            
+            {/* Dashboard Route */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <CreatorDashboard />
+              </ProtectedRoute>
+            } />
           </Routes>
         </div>
       </Router>
     </ThemeProvider>
+    </ClerkProvider>
   );
 }

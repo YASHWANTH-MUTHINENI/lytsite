@@ -4,6 +4,7 @@ import { useFileUrls } from "../../hooks/useDualQuality";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   ZoomIn,
@@ -19,6 +20,12 @@ import {
   Search
 } from "lucide-react";
 
+export interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface LightboxGalleryBlockProps {
   title: string;
   files: Array<{ id?: string; url?: string; name: string }>;
@@ -29,6 +36,8 @@ interface LightboxGalleryBlockProps {
     format: string;
     dimensions?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export default function LightboxGalleryBlock({ 
@@ -36,7 +45,9 @@ export default function LightboxGalleryBlock({
   files, 
   totalImages = files.length,
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: LightboxGalleryBlockProps) {
   const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
@@ -291,6 +302,18 @@ export default function LightboxGalleryBlock({
                   {index + 1}
                 </div>
               </div>
+
+              {/* Instagram-style features for each thumbnail */}
+              {projectId && settings && (
+                <div className="p-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                  <CompactFeatures
+                    fileId={`lightbox-image-${index}`}
+                    projectId={projectId}
+                    settings={settings}
+                    onDownload={() => onDownload?.()}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -356,7 +379,7 @@ export default function LightboxGalleryBlock({
               variant="ghost"
               size="sm"
               className="fixed left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full shadow-lg backdrop-blur-sm disabled:opacity-30 hover:scale-110 transition-all duration-200"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 navigateImage('prev');
               }}
@@ -370,7 +393,7 @@ export default function LightboxGalleryBlock({
               variant="ghost"
               size="sm"
               className="fixed right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full shadow-lg backdrop-blur-sm disabled:opacity-30 hover:scale-110 transition-all duration-200"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 navigateImage('next');
               }}

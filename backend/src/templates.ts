@@ -192,8 +192,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 2002 - Instagram-style per-item features update
-  const cacheKey = '2002';
+  // Version 2004 - Clean rebuild with Instagram features confirmed in bundle
+  const cacheKey = '2004';
 
   return `<!DOCTYPE html>
 <html lang="en">

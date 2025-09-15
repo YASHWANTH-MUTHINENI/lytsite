@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Download, AlertCircle, Loader2 } from 'lucide-react';
+import { CompactFeatures } from '../features/CompactFeatures';
 import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
 
 // Global declarations for dynamically loaded PDF.js
@@ -20,13 +21,24 @@ if (typeof globalThis.fileDataStore === 'undefined') {
   globalThis.fileDataStore = new Map();
 }
 
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+  enableAnalytics?: boolean;
+  enableNotifications?: boolean;
+}
+
 interface DynamicPDFBlockProps {
   url: string;
+  projectId?: string;
+  settings?: ProjectSettings;
+  onDownload?: () => void;
 }
 
 type ViewerMethod = 'canvas' | 'iframe' | 'error' | 'loading';
 
-export default function DynamicPDFBlock({ url }: DynamicPDFBlockProps) {
+export default function DynamicPDFBlock({ url, projectId, settings, onDownload }: DynamicPDFBlockProps) {
   console.log('🔧 DynamicPDFBlock: Initialized with URL:', url);
   const { theme } = useEnhancedTheme();
   const [pdfDocument, setPdfDocument] = useState<any>(null);
@@ -478,6 +490,19 @@ export default function DynamicPDFBlock({ url }: DynamicPDFBlockProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Integrated Features - Instagram Style */}
+        {projectId && settings && (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <CompactFeatures
+              fileId={`${projectId}-pdf`}
+              projectId={projectId}
+              settings={settings}
+              onDownload={onDownload}
+              className="mt-6"
+            />
+          </div>
+        )}
       </section>
     );
   }

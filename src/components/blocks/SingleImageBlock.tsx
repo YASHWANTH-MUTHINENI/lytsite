@@ -3,6 +3,7 @@ import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { useFileUrls, formatFileSize } from "../../hooks/useDualQuality";
 import { 
   Download, 
@@ -15,6 +16,14 @@ import {
   Image as ImageIcon,
   Info
 } from "lucide-react";
+
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+  enableAnalytics?: boolean;
+  enableNotifications?: boolean;
+}
 
 interface SingleImageBlockProps {
   title: string;
@@ -30,6 +39,8 @@ interface SingleImageBlockProps {
     format: string;
     dimensions?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export default function SingleImageBlock({ 
@@ -40,7 +51,9 @@ export default function SingleImageBlock({
   caption,
   credit,
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: SingleImageBlockProps) {
   const { theme } = useEnhancedTheme();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -371,6 +384,19 @@ export default function SingleImageBlock({
           </div>
         )}
       </div>
+
+      {/* Integrated Features - Instagram Style */}
+      {projectId && settings && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <CompactFeatures
+            fileId={`${projectId}-${fileId || 'single-image'}`}
+            projectId={projectId}
+            settings={settings}
+            onDownload={onDownload}
+            className="mt-6"
+          />
+        </div>
+      )}
     </section>
   );
 }

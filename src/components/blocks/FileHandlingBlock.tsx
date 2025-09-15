@@ -4,6 +4,7 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   Eye,
@@ -36,9 +37,17 @@ interface FileData {
   files?: { name: string; size: string; type: string; url?: string }[];
 }
 
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface FileHandlingBlockProps {
   files: FileData[];
   onDownload?: (fileId: string) => void;
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 const FileTypeIcon = ({ type }: { type: string }) => {
@@ -392,7 +401,12 @@ const ArchiveExplorer = ({ file }: { file: FileData }) => {
   );
 };
 
-export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlockProps) {
+export default function FileHandlingBlock({ 
+  files, 
+  onDownload, 
+  projectId, 
+  settings 
+}: FileHandlingBlockProps) {
   const { theme } = useEnhancedTheme();
   const handleDownload = (fileId: string) => {
     onDownload?.(fileId);
@@ -445,6 +459,18 @@ export default function FileHandlingBlock({ files, onDownload }: FileHandlingBlo
                 <ArchiveExplorer file={file} />
               )}
             </div>
+
+            {/* Instagram-style Features for Individual Files */}
+            {projectId && settings && (
+              <div className="mt-4">
+                <CompactFeatures 
+                  fileId={file.id}
+                  projectId={projectId}
+                  settings={settings}
+                  onDownload={() => handleDownload(file.id)}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

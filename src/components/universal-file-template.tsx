@@ -18,6 +18,14 @@ interface TemplateData {
     website: string;
     linkedin: string;
   };
+  slug?: string;
+  settings?: {
+    enableFavorites?: boolean;
+    enableComments?: boolean;
+    enableApprovals?: boolean;
+    enableAnalytics?: boolean;
+    enableNotifications?: boolean;
+  };
 }
 
 interface UniversalFileTemplateProps {
@@ -83,6 +91,16 @@ const mockData = {
     email: "sarah.chen@techcorp.com",
     website: "https://techcorp.com",
     linkedin: "https://linkedin.com/in/sarahchen"
+  },
+  
+  // Optional advanced features data
+  slug: "q4-business-review-2024",
+  settings: {
+    enableFavorites: true,
+    enableComments: true,
+    enableApprovals: false,
+    enableAnalytics: true,
+    enableNotifications: false
   }
 };
 
@@ -483,6 +501,8 @@ Version: 1.0`;
           content={finalFileType === 'document' ? getSampleDocumentContent() : undefined}
           onDownload={handleDownload}
           metadata={getMetadata()}
+          projectId={templateData.slug}
+          settings={templateData.settings}
         />
 
         {/* Footer Block - Always on bottom */}

@@ -3,6 +3,7 @@ import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   Eye,
@@ -32,6 +33,12 @@ interface ArchiveFile {
   url?: string;
 }
 
+export interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+}
+
 interface ArchiveBlockProps {
   title: string;
   files: ArchiveFile[];
@@ -43,6 +50,8 @@ interface ArchiveBlockProps {
     compressed?: string;
     ratio?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 const getFileIcon = (fileType?: string) => {
@@ -72,7 +81,9 @@ export default function ArchiveBlock({
   files, 
   totalFiles, 
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: ArchiveBlockProps) {
   const { theme } = useEnhancedTheme();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -117,7 +128,6 @@ export default function ArchiveBlock({
             style={{ 
               paddingLeft: `${level * 20 + 12}px`,
               backgroundColor: isSelected ? theme.colors.primaryLight : theme.colors.surface,
-              ringColor: theme.colors.primary,
               ...(level > 0 && { marginLeft: `${level * 8}px` })
             }}
             onClick={() => {
@@ -191,15 +201,26 @@ export default function ArchiveBlock({
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Instagram-style Features for Individual Files */}
                 {file.type === 'file' && (
                   <div className="flex items-center space-x-2 ml-4">
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <CompactFeatures 
+                        fileId={`archive-file-${file.name}-${index}`}
+                        projectId={projectId || 'archive-project'}
+                        settings={settings || {
+                          enableFavorites: true,
+                          enableComments: true,
+                          enableApprovals: true
+                        }}
+                      />
+                    </div>
                     {file.url && (
                       <Button
                         variant="ghost"
                         size="sm"
                         className="w-8 h-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                           e.stopPropagation();
                           window.open(file.url, '_blank');
                         }}
@@ -211,7 +232,7 @@ export default function ArchiveBlock({
                       variant="ghost"
                       size="sm"
                       className="w-8 h-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         // Handle download single file
                       }}
@@ -365,8 +386,7 @@ export default function ArchiveBlock({
                       style={{
                         backgroundColor: theme.colors.surface,
                         borderColor: theme.colors.border,
-                        color: theme.colors.textPrimary,
-                        focusRingColor: theme.colors.primary
+                        color: theme.colors.textPrimary
                       }}
                     />
                   </div>
@@ -572,6 +592,8 @@ export default function ArchiveBlock({
           </div>
         </div>
       </div>
+
+
     </section>
   );
 }

@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { CompactFeatures } from "../features/CompactFeatures";
 import { 
   Download, 
   Eye,
@@ -23,6 +24,14 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 
+interface ProjectSettings {
+  enableFavorites?: boolean;
+  enableComments?: boolean;
+  enableApprovals?: boolean;
+  enableAnalytics?: boolean;
+  enableNotifications?: boolean;
+}
+
 interface GalleryBlockProps {
   title: string;
   files: DualQualityFile[]; // Use the standardized interface
@@ -33,6 +42,8 @@ interface GalleryBlockProps {
     format: string;
     dimensions?: string;
   };
+  projectId?: string;
+  settings?: ProjectSettings;
 }
 
 export default function GalleryBlock({ 
@@ -40,7 +51,9 @@ export default function GalleryBlock({
   files, 
   totalImages = files.length, 
   onDownload,
-  metadata 
+  metadata,
+  projectId,
+  settings
 }: GalleryBlockProps) {
   const { theme } = useEnhancedTheme();
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
@@ -276,6 +289,18 @@ export default function GalleryBlock({
                   {index + 1}
                 </div>
               </div>
+
+              {/* Instagram-style features for each image */}
+              {projectId && settings && (
+                <div className="p-3">
+                  <CompactFeatures
+                    fileId={`gallery-image-${index}`}
+                    projectId={projectId}
+                    settings={settings}
+                    onDownload={() => onDownload?.()}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -319,7 +344,7 @@ export default function GalleryBlock({
               variant="ghost"
               size="sm"
               className="fixed left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full shadow-lg backdrop-blur-sm disabled:opacity-30 hover:scale-110 transition-all duration-200"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 navigateImage('prev');
               }}
@@ -333,7 +358,7 @@ export default function GalleryBlock({
               variant="ghost"
               size="sm"
               className="fixed right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full shadow-lg backdrop-blur-sm disabled:opacity-30 hover:scale-110 transition-all duration-200"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 navigateImage('next');
               }}

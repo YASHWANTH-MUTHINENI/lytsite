@@ -24,6 +24,7 @@ export interface DirectUploadOptions {
   authorName?: string;
   password?: string;
   expiryDate?: string;
+  settings?: any; // ProjectSettings from types.ts
 }
 
 export interface DirectUploadResult {

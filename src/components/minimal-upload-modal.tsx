@@ -7,8 +7,12 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Switch } from "./ui/switch";
 import QRCode from 'qrcode';
 import UniversalFileTemplate from "./universal-file-template";
+import { getAnonymousSessionId } from "../utils/sessionManager";
+import { EmailCollectionModal } from "./EmailCollectionModal";
+import { useEmailCollection } from "../utils/useEmailCollection";
 
 import { PDFThumbnailGenerator } from "../utils/pdfThumbnailGenerator";
 // Phase 2: Import chunked upload system
@@ -43,7 +47,13 @@ import {
   Eye,
   Shield,
   Clock,
-  QrCode
+  QrCode,
+  Heart,
+  MessageCircle,
+  BarChart3,
+  Bell,
+  ChevronRight,
+  Settings
 } from "lucide-react";
 
 interface MinimalUploadModalProps {
@@ -257,13 +267,15 @@ const processFileWithThumbnails = async (file: File): Promise<any> => {
 };
 
 // Transform user data for UniversalFileTemplate with enhanced processing
-const getTemplateData = async (formData: any, uploadedFiles: File[]) => {
+const getTemplateData = async (formData: any, uploadedFiles: File[], projectSettings: any) => {
+  console.log('🎯 Building template data with settings:', { projectSettings, formData });
+  
   // Process files with thumbnail generation
   const processedFiles = await Promise.all(
     uploadedFiles.map(file => processFileWithThumbnails(file))
   );
 
-  return {
+  const templateData = {
     title: formData.title || "My Files",
     subLine: formData.description || "File delivery",
     tagLine: formData.authorName ? `By ${formData.authorName}` : "Shared with Lytsite",
@@ -273,8 +285,19 @@ const getTemplateData = async (formData: any, uploadedFiles: File[]) => {
       email: "",
       website: "",
       linkedin: ""
+    },
+    slug: formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'preview-project',
+    settings: {
+      enableFavorites: projectSettings.enableFavorites,
+      enableComments: projectSettings.enableComments,
+      enableApprovals: projectSettings.enableApprovals,
+      enableAnalytics: true, // Default for all projects
+      enableNotifications: true // Default for all projects
     }
   };
+  
+  console.log('🎯 Final template data generated:', templateData);
+  return templateData;
 };
 
 // Helper function to format file size for client delivery
@@ -288,9 +311,23 @@ export default function MinimalUploadModal({ onSuccess }: MinimalUploadModalProp
   const [currentFile, setCurrentFile] = useState<{ name: string; index: number; total: number } | null>(null);
   const [uploadTip, setUploadTip] = useState('');
   const [isOptimisticSuccess, setIsOptimisticSuccess] = useState(false);
-  const [step, setStep] = useState<'upload' | 'template' | 'details' | 'preview' | 'success'>('upload');
+  const [step, setStep] = useState<'upload' | 'template' | 'details' | 'settings' | 'preview' | 'success'>('upload');
   const [selectedTemplate, setSelectedTemplate] = useState('universal');
   const [showFilesModal, setShowFilesModal] = useState(false);
+  
+  // Project settings for advanced features
+  const [projectSettings, setProjectSettings] = useState({
+    enableFavorites: false, // Default to false - user must enable
+    enableComments: false, // Default to false - user must enable  
+    enableApprovals: false, // Default to false - user must enable
+    enableAnalytics: true, // Default to true
+    enableNotifications: false,
+    notificationEmail: '',
+    slackWebhook: ''
+  });
+  
+  // Email collection hook
+  const emailCollection = useEmailCollection();
   
   // Minimal form data - only 2-3 inputs required
   const [formData, setFormData] = useState({
@@ -340,18 +377,31 @@ useEffect(() => {
       setIsProcessingTemplate(true);
       try {
         // Only UniversalFileTemplate is supported
-        const data = await getTemplateData(formData, uploadedFiles);
+        const data = await getTemplateData(formData, uploadedFiles, projectSettings);
+        console.log('🎯 Setting template data:', data);
         setTemplateData(data);
+        console.log('🎯 Template data set, processing complete');
       } catch (error) {
         console.error('Error processing template data:', error);
       } finally {
         setIsProcessingTemplate(false);
+        console.log('🎯 Processing template flag set to false');
       }
     }
   };
 
   processTemplateData();
-}, [uploadedFiles, formData, step, selectedTemplate]);
+}, [uploadedFiles, formData, step, selectedTemplate, projectSettings]);
+
+// Debug state changes
+useEffect(() => {
+  console.log('🎯 State update:', { 
+    step, 
+    isProcessingTemplate, 
+    hasTemplateData: !!templateData,
+    templateDataKeys: templateData ? Object.keys(templateData) : 'none'
+  });
+}, [step, isProcessingTemplate, templateData]);
   
   // Destructure form data for easier access
   const { title, description, authorName } = formData;
@@ -609,7 +659,8 @@ useEffect(() => {
       template: selectedTemplate,
       authorName,
       password: password || undefined,
-      expiryDate: expiryDate || undefined
+      expiryDate: expiryDate || undefined,
+      settings: projectSettings
     });
 
     // Start chunked upload
@@ -661,7 +712,8 @@ useEffect(() => {
         template: selectedTemplate,
         authorName,
         password: password || undefined,
-        expiryDate: expiryDate || undefined
+        expiryDate: expiryDate || undefined,
+        settings: projectSettings
       });
 
       clearInterval(progressInterval);
@@ -713,7 +765,8 @@ useEffect(() => {
         template: selectedTemplate,
         authorName,
         password: password || undefined,
-        expiryDate: expiryDate || undefined
+        expiryDate: expiryDate || undefined,
+        settings: projectSettings
       });
 
       clearInterval(progressInterval);
@@ -766,6 +819,12 @@ useEffect(() => {
     uploadFormData.append('description', description);
     uploadFormData.append('template', selectedTemplate);
     uploadFormData.append('authorName', authorName);
+    
+    // Add anonymous session ID for project claiming
+    uploadFormData.append('anonymousSessionId', getAnonymousSessionId());
+    
+    // Add project settings for advanced features
+    uploadFormData.append('settings', JSON.stringify(projectSettings));
     
     // Add processed file metadata
     uploadFormData.append('filesMetadata', JSON.stringify(
@@ -824,6 +883,17 @@ useEffect(() => {
       }
       
       setStep('success');
+      
+      // Trigger email collection modal after a delay (let user see success first)
+      if (!emailCollection.hasEmail) {
+        setTimeout(() => {
+          emailCollection.triggerEmailCollection({
+            type: 'return_visit', // Use return_visit type for success page
+            projectId: result.slug || projectSlug,
+            projectTitle: title
+          });
+        }, 3000); // 3 second delay
+      }
     } else {
       throw new Error(result.error || 'Upload failed');
     }
@@ -867,7 +937,7 @@ useEffect(() => {
   return (
     <>
       {/* Debug log */}
-      {step === 'preview' && console.log('Rendering preview step')}
+      {step === 'preview' && console.log('🎯 Rendering preview step at', new Date().toISOString(), { isProcessingTemplate, hasTemplateData: !!templateData })}
       
       {/* Preview Modal - Rendered as Portal */}
       {step === 'preview' && createPortal(
@@ -954,7 +1024,15 @@ useEffect(() => {
                     {/* Template Preview */}
                     <div className="flex-1 overflow-y-auto">
                       {templateData ? (
-                        <UniversalFileTemplate data={templateData} />
+                        <>
+                          {console.log('🎯 Rendering UniversalFileTemplate with data:', {
+                            title: templateData.title,
+                            filesCount: templateData.files?.length,
+                            hasSettings: !!templateData.settings,
+                            settingsKeys: templateData.settings ? Object.keys(templateData.settings) : 'none'
+                          })}
+                          <UniversalFileTemplate data={templateData} />
+                        </>
                       ) : (
                         <div className="flex items-center justify-center h-64">
                           <div className="text-center">
@@ -1439,11 +1517,11 @@ useEffect(() => {
                     
                     <Button
                       onClick={() => {
-                        console.log('Preview button clicked, current step:', step);
+                        console.log('Settings button clicked, current step:', step);
                         console.log('Form data:', formData);
                         console.log('Title valid:', !!formData.title.trim());
                         console.log('Description valid:', !!formData.description.trim());
-                        setStep('preview');
+                        setStep('settings');
                       }}
                       disabled={!formData.title.trim() || !formData.description.trim()}
                       size="lg"
@@ -1456,11 +1534,192 @@ useEffect(() => {
                       }}
                       className="px-8 h-11 text-white font-semibold shadow-lg relative z-10 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview Site
+                      <Settings className="w-4 h-4 mr-2" />
+                      Configure Features
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {step === 'settings' && (
+            <div className="p-6 space-y-6">
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Settings className="w-6 h-6 text-purple-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                  Client Engagement Features
+                </h2>
+                <p className="text-slate-600 max-w-md mx-auto">
+                  Choose which interactive features to enable for your clients (all optional)
+                </p>
+              </div>
+
+              <div className="space-y-4 max-w-2xl mx-auto">
+                {/* Favorites Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Heart className="w-5 h-5 text-red-500" />
+                      <h3 className="font-semibold text-slate-900">Favorites</h3>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">Free</Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Let clients ♥ their preferred files for easy shortlisting
+                    </p>
+                  </div>
+                  <Switch
+                    checked={projectSettings.enableFavorites}
+                    onCheckedChange={(checked) => 
+                      setProjectSettings(prev => ({ ...prev, enableFavorites: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Comments Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageCircle className="w-5 h-5 text-blue-500" />
+                      <h3 className="font-semibold text-slate-900">Comments & Feedback</h3>
+                      <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50">Pro</Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Enable threaded discussions directly on files
+                    </p>
+                  </div>
+                  <Switch
+                    checked={projectSettings.enableComments}
+                    onCheckedChange={(checked) => 
+                      setProjectSettings(prev => ({ ...prev, enableComments: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Approvals Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <h3 className="font-semibold text-slate-900">One-Click Approvals</h3>
+                      <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50">Pro</Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Speed up approval workflows with status tracking
+                    </p>
+                  </div>
+                  <Switch
+                    checked={projectSettings.enableApprovals}
+                    onCheckedChange={(checked) => 
+                      setProjectSettings(prev => ({ ...prev, enableApprovals: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Analytics Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <BarChart3 className="w-5 h-5 text-purple-500" />
+                      <h3 className="font-semibold text-slate-900">Light Analytics</h3>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">Free</Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Track views, downloads, and engagement
+                    </p>
+                  </div>
+                  <Switch
+                    checked={projectSettings.enableAnalytics}
+                    onCheckedChange={(checked) => 
+                      setProjectSettings(prev => ({ ...prev, enableAnalytics: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Notifications Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bell className="w-5 h-5 text-yellow-500" />
+                      <h3 className="font-semibold text-slate-900">Notifications</h3>
+                      <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50">Pro</Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Get notified when clients interact with your files
+                    </p>
+                  </div>
+                  <Switch
+                    checked={projectSettings.enableNotifications}
+                    onCheckedChange={(checked) => 
+                      setProjectSettings(prev => ({ ...prev, enableNotifications: checked }))
+                    }
+                  />
+                </div>
+
+                {/* Notification Email Input (conditional) */}
+                {projectSettings.enableNotifications && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label htmlFor="notificationEmail" className="text-sm font-medium text-blue-900">
+                      Notification Email
+                    </Label>
+                    <Input
+                      id="notificationEmail"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={projectSettings.notificationEmail}
+                      onChange={(e) => setProjectSettings(prev => ({ 
+                        ...prev, 
+                        notificationEmail: e.target.value 
+                      }))}
+                      className="mt-2 bg-white"
+                    />
+                    <p className="text-xs text-blue-700 mt-1">
+                      We'll email you when clients favorite, comment, or approve files
+                    </p>
+                  </div>
+                )}
+
+                {/* Pro Features Upsell */}
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                    <h4 className="font-semibold text-amber-900">Unlock Pro Features</h4>
+                  </div>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Comments, approvals, and notifications are available with Lytsite Pro
+                  </p>
+                  <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep('details')}
+                  className="px-6 h-11 border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back to Details
+                </Button>
+                <Button
+                  onClick={() => setStep('preview')}
+                  size="lg"
+                  style={{
+                    background: 'linear-gradient(to right, #10b981, #059669)',
+                    color: 'white',
+                    border: 'none'
+                  }}
+                  className="px-8 h-11 text-white font-semibold shadow-lg relative z-10 hover:opacity-90"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview Site
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             </div>
           )}
@@ -1592,6 +1851,15 @@ useEffect(() => {
           </Card>
         </div>
       )}
+
+      {/* Email Collection Modal */}
+      <EmailCollectionModal
+        isOpen={emailCollection.shouldShowModal}
+        onClose={emailCollection.closeModal}
+        onEmailSubmit={(email) => emailCollection.submitEmail(email, emailCollection.modalTrigger || 'success_page', projectSlug)}
+        trigger={emailCollection.modalTrigger as any || 'success_page'}
+        projectTitle={title}
+      />
     </>
   );
 }

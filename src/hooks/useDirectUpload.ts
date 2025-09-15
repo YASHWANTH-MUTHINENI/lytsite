@@ -18,6 +18,7 @@ interface DirectUploadMetadata {
   authorName?: string;
   password?: string;
   expiryDate?: string;
+  settings?: any; // ProjectSettings from types.ts
 }
 
 interface DirectUploadSession {

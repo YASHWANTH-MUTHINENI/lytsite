@@ -31,6 +31,7 @@ export interface DirectChunkedUploadOptions {
   authorName?: string;
   password?: string;
   expiryDate?: string;
+  settings?: any; // ProjectSettings from types.ts
 }
 
 export interface DirectChunkedUploadResult {
