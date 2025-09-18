@@ -43,6 +43,11 @@ export function hasAnonymousSession(): boolean {
   return localStorage.getItem(ANONYMOUS_SESSION_KEY) !== null;
 }
 
+// API base URL configuration
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev'
+  : 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev';
+
 /**
  * Get projects created by the current anonymous session
  */
@@ -50,7 +55,7 @@ export async function getAnonymousProjects(): Promise<any[]> {
   const sessionId = getAnonymousSessionId();
   
   try {
-    const response = await fetch(`/api/projects/anonymous/${sessionId}`);
+    const response = await fetch(`${API_BASE}/api/projects/anonymous/${sessionId}`);
     
     if (response.ok) {
       const data = await response.json();
@@ -74,7 +79,7 @@ export async function claimAnonymousProjects(creatorId: string): Promise<boolean
   }
   
   try {
-    const response = await fetch('/api/creators/claim', {
+    const response = await fetch(`${API_BASE}/api/creators/claim`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -98,6 +103,25 @@ export async function claimAnonymousProjects(creatorId: string): Promise<boolean
 }
 
 /**
+ * Get engagement summary for anonymous session (limited data for conversion)
+ */
+export async function getAnonymousEngagementSummary(): Promise<any> {
+  const sessionId = getAnonymousSessionId();
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/engagement/anonymous/${sessionId}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    }
+  } catch (error) {
+    console.error('Failed to fetch engagement summary:', error);
+  }
+  
+  return null;
+}
+
+/**
  * Session Manager Hook for React components
  */
 export function useAnonymousSession() {
@@ -109,5 +133,6 @@ export function useAnonymousSession() {
     clearSession: clearAnonymousSession,
     claimProjects: claimAnonymousProjects,
     getProjects: getAnonymousProjects,
+    getEngagementSummary: getAnonymousEngagementSummary,
   };
 }

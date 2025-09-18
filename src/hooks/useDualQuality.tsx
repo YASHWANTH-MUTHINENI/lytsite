@@ -254,7 +254,23 @@ export function DownloadButton({
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    try {
+      // Track download analytics
+      await fetch(`${WORKER_URL}/api/track/download/${fileId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fileId,
+          fileName
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to track download:', error);
+    }
+    
     // Always download the original file - user doesn't see this complexity
     const downloadUrl = `${WORKER_URL}/api/files/${fileId}?mode=download`;
     window.open(downloadUrl, '_blank');

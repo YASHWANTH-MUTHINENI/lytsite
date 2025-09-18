@@ -47,8 +47,8 @@ export function DashboardAnalytics({ projectId, fileId, className = '' }: Dashbo
   const loadDetailedAnalytics = async () => {
     try {
       const url = fileId 
-        ? `/api/advanced/analytics?projectId=${projectId}&fileId=${fileId}&detailed=true`
-        : `/api/advanced/analytics?projectId=${projectId}&detailed=true`;
+        ? `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/analytics?projectId=${projectId}&fileId=${fileId}&detailed=true`
+        : `https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/analytics?projectId=${projectId}&detailed=true`;
         
       const response = await fetch(url);
       

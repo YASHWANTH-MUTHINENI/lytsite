@@ -1,0 +1,44 @@
+{
+  "id": "bmsbks01",
+  "title": "BMS Books Collection",
+  "description": "Professional book showcase with Instagram-style interactions",
+  "tagLine": "Created with Lytsite",
+  "template": "universal",
+  "createdAt": 1726419300000,
+  "views": 0,
+  "authorName": "Test User",
+  "files": [
+    {
+      "id": "img001",
+      "name": "book-cover-1.jpg",
+      "size": 1572864,
+      "url": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "type": "image",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "id": "img002",
+      "name": "book-cover-2.jpg", 
+      "size": 1363149,
+      "url": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "type": "image",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "id": "pdf001",
+      "name": "book-preview.pdf",
+      "size": 2097152, 
+      "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "type": "pdf",
+      "mimeType": "application/pdf"
+    },
+    {
+      "id": "vid001",
+      "name": "author-interview.mp4",
+      "size": 15728640,
+      "url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+      "type": "video",
+      "mimeType": "video/mp4"
+    }
+  ]
+}

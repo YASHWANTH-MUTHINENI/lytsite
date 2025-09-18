@@ -1,5 +1,6 @@
 import { Env, ProjectData } from './types';
 import { formatFileSize, isImage } from './utils';
+import { verifyPassword } from './password-utils';
 
 export async function serveLytsite(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -22,6 +23,40 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
     }
 
     const project: ProjectData = JSON.parse(projectJson);
+    
+    // Load project settings from D1 database
+    let projectSettings = {
+      enableFavorites: false,
+      enableComments: false,
+      enableApprovals: false,
+      enableAnalytics: false,
+      enableNotifications: false
+    };
+    
+    if (env.LYTSITE_DB) {
+      try {
+        const settingsResult = await env.LYTSITE_DB.prepare(`
+          SELECT enable_favorites, enable_comments, enable_approvals, enable_analytics, enable_notifications
+          FROM project_settings WHERE project_id = ?
+        `).bind(slug).first();
+        
+        if (settingsResult) {
+          const settings = settingsResult as any;
+          projectSettings = {
+            enableFavorites: Boolean(settings.enable_favorites),
+            enableComments: Boolean(settings.enable_comments),
+            enableApprovals: Boolean(settings.enable_approvals),
+            enableAnalytics: Boolean(settings.enable_analytics),
+            enableNotifications: Boolean(settings.enable_notifications)
+          };
+          console.log('📖 Loaded settings from D1 for project:', slug, projectSettings);
+        } else {
+          console.log('⚠️ No settings found in D1 for project:', slug);
+        }
+      } catch (error) {
+        console.warn('Failed to load project settings from D1:', error);
+      }
+    }
     
     // Check if project has expired
     if (project.expiryDate && Date.now() > project.expiryDate) {
@@ -57,7 +92,7 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
     if (project.password) {
       const providedPassword = url.searchParams.get('password');
       
-      if (!providedPassword || providedPassword !== project.password) {
+      if (!providedPassword || !(await verifyPassword(providedPassword, project.password))) {
         return new Response(`
           <!DOCTYPE html>
           <html>
@@ -147,14 +182,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
       views: project.views,
       createdAt: project.createdAt,
       slug,
-      // Advanced features settings (NEW)
-      settings: project.settings || {
-        enableFavorites: false,
-        enableComments: false,
-        enableApprovals: false,
-        enableAnalytics: false,
-        enableNotifications: false
-      },
+      // Advanced features settings (loaded from D1)
+      settings: projectSettings,
       // Client delivery specific fields (from project data)
       clientName: (project as any).clientName,
       deliveryDate: (project as any).deliveryDate,
@@ -192,8 +221,8 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 }
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
-  // Version 2004 - Clean rebuild with Instagram features confirmed in bundle
-  const cacheKey = '2004';
+  // Version 2016 - FINAL FIX: Instagram features working!
+  const cacheKey = '2016';
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -12,6 +12,7 @@ import {
   isOptimizableFile,
   storeFile
 } from './optimization';
+import { hashPassword } from './password-utils';
 
 /**
  * Generate presigned URL for R2 bucket upload
@@ -35,10 +36,8 @@ async function generatePresignedUrl(
 
   // R2 presigned URL - this is a simplified version
   // In production, you'd use the actual R2 presigned URL API
-  const presignedUrl = await env.LYTSITE_STORAGE.createPresignedUrl(key, {
-    method: 'PUT',
-    expiresIn: expiresIn
-  });
+  // For now, return a URL that can be used with the Worker as a proxy
+  const presignedUrl = `/api/upload/direct/${encodeURIComponent(key)}?expires=${Date.now() + expiresIn * 1000}`;
   
   return presignedUrl;
 }
@@ -134,13 +133,11 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
       const storageKeys = generateStorageKeys(projectSlug, fileId, fileInfo.fileName);
 
       // Generate presigned URL for original file upload
-      const presignedUrl = await generateR2PresignedUrl(
-        env.R2_BUCKET_ORIGINALS,
-        storageKeys.original,
-        'PUT',
-        3600, // 1 hour expiration
+      const presignedUrl = await generatePresignedUrl(
+        env,
+        storageKeys.originalKey,
         fileInfo.contentType,
-        fileInfo.fileSize
+        3600 // 1 hour expiration
       );
 
       const uploadFile: DirectUploadFile = {
@@ -150,7 +147,10 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
         contentType: fileInfo.contentType,
         status: 'pending',
         presignedUrl,
-        storageKeys
+        storageKeys: {
+          original: storageKeys.originalKey,
+          preview: storageKeys.optimizedKey
+        }
       };
 
       uploadFiles.push(uploadFile);
@@ -162,6 +162,9 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
       });
     }
 
+    // Hash password if provided for security
+    const hashedPassword = metadata.password ? await hashPassword(metadata.password) : undefined;
+
     // Create upload session
     const session: DirectUploadSession = {
       sessionId,
@@ -172,7 +175,7 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
         description: metadata.description || '',
         template: metadata.template || 'universal-file-template',
         authorName: metadata.authorName || '',
-        password: metadata.password,
+        password: hashedPassword,
         expiryDate: metadata.expiryDate
       },
       status: 'pending',
@@ -180,9 +183,7 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
     };
 
     // Store session in KV
-    await env.KV.put(`upload-session:${sessionId}`, JSON.stringify(session), {
-      expirationTtl: 7200 // 2 hours
-    });
+    await env.LYTSITE_KV.put(`upload-session:${sessionId}`, JSON.stringify(session));
 
     console.log(`Direct upload session initialized: ${sessionId} with ${files.length} files`);
 
@@ -213,12 +214,12 @@ export async function initializeDirectUpload(request: Request, env: Env): Promis
 export async function completeDirectUpload(request: Request, env: Env, fileId: string): Promise<Response> {
   try {
     // Find the session containing this file
-    const sessions = await env.KV.list({ prefix: 'upload-session:' });
+    const sessions = await env.LYTSITE_KV.list({ prefix: 'upload-session:' });
     let targetSession: DirectUploadSession | null = null;
     let sessionKey = '';
 
     for (const key of sessions.keys) {
-      const sessionData = await env.KV.get(key.name);
+      const sessionData = await env.LYTSITE_KV.get(key.name);
       if (sessionData) {
         const session: DirectUploadSession = JSON.parse(sessionData);
         const fileIndex = session.files.findIndex(f => f.fileId === fileId);
@@ -250,9 +251,7 @@ export async function completeDirectUpload(request: Request, env: Env, fileId: s
     }
 
     // Save updated session
-    await env.KV.put(sessionKey, JSON.stringify(targetSession), {
-      expirationTtl: 7200
-    });
+    await env.LYTSITE_KV.put(sessionKey, JSON.stringify(targetSession));
 
     // Trigger post-processing for this file
     const uploadedFile = targetSession.files.find(f => f.fileId === fileId);
@@ -291,7 +290,7 @@ export async function completeDirectUpload(request: Request, env: Env, fileId: s
  */
 export async function getDirectUploadStatus(request: Request, env: Env, sessionId: string): Promise<Response> {
   try {
-    const sessionData = await env.KV.get(`upload-session:${sessionId}`);
+    const sessionData = await env.LYTSITE_KV.get(`upload-session:${sessionId}`);
     
     if (!sessionData) {
       return Response.json({
@@ -350,7 +349,7 @@ async function processUploadedFile(
     }
 
     // Get the uploaded file from R2
-    const originalObject = await env.R2_BUCKET_ORIGINALS.get(file.storageKeys.original);
+    const originalObject = await env.LYTSITE_ORIGINALS.get(file.storageKeys.original);
     if (!originalObject) {
       throw new Error('Uploaded file not found in storage');
     }
@@ -361,23 +360,21 @@ async function processUploadedFile(
     let optimizedKey: string | undefined;
 
     // Generate optimized version if file type supports it
-    if (isOptimizableFile(file.fileName, file.contentType)) {
+    if (isOptimizableFile(file.fileName)) {
       try {
         const originalBuffer = await originalObject.arrayBuffer();
-        const optimizedBuffer = await generateOptimizedVersion(originalBuffer, {
-          fileName: file.fileName,
-          fileType: file.contentType,
-          fileSize: file.fileSize
-        });
+        const optimizedBuffer = await generateOptimizedVersion(originalBuffer, file.contentType, file.fileName);
 
-        // Store optimized version
-        optimizedKey = file.storageKeys.original.replace('/originals/', '/previews/');
-        await env.R2_BUCKET_PREVIEWS.put(optimizedKey, optimizedBuffer, {
-          httpMetadata: {
-            contentType: file.contentType.startsWith('image/') ? 'image/webp' : file.contentType,
-            cacheControl: 'public, max-age=31536000'
-          }
-        });
+        // Store optimized version if successful
+        if (optimizedBuffer) {
+          optimizedKey = file.storageKeys.original.replace('/originals/', '/previews/');
+          await env.LYTSITE_PREVIEWS.put(optimizedKey, optimizedBuffer.optimizedData, {
+            httpMetadata: {
+              contentType: optimizedBuffer.contentType,
+              cacheControl: 'public, max-age=31536000'
+            }
+          });
+        }
 
         console.log(`Optimized version created: ${optimizedKey}`);
       } catch (optimizationError) {
@@ -398,10 +395,10 @@ async function processUploadedFile(
       processedAt: new Date().toISOString()
     };
 
-    await env.KV.put(`file:${file.fileId}`, JSON.stringify(metadata));
+    await env.LYTSITE_KV.put(`file:${file.fileId}`, JSON.stringify(metadata));
 
     // Update file status in session
-    const sessionData = await env.KV.get(`upload-session:${session.sessionId}`);
+    const sessionData = await env.LYTSITE_KV.get(`upload-session:${session.sessionId}`);
     if (sessionData) {
       const currentSession: DirectUploadSession = JSON.parse(sessionData);
       const fileIndex = currentSession.files.findIndex(f => f.fileId === file.fileId);
@@ -417,9 +414,7 @@ async function processUploadedFile(
           await createProjectFromSession(env, currentSession);
         }
 
-        await env.KV.put(`upload-session:${session.sessionId}`, JSON.stringify(currentSession), {
-          expirationTtl: 7200
-        });
+        await env.LYTSITE_KV.put(`upload-session:${session.sessionId}`, JSON.stringify(currentSession));
       }
     }
 
@@ -429,15 +424,13 @@ async function processUploadedFile(
     console.error(`File processing failed for ${file.fileId}:`, error);
     
     // Update file status to error
-    const sessionData = await env.KV.get(`upload-session:${session.sessionId}`);
+    const sessionData = await env.LYTSITE_KV.get(`upload-session:${session.sessionId}`);
     if (sessionData) {
       const currentSession: DirectUploadSession = JSON.parse(sessionData);
       const fileIndex = currentSession.files.findIndex(f => f.fileId === file.fileId);
       if (fileIndex !== -1) {
         currentSession.files[fileIndex].status = 'error';
-        await env.KV.put(`upload-session:${session.sessionId}`, JSON.stringify(currentSession), {
-          expirationTtl: 7200
-        });
+        await env.LYTSITE_KV.put(`upload-session:${session.sessionId}`, JSON.stringify(currentSession));
       }
     }
   }
@@ -473,7 +466,7 @@ async function createProjectFromSession(env: Env, session: DirectUploadSession):
     };
 
     // Store project
-    await env.KV.put(`project:${session.projectSlug}`, JSON.stringify(projectData));
+    await env.LYTSITE_KV.put(`project:${session.projectSlug}`, JSON.stringify(projectData));
 
     console.log(`Project created from direct upload session: ${session.projectSlug}`);
 

@@ -824,6 +824,7 @@ useEffect(() => {
     uploadFormData.append('anonymousSessionId', getAnonymousSessionId());
     
     // Add project settings for advanced features
+    console.log('📤 Sending project settings to backend:', projectSettings);
     uploadFormData.append('settings', JSON.stringify(projectSettings));
     
     // Add processed file metadata

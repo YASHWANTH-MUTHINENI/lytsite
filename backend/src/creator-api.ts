@@ -1,4 +1,6 @@
 import { Env } from './types';
+import { corsHeaders } from './utils';
+import { requireAuth, optionalAuth, requireOwnership, AuthContext } from './auth-middleware';
 
 interface IRequest extends Request {
   query?: Record<string, string>;
@@ -91,6 +93,7 @@ export class CreatorAPI {
 
   // Get projects by anonymous session ID
   async getAnonymousProjects(anonymousSessionId: string) {
+    console.log('Searching for anonymous projects with session ID:', anonymousSessionId);
     const stmt = this.db.prepare(`
       SELECT p.*, ps.* 
       FROM projects p
@@ -100,6 +103,8 @@ export class CreatorAPI {
     `);
     
     const results = await stmt.bind(anonymousSessionId).all();
+    console.log('Database query results:', results);
+    console.log('Results.results length:', results.results?.length || 0);
     
     return results.results?.map((row: any) => ({
       id: row.id,
@@ -170,6 +175,102 @@ export class CreatorAPI {
     return { success: true, message: 'Anonymous projects claimed successfully' };
   }
 
+  // Get anonymous engagement summary (limited data for conversion)
+  async getAnonymousEngagementSummary(anonymousSessionId: string) {
+    // Check if session has expired (7 days from first project creation)
+    const projectAgeStmt = this.db.prepare(`
+      SELECT MIN(created_at) as first_project_date, COUNT(*) as project_count
+      FROM projects 
+      WHERE anonymous_session_id = ?
+    `);
+    
+    const projectAge = await projectAgeStmt.bind(anonymousSessionId).first() as any;
+    
+    if (!projectAge?.first_project_date) {
+      return null; // No projects found
+    }
+
+    const firstProjectDate = new Date(projectAge.first_project_date);
+    const now = new Date();
+    const daysSinceCreation = Math.floor((now.getTime() - firstProjectDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.max(0, 7 - daysSinceCreation);
+    
+    // If expired, return expired status
+    if (daysRemaining <= 0) {
+      return {
+        expired: true,
+        message: 'Analytics access has expired. Sign up to restore your data!'
+      };
+    }
+
+    // Get project IDs for this session
+    const projectIdsStmt = this.db.prepare(`
+      SELECT id FROM projects WHERE anonymous_session_id = ?
+    `);
+    const projectIdsResult = await projectIdsStmt.bind(anonymousSessionId).all();
+    const projectIdList = (projectIdsResult.results as any[]).map((row: any) => row.id);
+
+    if (projectIdList.length === 0) {
+      return null;
+    }
+
+    // Get aggregated engagement counts (no detailed breakdown)
+    let totalInteractions = 0;
+    let hasComments = false;
+    let hasFavorites = false;
+    let hasApprovals = false;
+
+    // Check for comments
+    const commentsStmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM comments 
+      WHERE project_id IN (${projectIdList.map(() => '?').join(',')})
+    `);
+    const commentCount = await commentsStmt.bind(...projectIdList).first() as any;
+    const commentsNum = commentCount?.count || 0;
+    if (commentsNum > 0) {
+      hasComments = true;
+      totalInteractions += commentsNum;
+    }
+
+    // Check for favorites
+    const favoritesStmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM favorites 
+      WHERE project_id IN (${projectIdList.map(() => '?').join(',')})
+    `);
+    const favoriteCount = await favoritesStmt.bind(...projectIdList).first() as any;
+    const favoritesNum = favoriteCount?.count || 0;
+    if (favoritesNum > 0) {
+      hasFavorites = true;
+      totalInteractions += favoritesNum;
+    }
+
+    // Check for approvals
+    const approvalsStmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM approvals 
+      WHERE project_id IN (${projectIdList.map(() => '?').join(',')})
+    `);
+    const approvalCount = await approvalsStmt.bind(...projectIdList).first() as any;
+    const approvalsNum = approvalCount?.count || 0;
+    if (approvalsNum > 0) {
+      hasApprovals = true;
+      totalInteractions += approvalsNum;
+    }
+
+    const expiresAt = new Date(firstProjectDate);
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    return {
+      total_interactions: totalInteractions,
+      has_comments: hasComments,
+      has_favorites: hasFavorites,
+      has_approvals: hasApprovals,
+      days_remaining: daysRemaining,
+      expires_at: expiresAt.toISOString(),
+      project_count: projectAge.project_count,
+      expired: false
+    };
+  }
+
   // Get creator analytics summary
   async getCreatorAnalytics(creatorId: string) {
     // Get project count
@@ -218,6 +319,22 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
   const path = url.pathname.replace('/api/creators', '');
 
   try {
+    // Handle authentication based on endpoint
+    let auth: AuthContext | null = null;
+    
+    // Public endpoints (no auth required)
+    const publicEndpoints = ['/sync'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => path === endpoint);
+    
+    if (!isPublicEndpoint) {
+      // Protected endpoints require authentication
+      const authResult = await requireAuth(request, env);
+      if (authResult instanceof Response) {
+        return authResult; // Return auth error
+      }
+      auth = authResult.auth;
+    }
+
     switch (request.method) {
       case 'POST':
         if (path === '/sync') {
@@ -225,7 +342,7 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
           const body = await request.json() as CreateCreatorData;
           const creator = await api.createOrUpdateCreator(body);
           return new Response(JSON.stringify({ creator }), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
           });
         }
         
@@ -234,7 +351,7 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
           const body = await request.json() as { anonymousSessionId: string; creatorId: string };
           const result = await api.claimAnonymousProject(body.anonymousSessionId, body.creatorId);
           return new Response(JSON.stringify(result), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
           });
         }
         break;
@@ -243,18 +360,36 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
         if (path.startsWith('/projects/')) {
           // Get creator projects: /api/creators/projects/{creatorId}
           const creatorId = path.split('/')[2];
+          
+          // Verify ownership - users can only access their own projects
+          if (auth) {
+            const ownershipResult = await requireOwnership(request, env, creatorId);
+            if (ownershipResult instanceof Response) {
+              return ownershipResult; // Return ownership error
+            }
+          }
+          
           const projects = await api.getCreatorProjects(creatorId);
           return new Response(JSON.stringify({ projects }), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
           });
         }
         
         if (path.startsWith('/analytics/')) {
           // Get creator analytics: /api/creators/analytics/{creatorId}
           const creatorId = path.split('/')[2];
+          
+          // Verify ownership - users can only access their own analytics
+          if (auth) {
+            const ownershipResult = await requireOwnership(request, env, creatorId);
+            if (ownershipResult instanceof Response) {
+              return ownershipResult; // Return ownership error
+            }
+          }
+          
           const analytics = await api.getCreatorAnalytics(creatorId);
           return new Response(JSON.stringify({ analytics }), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
           });
         }
         
@@ -263,7 +398,7 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
           const clerkUserId = path.split('/')[2];
           const creator = await api.getCreatorByClerkId(clerkUserId);
           return new Response(JSON.stringify({ creator }), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
           });
         }
         break;
@@ -271,14 +406,14 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
 
     return new Response(JSON.stringify({ error: 'Not found' }), {
       status: 404,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Creator API error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
     });
   }
 }

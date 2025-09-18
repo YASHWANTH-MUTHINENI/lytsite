@@ -28,6 +28,7 @@ import Feedback from './components/feedback';
 import Payment from './components/Payment';
 import { CreatorDashboard } from './components/CreatorDashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { EngagementProvider } from './providers/EngagementProvider';
 
 // Import the publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -40,8 +41,9 @@ export default function App() {
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <ThemeProvider>
-        <Router>
-          <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
+        <EngagementProvider>
+          <Router>
+            <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/templates" element={<TemplatesPage />} />
@@ -78,6 +80,7 @@ export default function App() {
           </Routes>
         </div>
       </Router>
+        </EngagementProvider>
     </ThemeProvider>
     </ClerkProvider>
   );

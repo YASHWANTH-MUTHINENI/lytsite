@@ -11,6 +11,7 @@ import {
   generateStorageKeys, 
   isOptimizableFile 
 } from './optimization';
+import { hashPassword } from './password-utils';
 
 export interface DirectChunkSession {
   sessionId: string;

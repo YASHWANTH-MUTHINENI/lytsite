@@ -1,0 +1,45 @@
+{
+  "title": "Yashwanth Wedding Pics",
+  "subLine": "Beautiful wedding memories with Instagram-style sharing",
+  "tagLine": "Created with Lytsite",
+  "createdAt": "2025-09-15T17:15:00.000Z",
+  "views": 0,
+  "files": [
+    {
+      "name": "ceremony-photo-1.jpg",
+      "size": "3.2 MB",
+      "url": "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+      "type": "image"
+    },
+    {
+      "name": "ceremony-photo-2.jpg", 
+      "size": "2.8 MB",
+      "url": "https://images.unsplash.com/photo-1465495976277-4387d4b0e4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+      "type": "image"
+    },
+    {
+      "name": "reception-highlights.jpg",
+      "size": "2.4 MB",
+      "url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+      "type": "image"
+    },
+    {
+      "name": "couple-portrait.jpg",
+      "size": "2.1 MB",
+      "url": "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+      "type": "image"
+    },
+    {
+      "name": "wedding-video-highlights.mp4",
+      "size": "25.6 MB",
+      "url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+      "type": "video"
+    },
+    {
+      "name": "guest-book.pdf",
+      "size": "1.2 MB", 
+      "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "type": "pdf"
+    }
+  ]
+}

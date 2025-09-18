@@ -1,7 +1,25 @@
 /**
  * Phase 2: Chunked Upload System
  * 
- * This module implements chunked uploads through the worker with:
+ * This module implem    // Hash password if provided for security
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+
+    // Initialize upload session
+    const session: UploadSession = {
+      sessionId: sessionId,
+      projectSlug,
+      files: [],
+      metadata: {
+        title,
+        description,
+        template,
+        authorName,
+        password: hashedPassword,
+        expiryDate
+      },
+      createdAt: new Date().toISOString(),
+      status: 'initialized'
+    };oads through the worker with:
  * - Multi-part uploads for large files (>100MB)
  * - Real-time progress tracking
  * - Background optimization processing
@@ -11,6 +29,7 @@
 import { Env, FileMetadata, DirectUploadResponse, ChunkUploadResponse, UploadInitResponse } from './types';
 import { generateSlug, generateId, corsHeaders } from './utils';
 import { generateStorageKeys, storeFile } from './optimization';
+import { hashPassword } from './password-utils';
 
 // Configuration for chunked uploads
 const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks

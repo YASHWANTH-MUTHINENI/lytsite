@@ -1,0 +1,60 @@
+{
+  "id": "wedding1",
+  "title": "Yashwanth Wedding Pics",
+  "description": "Beautiful wedding memories with Instagram-style sharing",
+  "template": "universal",
+  "createdAt": 1726417800000,
+  "views": 0,
+  "authorName": "Yashwanth",
+  "settings": {
+    "enableFavorites": true,
+    "enableComments": true,
+    "enableApprovals": true,
+    "enableAnalytics": false,
+    "enableNotifications": false
+  },
+  "files": [
+    {
+      "id": "ceremony-1",
+      "name": "ceremony-photo-1.jpg",
+      "size": 3355443,
+      "type": "image/jpeg",
+      "url": "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+    },
+    {
+      "id": "ceremony-2", 
+      "name": "ceremony-photo-2.jpg",
+      "size": 2936012,
+      "type": "image/jpeg",
+      "url": "https://images.unsplash.com/photo-1465495976277-4387d4b0e4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+    },
+    {
+      "id": "reception-1",
+      "name": "reception-highlights.jpg", 
+      "size": 2516582,
+      "type": "image/jpeg",
+      "url": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+    },
+    {
+      "id": "portrait-1",
+      "name": "couple-portrait.jpg",
+      "size": 2202009,
+      "type": "image/jpeg", 
+      "url": "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+    },
+    {
+      "id": "video-1",
+      "name": "wedding-video-highlights.mp4",
+      "size": 26843545,
+      "type": "video/mp4",
+      "url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+    },
+    {
+      "id": "guestbook-1",
+      "name": "guest-book.pdf",
+      "size": 1258291,
+      "type": "application/pdf",
+      "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+    }
+  ]
+}

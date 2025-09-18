@@ -31,7 +31,7 @@ export function FavoriteButton({ projectId, fileId, className = '' }: FavoriteBu
   const loadFavoriteStatus = async () => {
     try {
       const userSessionId = getUserSessionId();
-      const response = await fetch(`/api/favorites?projectId=${projectId}&fileId=${fileId}&userSessionId=${userSessionId}`);
+      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/favorites?projectId=${projectId}&fileId=${fileId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -51,7 +51,7 @@ export function FavoriteButton({ projectId, fileId, className = '' }: FavoriteBu
 
     try {
       const method = isFavorited ? 'DELETE' : 'POST';
-      const response = await fetch('/api/favorites', {
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/favorites', {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +59,8 @@ export function FavoriteButton({ projectId, fileId, className = '' }: FavoriteBu
         body: JSON.stringify({
           projectId,
           fileId,
-          userSessionId
+          userEmail: userSessionId,
+          userName: `User ${userSessionId.slice(-4)}`
         })
       });
 

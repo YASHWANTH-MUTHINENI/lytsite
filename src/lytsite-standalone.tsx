@@ -61,7 +61,10 @@ function initializeLytsite() {
       email: "",
       website: "https://lytsite.com",
       linkedin: ""
-    }
+    },
+    // ✅ ADD THE MISSING PROPERTIES FOR INSTAGRAM FEATURES
+    slug: data.slug,
+    settings: data.settings
   };
 
   // Always render UniversalFileTemplate for standalone builds

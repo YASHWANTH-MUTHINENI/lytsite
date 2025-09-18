@@ -32,7 +32,7 @@ export function ApprovalButtons({ projectId, fileId, className = '' }: ApprovalB
   const loadApprovalStatus = async () => {
     try {
       const userSessionId = getUserSessionId();
-      const response = await fetch(`/api/approvals?projectId=${projectId}&fileId=${fileId}&userSessionId=${userSessionId}`);
+      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/approvals?projectId=${projectId}&fileId=${fileId}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -60,7 +60,7 @@ export function ApprovalButtons({ projectId, fileId, className = '' }: ApprovalB
     const userSessionId = getUserSessionId();
 
     try {
-      const response = await fetch('/api/approvals', {
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/approvals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,8 +68,9 @@ export function ApprovalButtons({ projectId, fileId, className = '' }: ApprovalB
         body: JSON.stringify({
           projectId,
           fileId,
-          status,
-          userSessionId
+          userEmail: userSessionId,
+          userName: `User ${userSessionId.slice(-4)}`,
+          status
         })
       });
 

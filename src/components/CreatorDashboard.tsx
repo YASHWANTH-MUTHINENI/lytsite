@@ -4,6 +4,11 @@ import { DashboardAnalytics } from './features/DashboardAnalytics';
 import { ProjectClaimBanner } from './auth/ProjectClaimBanner';
 import { Heart, MessageCircle, CheckCircle, Plus, Upload, Calendar, Users, BarChart3, TrendingUp } from 'lucide-react';
 
+// Use the same API base as other working components
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev' 
+  : 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev';
+
 interface DashboardProps {
   className?: string;
 }
@@ -63,6 +68,7 @@ export function CreatorDashboard({ className = '' }: DashboardProps) {
     if (!user) return;
 
     try {
+      console.log('🔍 Initializing creator for user:', user.id);
       const creatorData = {
         clerk_user_id: user.id,
         email: user.primaryEmailAddress?.emailAddress || '',
@@ -70,7 +76,8 @@ export function CreatorDashboard({ className = '' }: DashboardProps) {
         avatar_url: user.imageUrl || undefined,
       };
 
-      const response = await fetch('/api/creators/sync', {
+      console.log('📤 Creating creator with data:', creatorData);
+      const response = await fetch(`${API_BASE}/api/creators/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,12 +85,16 @@ export function CreatorDashboard({ className = '' }: DashboardProps) {
         body: JSON.stringify(creatorData),
       });
 
+      console.log('📥 Creator sync response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Creator initialized:', data.creator);
         setCreator(data.creator);
+      } else {
+        console.error('❌ Creator sync failed:', response.status, await response.text());
       }
     } catch (error) {
-      console.error('Failed to initialize creator:', error);
+      console.error('💥 Failed to initialize creator:', error);
     }
   };
 
@@ -91,10 +102,13 @@ export function CreatorDashboard({ className = '' }: DashboardProps) {
     if (!creator) return;
 
     try {
-      const response = await fetch(`/api/creators/projects/${creator.id}`);
+      console.log('📋 Loading projects for creator:', creator.id);
+      const response = await fetch(`${API_BASE}/api/creators/projects/${creator.id}`);
       
+      console.log('📥 Projects response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Projects loaded:', data.projects);
         const projectsWithPlaceholders = (data.projects || []).map((project: any) => ({
           ...project,
           favorites_count: 0, // TODO: Fetch real analytics
@@ -103,9 +117,11 @@ export function CreatorDashboard({ className = '' }: DashboardProps) {
           views_count: 0,
         }));
         setProjects(projectsWithPlaceholders);
+      } else {
+        console.error('❌ Projects load failed:', response.status, await response.text());
       }
     } catch (error) {
-      console.error('Failed to load projects:', error);
+      console.error('💥 Failed to load projects:', error);
     } finally {
       setIsLoading(false);
     }

@@ -48,16 +48,66 @@ export function InlineActionBar({
     ) : null;
   }
 
-  const handleFavoriteClick = () => {
-    setIsFavorited(!isFavorited);
-    // TODO: Implement actual API call
-    console.log(`Toggle favorite for file ${fileId} in project ${projectId}`);
+  const handleFavoriteClick = async () => {
+    try {
+      const userSessionId = localStorage.getItem('lytsite_session_id') || 
+        `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (!localStorage.getItem('lytsite_session_id')) {
+        localStorage.setItem('lytsite_session_id', userSessionId);
+      }
+
+      const method = isFavorited ? 'DELETE' : 'POST';
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/favorites', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId,
+          fileId,
+          userEmail: userSessionId,
+          userName: `User ${userSessionId.slice(-4)}`
+        })
+      });
+
+      if (response.ok) {
+        setIsFavorited(!isFavorited);
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
   };
 
-  const handleApprovalClick = (status: 'approved' | 'rejected') => {
-    setApprovalStatus(status);
-    // TODO: Implement actual API call
-    console.log(`Set approval status ${status} for file ${fileId} in project ${projectId}`);
+  const handleApprovalClick = async (status: 'approved' | 'rejected') => {
+    try {
+      const userSessionId = localStorage.getItem('lytsite_session_id') || 
+        `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (!localStorage.getItem('lytsite_session_id')) {
+        localStorage.setItem('lytsite_session_id', userSessionId);
+      }
+
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/approvals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId,
+          fileId,
+          userEmail: userSessionId,
+          userName: `User ${userSessionId.slice(-4)}`,
+          status
+        })
+      });
+
+      if (response.ok) {
+        setApprovalStatus(status);
+      }
+    } catch (error) {
+      console.error('Failed to set approval status:', error);
+    }
   };
 
   return (

@@ -105,8 +105,13 @@ const mockData = {
 };
 
 export default function UniversalFileTemplate({ data }: UniversalFileTemplateProps) {
+  // Use provided data, window data (for deployed sites), or fall back to mockData for testing
+  const windowData = typeof window !== 'undefined' ? (window as any).LYTSITE_DATA : null;
+  
   // Use provided data or fall back to mockData for testing
   const templateData = data || mockData;
+  
+
 
   // Sample document content for text/document files
   const getSampleDocumentContent = () => {
@@ -504,6 +509,8 @@ Version: 1.0`;
           projectId={templateData.slug}
           settings={templateData.settings}
         />
+        
+
 
         {/* Footer Block - Always on bottom */}
         <FooterBlock

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import MinimalUploadModal from "./minimal-upload-modal";
 import Navbar from "./Navbar";
+import { AnonymousEngagementTeaser } from "./auth/AnonymousEngagementTeaser";
 import { 
   Upload, 
   Palette, 
@@ -134,6 +135,20 @@ export default function Homepage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Anonymous Engagement Teaser */}
+      <section className="py-8 bg-gradient-to-br from-slate-50 to-slate-100/50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <AnonymousEngagementTeaser 
+              onSignUpClick={() => {
+                // Redirect to sign up or open auth modal
+                window.location.href = '/dashboard';
+              }}
+            />
           </div>
         </div>
       </section>

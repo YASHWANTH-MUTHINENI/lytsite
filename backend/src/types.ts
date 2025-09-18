@@ -1,5 +1,10 @@
 // Cloudflare Workers types (these should be available globally in the Workers runtime)
 declare global {
+  interface ExecutionContext {
+    waitUntil(promise: Promise<any>): void;
+    passThroughOnException(): void;
+  }
+
   interface KVNamespace {
     get(key: string): Promise<string | null>;
     put(key: string, value: string): Promise<void>;
@@ -63,10 +68,17 @@ export interface Fetcher {
 
 export interface Env {
   LYTSITE_KV: KVNamespace;
+  // Alternative KV binding name for compatibility
+  KV?: KVNamespace;
   LYTSITE_STORAGE: R2Bucket;
   // Phase 2: Direct upload buckets
   LYTSITE_ORIGINALS: R2Bucket;
   LYTSITE_PREVIEWS: R2Bucket;
+  // Alternative R2 bucket bindings for compatibility
+  R2_BUCKET_ORIGINALS?: R2Bucket;
+  R2_BUCKET_PREVIEWS?: R2Bucket;
+  // Execution context for waitUntil
+  ctx?: ExecutionContext;
   ENVIRONMENT: string;
   // D1 Database for advanced features
   LYTSITE_DB: D1Database;
@@ -74,6 +86,17 @@ export interface Env {
   ASSETS?: {
     fetch(request: Request): Promise<Response>;
   };
+  // Authentication & Security
+  CLERK_SECRET_KEY?: string;
+  INTERNAL_API_KEY?: string;
+  WEBHOOK_API_KEY?: string;
+  CLERK_WEBHOOK_SECRET?: string;
+  // External services
+  AWS_CONVERTER_URL?: string;
+  AWS_REGION?: string;
+  GOTENBERG_SERVICE_URL?: string;
+  CLOUDMERSIVE_API_KEY?: string;
+  ONLYOFFICE_SERVER_URL?: string;
 }
 
 export interface ProjectData {

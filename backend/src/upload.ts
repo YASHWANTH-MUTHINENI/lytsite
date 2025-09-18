@@ -8,9 +8,11 @@ import {
   isOptimizableFile,
   STORAGE_BUCKETS 
 } from './optimization';
+import { hashPassword } from './password-utils';
 
 export async function handleUpload(request: Request, env: Env): Promise<Response> {
   try {
+    console.log('🚀 Upload endpoint hit!');
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const title = formData.get('title') as string;
@@ -39,9 +41,12 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
     if (settingsJson) {
       try {
         projectSettings = JSON.parse(settingsJson);
+        console.log('🔍 Backend received project settings:', projectSettings);
       } catch (error) {
         console.warn('Failed to parse project settings:', error);
       }
+    } else {
+      console.log('⚠️ No settings JSON received by backend');
     }
 
     if (!files.length || !title) {
@@ -240,6 +245,9 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
       });
     }
 
+    // Hash password if provided for security
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+
     // Create project data
     const projectData: ProjectData = {
       id: projectSlug,
@@ -251,12 +259,13 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
       views: 0,
       authorName,
       authorEmail,
-      password: password || undefined,
+      password: hashedPassword,
       expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined,
       settings: projectSettings || undefined
     };
 
     // Store project metadata in KV
+    console.log('💾 Storing project data with settings:', { projectSlug, settings: projectData.settings });
     await env.LYTSITE_KV.put(`project:${projectSlug}`, JSON.stringify(projectData));
 
     // Store project in database with anonymous session support
@@ -265,15 +274,15 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
         // Insert project record
         await env.LYTSITE_DB.prepare(`
           INSERT INTO projects 
-          (id, slug, title, description, author_name, anonymous_session_id, created_at, updated_at)
+          (id, slug, title, description, creator_id, anonymous_session_id, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `).bind(
           projectSlug,
           projectSlug,
           title,
           description,
-          authorName || null,
-          anonymousSessionId || null
+          null, // creator_id (NULL for anonymous sessions)
+          anonymousSessionId || null  // anonymous_session_id
         ).run();
 
         // Store project settings if provided
@@ -371,6 +380,38 @@ export async function handleFileServing(request: Request, env: Env): Promise<Res
     
     if (!object) {
       return new Response('File not found', { status: 404 });
+    }
+
+    // Track view analytics if this is a preview request
+    if (mode === 'preview') {
+      try {
+        // Extract project ID from metadata (if available)
+        let projectId: string | null = null;
+        if (metadata && metadata.originalKey) {
+          const keyParts = metadata.originalKey.split('/');
+          if (keyParts.length >= 2 && keyParts[0] === 'projects') {
+            projectId = keyParts[1];
+          }
+        }
+        
+        // Track view in analytics if we have project context
+        if (projectId && env.LYTSITE_DB) {
+          const eventId = crypto.randomUUID();
+          await env.LYTSITE_DB.prepare(`
+            INSERT INTO analytics (id, project_id, file_id, event_type, created_at)
+            VALUES (?, ?, ?, 'view', ?)
+          `).bind(eventId, projectId, fileId, Math.floor(Date.now() / 1000)).run();
+        }
+        
+        // Also track in simple KV counter for legacy support
+        const viewKey = `views:${fileId}`;
+        const currentViews = await env.LYTSITE_KV.get(viewKey);
+        const newViews = currentViews ? parseInt(currentViews) + 1 : 1;
+        await env.LYTSITE_KV.put(viewKey, newViews.toString());
+      } catch (error) {
+        console.warn('Failed to track view:', error);
+        // Don't fail the request if tracking fails
+      }
     }
 
     // Set response headers

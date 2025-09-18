@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Upload, Menu, X, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { ConversionNotificationCenter } from "./notifications/ConversionNotificationCenter";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -162,8 +163,13 @@ export default function Navbar() {
               </button>
             </nav>
             
-            {/* Right - Auth Section */}
-            <AuthSection />
+            {/* Right - Notifications & Auth */}
+            <div className="flex items-center gap-3">
+              <ConversionNotificationCenter 
+                onSignUpClick={() => window.location.href = '/dashboard'}
+              />
+              <AuthSection />
+            </div>
             
             {/* Mobile Menu Button */}
             {isMobile && (

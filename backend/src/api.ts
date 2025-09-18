@@ -112,11 +112,33 @@ export class AdvancedFeaturesAPI {
       // Add favorite
       const { projectId, fileId, userEmail, userName } = await request.json();
       
+      // Check if database exists
+      if (!this.env.LYTSITE_DB) {
+        return new Response(JSON.stringify({ 
+          error: 'Database not configured' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
       const favoriteId = crypto.randomUUID();
-      await this.env.LYTSITE_DB.prepare(`
-        INSERT OR REPLACE INTO favorites (id, project_id, file_id, user_email, user_name)
-        VALUES (?, ?, ?, ?, ?)
-      `).bind(favoriteId, projectId, fileId, userEmail, userName).run();
+      
+      try {
+        await this.env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO favorites (id, project_id, file_id, user_email, user_name)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(favoriteId, projectId, fileId, userEmail, userName).run();
+      } catch (dbError) {
+        console.error('Database error in favorites:', dbError);
+        return new Response(JSON.stringify({ 
+          error: 'Database operation failed',
+          details: String(dbError) 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       // Track analytics
       await this.trackEvent(projectId, fileId, userEmail, 'favorite');
@@ -250,21 +272,56 @@ export class AdvancedFeaturesAPI {
         notes
       });
 
-      return new Response(JSON.stringify({ success: true, id: approvalId }), {
+      // Get updated counts for this file
+      const countsResult = await this.env.LYTSITE_DB.prepare(`
+        SELECT status, COUNT(*) as count 
+        FROM approvals 
+        WHERE project_id = ? AND file_id = ? 
+        GROUP BY status
+      `).bind(projectId, fileId).all();
+
+      const counts = { approved: 0, rejected: 0 };
+      (countsResult.results as any[]).forEach(row => {
+        if (row.status === 'approved') counts.approved = row.count;
+        if (row.status === 'rejected') counts.rejected = row.count;
+      });
+
+      return new Response(JSON.stringify({ success: true, id: approvalId, counts }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     if (method === 'GET') {
-      // Get approvals for project
+      // Get approvals for project/file
       const url = new URL(request.url);
       const projectId = url.searchParams.get('projectId');
+      const fileId = url.searchParams.get('fileId');
 
-      const result = await this.env.LYTSITE_DB.prepare(`
-        SELECT * FROM approvals WHERE project_id = ? ORDER BY created_at DESC
-      `).bind(projectId).all();
+      // Get approval counts
+      const countsResult = await this.env.LYTSITE_DB.prepare(`
+        SELECT status, COUNT(*) as count 
+        FROM approvals 
+        WHERE project_id = ? ${fileId ? 'AND file_id = ?' : ''}
+        GROUP BY status
+      `).bind(projectId, ...(fileId ? [fileId] : [])).all();
 
-      return new Response(JSON.stringify(result.results), {
+      const counts = { approved: 0, rejected: 0 };
+      (countsResult.results as any[]).forEach(row => {
+        if (row.status === 'approved') counts.approved = row.count;
+        if (row.status === 'rejected') counts.rejected = row.count;
+      });
+
+      // Get all approvals for detailed view
+      const allResult = await this.env.LYTSITE_DB.prepare(`
+        SELECT * FROM approvals 
+        WHERE project_id = ? ${fileId ? 'AND file_id = ?' : ''}
+        ORDER BY created_at DESC
+      `).bind(projectId, ...(fileId ? [fileId] : [])).all();
+
+      return new Response(JSON.stringify({ 
+        counts, 
+        approvals: allResult.results 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }

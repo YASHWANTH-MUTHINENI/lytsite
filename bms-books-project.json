@@ -1,0 +1,60 @@
+{
+  "id": "bmsbooks",
+  "title": "BMS Books Collection",
+  "description": "Professional book showcase with Instagram-style interactions",
+  "template": "universal-file-template",
+  "createdAt": 1726422900000,
+  "authorName": "Book Curator",
+  "authorEmail": "curator@bmsbooks.com",
+  "views": 0,
+  "files": [
+    {
+      "id": "book1img001",
+      "name": "book-cover-1.jpg",
+      "size": 1572864,
+      "url": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "type": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "id": "book2img002", 
+      "name": "book-cover-2.jpg",
+      "size": 1363149,
+      "url": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "type": "image",
+      "contentType": "image/jpeg"
+    },
+    {
+      "id": "bookpdf003",
+      "name": "book-preview.pdf",
+      "size": 2202009, 
+      "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "type": "pdf",
+      "contentType": "application/pdf"
+    },
+    {
+      "id": "vidintrvw04",
+      "name": "author-interview.mp4",
+      "size": 15938355,
+      "url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+      "type": "video",
+      "contentType": "video/mp4"
+    },
+    {
+      "id": "catalog005",
+      "name": "book-catalog.xlsx",
+      "size": 460800,
+      "url": "https://file-examples.com/storage/fe68c8a70c66bd30f22c7d9/2017/10/file_example_XLS_10.xls",
+      "type": "spreadsheet",
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "id": "notes006doc",
+      "name": "reading-notes.docx",
+      "size": 286720,
+      "url": "https://file-examples.com/storage/fe68c8a70c66bd30f22c7d9/2017/10/file-sample_150kB.pdf",
+      "type": "document",
+      "contentType": "application/pdf"
+    }
+  ]
+}
