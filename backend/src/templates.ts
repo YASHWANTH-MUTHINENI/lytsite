@@ -222,7 +222,7 @@ export async function serveLytsite(request: Request, env: Env): Promise<Response
 
 function generateHtmlWrapper(projectData: any, slug: string): string {
   // Version 2016 - FINAL FIX: Instagram features working!
-  const cacheKey = '2016';
+  const cacheKey = '2022';
 
   return `<!DOCTYPE html>
 <html lang="en">

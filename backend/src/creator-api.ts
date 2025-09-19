@@ -310,6 +310,168 @@ export class CreatorAPI {
       comments: (totalComments as any)?.comments || 0
     };
   }
+
+  // Get comprehensive project details for dashboard
+  async getProjectDetails(projectId: string) {
+    console.log('📊 CreatorAPI: Getting details for project:', projectId);
+    
+    // Get basic project info with settings
+    const projectStmt = this.db.prepare(`
+      SELECT 
+        p.id, p.title, p.slug, p.description, p.created_at,
+        COALESCE(ps.enable_favorites, 0) as enable_favorites,
+        COALESCE(ps.enable_comments, 0) as enable_comments,
+        COALESCE(ps.enable_approvals, 0) as enable_approvals,
+        COALESCE(ps.enable_analytics, 1) as enable_analytics,
+        COALESCE(ps.enable_notifications, 0) as enable_notifications
+      FROM projects p
+      LEFT JOIN project_settings ps ON p.id = ps.project_id
+      WHERE p.id = ?
+    `);
+    const project = await projectStmt.bind(projectId).first() as any;
+    
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Get all project files from analytics events (assuming files are tracked when viewed)
+    const filesStmt = this.db.prepare(`
+      SELECT DISTINCT file_id, COUNT(*) as view_count
+      FROM analytics 
+      WHERE project_id = ? AND file_id IS NOT NULL AND file_id != ''
+      GROUP BY file_id
+    `);
+    const fileResults = await filesStmt.bind(projectId).all();
+    const fileIds = (fileResults.results as any[]).map(r => r.file_id);
+    
+    console.log('📊 Found files:', fileIds);
+
+    // Build file details
+    const files = await Promise.all(fileIds.map(async (fileId: string) => {
+      // Get favorites for this file
+      const favoritesStmt = this.db.prepare(`
+        SELECT id, user_email, user_name, created_at
+        FROM favorites 
+        WHERE project_id = ? AND file_id = ?
+        ORDER BY created_at DESC
+      `);
+      const favorites = await favoritesStmt.bind(projectId, fileId).all();
+
+      // Get comments for this file
+      const commentsStmt = this.db.prepare(`
+        SELECT id, user_email, user_name, comment_text, created_at, thread_id
+        FROM comments 
+        WHERE project_id = ? AND file_id = ?
+        ORDER BY created_at DESC
+      `);
+      const comments = await commentsStmt.bind(projectId, fileId).all();
+
+      // Get approvals for this file
+      const approvalsStmt = this.db.prepare(`
+        SELECT id, user_email, user_name, status, notes, created_at
+        FROM approvals 
+        WHERE project_id = ? AND file_id = ?
+        ORDER BY created_at DESC
+      `);
+      const approvals = await approvalsStmt.bind(projectId, fileId).all();
+
+      // Get analytics for this file
+      const analyticsStmt = this.db.prepare(`
+        SELECT 
+          COUNT(*) as total_views,
+          COUNT(CASE WHEN event_type = 'download' THEN 1 END) as downloads,
+          COUNT(DISTINCT user_email) as unique_visitors
+        FROM analytics 
+        WHERE project_id = ? AND file_id = ?
+      `);
+      const analytics = await analyticsStmt.bind(projectId, fileId).first() as any;
+
+      return {
+        id: fileId,
+        name: fileId, // We'll use fileId as name for now
+        type: 'unknown', // Could be enhanced to detect type
+        uploadedAt: new Date().toISOString(), // Placeholder
+        favorites: (favorites.results as any[]).map(f => ({
+          id: f.id,
+          userEmail: f.user_email,
+          userName: f.user_name,
+          createdAt: new Date(f.created_at * 1000).toISOString()
+        })),
+        comments: (comments.results as any[]).map(c => ({
+          id: c.id,
+          userEmail: c.user_email,
+          userName: c.user_name,
+          commentText: c.comment_text,
+          createdAt: new Date(c.created_at * 1000).toISOString()
+        })),
+        approvals: (approvals.results as any[]).map(a => ({
+          id: a.id,
+          userEmail: a.user_email,
+          userName: a.user_name,
+          status: a.status,
+          notes: a.notes,
+          createdAt: new Date(a.created_at * 1000).toISOString()
+        })),
+        analytics: {
+          views: analytics?.total_views || 0,
+          downloads: analytics?.downloads || 0,
+          uniqueVisitors: analytics?.unique_visitors || 0
+        }
+      };
+    }));
+
+    // Calculate project totals
+    const totalFavorites = files.reduce((sum, file) => sum + file.favorites.length, 0);
+    const totalComments = files.reduce((sum, file) => sum + file.comments.length, 0);
+    const totalApprovals = files.reduce((acc, file) => {
+      file.approvals.forEach(approval => {
+        acc[approval.status as keyof typeof acc]++;
+      });
+      return acc;
+    }, { approved: 0, rejected: 0, pending: 0 });
+    const totalViews = files.reduce((sum, file) => sum + file.analytics.views, 0);
+    const totalDownloads = files.reduce((sum, file) => sum + file.analytics.downloads, 0);
+    
+    // Get unique users count across all interactions
+    const uniqueUsersStmt = this.db.prepare(`
+      SELECT COUNT(DISTINCT user_email) as unique_users
+      FROM (
+        SELECT user_email FROM analytics WHERE project_id = ? AND user_email IS NOT NULL
+        UNION
+        SELECT user_email FROM favorites WHERE project_id = ?
+        UNION  
+        SELECT user_email FROM comments WHERE project_id = ?
+        UNION
+        SELECT user_email FROM approvals WHERE project_id = ?
+      )
+    `);
+    const uniqueUsers = await uniqueUsersStmt.bind(projectId, projectId, projectId, projectId).first() as any;
+
+    return {
+      id: project.id,
+      title: project.title,
+      slug: project.slug,
+      description: project.description,
+      created_at: new Date(project.created_at).toISOString(),
+      settings: {
+        enable_favorites: Boolean(project.enable_favorites),
+        enable_comments: Boolean(project.enable_comments),
+        enable_approvals: Boolean(project.enable_approvals),
+        enable_analytics: Boolean(project.enable_analytics),
+        enable_notifications: Boolean(project.enable_notifications)
+      },
+      files,
+      totals: {
+        totalFiles: files.length,
+        totalFavorites,
+        totalComments,
+        totalApprovals,
+        totalViews,
+        totalDownloads,
+        uniqueUsers: uniqueUsers?.unique_users || 0
+      }
+    };
+  }
 }
 
 // HTTP Request Handlers
@@ -317,6 +479,14 @@ export async function handleCreatorAPI(request: IRequest, env: Env): Promise<Res
   const api = new CreatorAPI(env);
   const url = new URL(request.url);
   const path = url.pathname.replace('/api/creators', '');
+
+  // Handle CORS preflight requests
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders()
+    });
+  }
 
   try {
     // Handle authentication based on endpoint

@@ -31,10 +31,11 @@ export function FavoriteButton({ projectId, fileId, className = '' }: FavoriteBu
   const loadFavoriteStatus = async () => {
     try {
       const userSessionId = getUserSessionId();
-      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/favorites?projectId=${projectId}&fileId=${fileId}`);
+      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/favorites?projectId=${projectId}&fileId=${fileId}&userEmail=${userSessionId}`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Loaded favorite status:', data);
         setIsFavorited(data.isFavorited || false);
         setFavoriteCount(data.count || 0);
       }
@@ -66,8 +67,10 @@ export function FavoriteButton({ projectId, fileId, className = '' }: FavoriteBu
 
       if (response.ok) {
         const data = await response.json();
-        setIsFavorited(!isFavorited);
-        setFavoriteCount(data.count || 0);
+        console.log('🔍 Toggle favorite response:', data);
+        
+        // Reload the favorite status to get accurate data
+        await loadFavoriteStatus();
       } else {
         console.error('Failed to toggle favorite');
       }

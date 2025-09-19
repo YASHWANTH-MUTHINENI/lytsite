@@ -80,7 +80,7 @@ export default function Homepage() {
                 </h1>
                 
                 <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed max-w-2xl font-light italic">
-                  Transform your files into professional, secure websites that impress clients and colleagues — no technical skills required.
+                  Create engaging file experiences with comments, approvals, and analytics. Turn every shared file into a collaborative workspace.
                 </p>
               </div>
               
@@ -462,10 +462,10 @@ export default function Homepage() {
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">
-              More than file transfer. A delivery experience your clients will love.
+              Beyond sharing. Create engaging file experiences that drive collaboration.
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Transform any file into a professional presentation with features that make sharing feel premium.
+              Every file becomes an interactive workspace with comments, approvals, analytics, and comprehensive project dashboards.
             </p>
           </div>
           
@@ -497,30 +497,30 @@ export default function Homepage() {
               </p>
             </div>
 
-            {/* Smart Tracking */}
+            {/* Comments & Feedback */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
-              <div className="text-4xl mb-6">📊</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Smart Tracking</h3>
+              <div className="text-4xl mb-6">�</div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">Comments & Feedback</h3>
               <p className="text-slate-600 leading-relaxed">
-                Know exactly when your files are viewed, downloaded, and by whom. Get insights that help you follow up at the right time.
+                Enable real-time commenting on any file. Collect feedback, answer questions, and collaborate directly on your shared content.
               </p>
             </div>
 
-            {/* Timeline & Versioning */}
+            {/* Approval Workflows */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
-              <div className="text-4xl mb-6">📂</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Timeline & Versioning</h3>
+              <div className="text-4xl mb-6">✅</div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">Approval Workflows</h3>
               <p className="text-slate-600 leading-relaxed">
-                Keep links current with instant updates. Share once, update forever – your audience always sees the latest version.
+                Streamline review processes with built-in approval systems. Track approval status and get notified when decisions are made.
               </p>
             </div>
 
-            {/* Bulk Generation */}
+            {/* Project Analytics Dashboard */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
-              <div className="text-4xl mb-6">📑</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Bulk Generation</h3>
+              <div className="text-4xl mb-6">�</div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">Project Analytics Dashboard</h3>
               <p className="text-slate-600 leading-relaxed">
-                Upload multiple files at once and get individual professional sites for each. Perfect for portfolios, catalogs, and collections.
+                Comprehensive insights into every project. See file-level engagement, user activity, comments, approvals, and detailed analytics.
               </p>
             </div>
 
@@ -546,10 +546,10 @@ export default function Homepage() {
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">
-              Built for Professionals Who Demand Better
+              Built for Teams Who Need Real Collaboration
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Whether you're delivering creative work, managing client projects, or closing deals – Lytsite transforms how you share.
+              Whether you're collecting client feedback, managing approval workflows, or tracking engagement – Lytsite transforms files into collaborative workspaces.
             </p>
           </div>
           
@@ -849,7 +849,7 @@ export default function Homepage() {
             Ready to get started?
           </h2>
           <p className="text-xl text-slate-700 dark:text-slate-300 mb-8 max-w-2xl mx-auto">
-            Transform your file sharing experience in seconds. Try our upload tool above or explore our templates.
+            Create your first collaborative file workspace. Upload any file and unlock comments, approvals, and analytics.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
@@ -883,88 +883,36 @@ export default function Homepage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                Simple, transparent pricing
+                Pricing that grows with your business
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Choose the perfect plan for your file sharing needs. Start free and upgrade as you grow.
+                From individual creators to growing agencies. Start free, upgrade when you're ready to win more clients.
               </p>
             </div>
 
             {/* Clean Pricing Cards */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
               
               {/* Free Plan */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Free</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">₹0</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">$0</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>2 GB upload size</span>
+                    <span>Basic file delivery</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>10 GB bandwidth/month</span>
+                    <span>5 GB storage</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>7 days expiry</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>File previews</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>QR code sharing</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <X className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" />
-                    <span className="text-slate-500">Password protection</span>
-                  </li>
-                </ul>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.open('https://lytsite.com', '_blank')}
-                >
-                  Get Started
-                </Button>
-              </div>
-
-              {/* Standard Plan - Popular */}
-              <div className="bg-white rounded-2xl border-2 border-primary p-6 lg:p-8 shadow-lg relative transform scale-105">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-white px-4 py-1">Most Popular</Badge>
-                </div>
-                
-                <div className="text-center mb-6 pt-2">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Standard</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">₹749</div>
-                  <p className="text-sm text-slate-500">per month</p>
-                </div>
-                
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>10 GB upload size</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>100 GB bandwidth/month</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>30 days expiry</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>Password protection</span>
+                    <span>Lytsite branding</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
@@ -972,38 +920,35 @@ export default function Homepage() {
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>No watermark</span>
+                    <span>Up to 3 active delivery links</span>
                   </li>
                 </ul>
                 
                 <Button 
-                  className="w-full bg-primary text-white hover:bg-primary/90"
-                  onClick={handleFreeTrialClick}
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.location.href = '/billing'}
                 >
-                  Start Free Trial
+                  Get Started
                 </Button>
               </div>
 
-              {/* Pro Plan */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-center mb-6">
+              {/* Pro Plan - Popular */}
+              <div className="bg-white rounded-2xl border-2 border-primary p-6 lg:p-8 shadow-lg relative transform scale-105">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-primary text-white px-4 py-1">Most Popular</Badge>
+                </div>
+                
+                <div className="text-center mb-6 pt-2">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Pro</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">₹2,399</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">$19</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>25 GB upload size</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>500 GB bandwidth/month</span>
-                  </li>
-                  <li className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>No expiry</span>
+                    <span>Everything in Free</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
@@ -1011,20 +956,35 @@ export default function Homepage() {
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                    <span>100 GB storage</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
                     <span>Advanced analytics</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>2 team members</span>
+                    <span>Unlimited delivery links</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                    <span>Comments & feedback</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                    <span>Client favorites</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                    <span>Email notifications</span>
                   </li>
                 </ul>
                 
                 <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.location.href = '/payment'}
+                  className="w-full bg-primary text-white hover:bg-primary/90"
+                  onClick={() => window.location.href = '/billing'}
                 >
-                  Upgrade to Pro
+                  Start Free Trial
                 </Button>
               </div>
 
@@ -1032,45 +992,51 @@ export default function Homepage() {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Business</h3>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">₹8,199</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">$49</div>
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>100 GB upload size</span>
+                    <span>Everything in Pro</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>2 TB bandwidth/month</span>
+                    <span>Unlimited storage</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>White-label + domain</span>
+                    <span>CRM integrations</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>Full analytics + API</span>
+                    <span>API access</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>Unlimited team members</span>
+                    <span>Priority support</span>
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                    <span>Priority support + SLA</span>
+                    <span>Multi-user access</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                    <span>Custom domain</span>
                   </li>
                 </ul>
                 
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = '/payment'}
+                  onClick={() => window.location.href = '/billing'}
                 >
                   Contact Sales
                 </Button>
               </div>
+
+
             </div>
 
             {/* FAQ Section */}
@@ -1106,7 +1072,7 @@ export default function Homepage() {
                   <span className="text-xl font-bold leading-none">Lytsite</span>
                 </div>
                 <p className="text-slate-400 mb-6 leading-relaxed text-sm">
-                  Professional file sharing made simple. Transform how you deliver work to clients with beautiful, secure sharing pages.
+                  Advanced file collaboration platform. Create engaging workspaces with comments, approvals, and comprehensive analytics for every project.
                 </p>
                 {/* <div className="flex space-x-3">
                   <a href="#" className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors">
@@ -1177,7 +1143,7 @@ export default function Homepage() {
           <div className="py-6 border-t border-slate-800">
             <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between text-center lg:text-left space-y-4 lg:space-y-0">
               <p className="text-slate-400 text-sm">
-                © 2025 Lytsite. All rights reserved. Professional file sharing made simple.
+                © 2025 Lytsite. All rights reserved. File collaboration platform with advanced engagement features.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6 text-sm">
                 <span className="text-slate-400 flex items-center gap-1">

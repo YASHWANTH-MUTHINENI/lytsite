@@ -24,6 +24,7 @@ async function secureApiResponse(handler: () => Promise<Response>): Promise<Resp
 import { AdvancedFeaturesAPI } from './api';
 import { handleCreatorAPI } from './creator-api';
 import { handleEmailCollection } from './email-collection';
+import { BillingAPI } from './billing/api';
 // Phase 2: Import chunked upload handlers
 import { 
   initializeChunkedUpload, 
@@ -49,6 +50,8 @@ import {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    
+    console.log('🔥 Worker: Received request:', request.method, url.pathname);
     
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
@@ -292,6 +295,44 @@ export default {
       return handleCreatorAPI(request, env);
     }
 
+    // Project details API route (comprehensive dashboard)
+    if (url.pathname.match(/^\/api\/projects\/([^\/]+)\/details$/)) {
+      return secureApiResponse(async () => {
+        const projectId = url.pathname.split('/')[3];
+        console.log('📊 Worker: Project details request for:', projectId);
+        
+        try {
+          const { CreatorAPI } = await import('./creator-api');
+          const api = new CreatorAPI(env);
+          const projectDetails = await api.getProjectDetails(projectId);
+          
+          return new Response(JSON.stringify({ project: projectDetails }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+          });
+        } catch (error) {
+          console.error('💥 Project details error:', error);
+          return new Response(JSON.stringify({ 
+            error: 'Failed to load project details',
+            message: error instanceof Error ? error.message : 'Unknown error'
+          }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+          });
+        }
+      });
+    }
+
+    // Billing API routes
+    if (url.pathname.startsWith('/api/billing')) {
+      console.log('💰 Worker: Billing API route matched:', url.pathname);
+      return secureApiResponse(async () => {
+        console.log('💰 Worker: Creating BillingAPI instance');
+        const api = new BillingAPI(env);
+        console.log('💰 Worker: Calling api.handleRequest');
+        return api.handleRequest(request);
+      });
+    }
+
     // Advanced Features API routes
     if (url.pathname.startsWith('/api/favorites') || 
         url.pathname.startsWith('/api/comments') || 
@@ -299,8 +340,11 @@ export default {
         url.pathname.startsWith('/api/analytics') || 
         url.pathname.startsWith('/api/notifications') || 
         url.pathname.startsWith('/api/project-settings')) {
+      console.log('🔥 Worker: Advanced Features API route matched:', url.pathname);
       return secureApiResponse(async () => {
+        console.log('🔥 Worker: Creating AdvancedFeaturesAPI instance');
         const api = new AdvancedFeaturesAPI(env);
+        console.log('🔥 Worker: Calling api.handleRequest');
         return api.handleRequest(request);
       });
     }

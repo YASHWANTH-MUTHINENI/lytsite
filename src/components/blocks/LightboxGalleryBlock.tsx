@@ -354,6 +354,19 @@ export default function LightboxGalleryBlock({
           </div>
         )}
 
+        {/* Main Gallery Features - Below Thumbnail Grid */}
+        {projectId && settings && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <CompactFeatures
+              fileId={`${projectId}-lightbox`}
+              projectId={projectId}
+              settings={settings}
+              onDownload={onDownload}
+              className="mt-8"
+            />
+          </div>
+        )}
+
         {/* Lightbox */}
         {selectedImage !== null && (
           <div 

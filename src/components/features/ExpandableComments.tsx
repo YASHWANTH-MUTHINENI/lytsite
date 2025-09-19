@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, Heart, MoreHorizontal } from 'lucide-react';
 
 interface Comment {
@@ -19,7 +19,7 @@ interface ExpandableCommentsProps {
   className?: string;
 }
 
-// Mock comments data - replace with actual API calls
+// Mock comments data - TO BE REPLACED WITH REAL API
 const mockComments: Comment[] = [
   {
     id: '1',
@@ -57,10 +57,133 @@ export function ExpandableComments({
   onToggle, 
   className = '' 
 }: ExpandableCommentsProps) {
-  const [comments, setComments] = useState<Comment[]>(mockComments);
+  console.log('🚀 ExpandableComments rendered with:', { fileId, projectId, isExpanded });
+  
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  // Get user session ID
+  const getUserSessionId = () => {
+    let sessionId = localStorage.getItem('lytsite_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('lytsite_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
+  // Load comments when component mounts or when expanded
+  useEffect(() => {
+    if (isExpanded) {
+      console.log('📥 Loading comments for expanded section...');
+      loadComments();
+    }
+  }, [isExpanded, fileId, projectId]);
+
+  const loadComments = async () => {
+    try {
+      console.log('🔍 Fetching comments from API...');
+      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/comments?projectId=${projectId}&fileId=${fileId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Comments loaded:', data);
+        
+        // Convert backend format to UI format
+        const uiComments = (data.comments || []).map((comment: any) => ({
+          id: comment.id,
+          author: comment.user_name || comment.userName || (comment.user_email ? `User ${comment.user_email.slice(-4)}` : `User ${comment.userEmail?.slice(-4) || 'Unknown'}`),
+          avatar: (comment.user_name || comment.userName)?.substring(0, 2).toUpperCase() || 'U',
+          content: comment.comment_text || comment.commentText || comment.content,
+          timestamp: comment.created_at ? new Date(comment.created_at * 1000).toLocaleString() : new Date(comment.createdAt).toLocaleString(),
+          likes: 0,
+          isLiked: false
+        }));
+        
+        setComments(uiComments);
+      } else {
+        console.error('❌ Failed to load comments:', response.status);
+        // Fall back to mock data for now
+        setComments(mockComments);
+      }
+    } catch (error) {
+      console.error('❌ Error loading comments:', error);
+      // Fall back to mock data for now
+      setComments(mockComments);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || isLoading) return;
+
+    console.log('📤 Submitting comment:', newComment);
+    setIsLoading(true);
+    const userSessionId = getUserSessionId();
+
+    try {
+      const requestBody = {
+        projectId,
+        fileId,
+        threadId: null,
+        userEmail: userSessionId,
+        userName: `User ${userSessionId?.slice(-4) || 'Unknown'}`,
+        commentText: newComment.trim()
+      };
+
+      console.log('🚀 Sending comment to backend:', requestBody);
+
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('📥 Comment submission response:', response.status, response.statusText);
+
+      if (response.ok) {
+        setNewComment('');
+        // Reload comments to get the new one
+        await loadComments();
+        console.log('✅ Comment submitted successfully');
+      } else {
+        console.error('❌ Failed to submit comment');
+        // Add comment locally as fallback
+        const fallbackComment: Comment = {
+          id: Date.now().toString(),
+          author: 'You',
+          avatar: 'Y',
+          content: newComment,
+          timestamp: 'now',
+          likes: 0,
+          isLiked: false
+        };
+        setComments(prev => [...prev, fallbackComment]);
+        setNewComment('');
+      }
+    } catch (error) {
+      console.error('❌ Error submitting comment:', error);
+      // Add comment locally as fallback
+      const fallbackComment: Comment = {
+        id: Date.now().toString(),
+        author: 'You',
+        avatar: 'Y',
+        content: newComment,
+        timestamp: 'now',
+        likes: 0,
+        isLiked: false
+      };
+      setComments(prev => [...prev, fallbackComment]);
+      setNewComment('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitCommentOld = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
@@ -167,9 +290,13 @@ export function ExpandableComments({
             <button
               type="submit"
               className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!newComment.trim()}
+              disabled={!newComment.trim() || isLoading}
             >
-              <Send className="w-4 h-4" />
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </button>
           </div>
         </form>

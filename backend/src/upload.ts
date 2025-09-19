@@ -9,6 +9,7 @@ import {
   STORAGE_BUCKETS 
 } from './optimization';
 import { hashPassword } from './password-utils';
+import { UsageLimitsEnforcer } from './billing/usage-enforcer';
 
 export async function handleUpload(request: Request, env: Env): Promise<Response> {
   try {
@@ -57,6 +58,28 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
         status: 400,
         headers: corsHeaders()
       });
+    }
+
+    // Check usage limits before creating project
+    if (authorEmail) {
+      const usageEnforcer = new UsageLimitsEnforcer(env);
+      const canCreate = await usageEnforcer.checkUsageLimit(
+        authorEmail,
+        'create_project'
+      );
+
+      if (!canCreate.allowed) {
+        return Response.json({
+          success: false,
+          error: canCreate.reason || 'Project limit reached',
+          upgradeRequired: canCreate.upgradeRequired,
+          currentUsage: canCreate.currentUsage,
+          limit: canCreate.limit
+        } as UploadResponse, {
+          status: 403, // Forbidden
+          headers: corsHeaders()
+        });
+      }
     }
 
     // Generate project slug first (we'll use this as project ID)
@@ -305,6 +328,17 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
         }
       } catch (error) {
         console.warn('Failed to store project in database:', error);
+      }
+    }
+
+    // Track successful project creation for billing
+    if (authorEmail) {
+      try {
+        const usageEnforcer = new UsageLimitsEnforcer(env);
+        await usageEnforcer.updateUsage(authorEmail, 'create_project');
+      } catch (error) {
+        console.warn('Failed to track usage for project creation:', error);
+        // Don't fail the upload if usage tracking fails
       }
     }
 

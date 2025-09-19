@@ -6,6 +6,7 @@ import FooterBlock from "./blocks/FooterBlock";
 import EnhancedThemeSwitcher from "./ui/EnhancedThemeSwitcher";
 import { Button } from "./ui/button";
 import { ArrowLeft, Home } from "lucide-react";
+import { useBulkDownload } from "../hooks/useDualQuality";
 
 interface TemplateData {
   title: string;
@@ -398,18 +399,142 @@ Version: 1.0`;
     f.type?.includes('presentation')
   );
   
-  const finalFileType = isPowerPointFile ? 'presentation' : primaryFileType;  const handleDownload = () => {
+  const finalFileType = isPowerPointFile ? 'presentation' : primaryFileType;
+  
+  const { downloadFiles } = useBulkDownload();
+
+  const handleDownload = async () => {
     // Track download action
     console.log(`Download tracked for files`);
+    
+    // Download the primary file or first file
+    const fileToDownload = templateData.files[0];
+    console.log('File to download:', fileToDownload); // Debug log
+    
+    if (fileToDownload) {
+      try {
+        if (fileToDownload.url) {
+          // If file has a direct URL, download it
+          console.log('Downloading via URL:', fileToDownload.url);
+          const link = document.createElement('a');
+          link.href = fileToDownload.url;
+          link.download = fileToDownload.name;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else if (fileToDownload.id) {
+          // Use the bulk download hook for files with IDs
+          console.log('Downloading via ID:', fileToDownload.id);
+          
+          try {
+            await downloadFiles([fileToDownload]);
+          } catch (error) {
+            console.error('Bulk download failed, trying direct URL construction:', error);
+            
+            // Fallback: construct download URL manually
+            const WORKER_URL = 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev';
+            const downloadUrl = `${WORKER_URL}/api/files/${fileToDownload.id}?mode=download`;
+            
+            console.log('Trying direct download URL:', downloadUrl);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileToDownload.name;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        } else {
+          // Fallback: try to construct URL from file name or try alternative approaches
+          console.warn('No URL or ID found for file:', fileToDownload);
+          console.log('Available file properties:', Object.keys(fileToDownload));
+          
+          // If no URL/ID, try to open the file in a new tab as fallback
+          if (fileToDownload.name) {
+            alert(`File "${fileToDownload.name}" is not available for download. Please contact the site owner.`);
+          }
+        }
+      } catch (error) {
+        console.error('Download failed:', error);
+      }
+    } else {
+      console.warn('No files available for download');
+    }
   };
 
   const handleGetInTouch = () => {
     window.location.href = `mailto:${templateData.contactInfo.email}`;
   };
 
-  const handleDownloadAll = () => {
+  const handleDownloadAll = async () => {
     // Download all files
     console.log("Download all files");
+    console.log('All files:', templateData.files); // Debug log
+    
+    try {
+      const filesToDownload = templateData.files.filter(file => file.url || file.id);
+      console.log('Downloadable files found:', filesToDownload.length, 'out of', templateData.files.length);
+      
+      if (filesToDownload.length === 0) {
+        console.warn('No downloadable files found');
+        
+        // Show details about what files are available
+        templateData.files.forEach((file, index) => {
+          console.log(`File ${index}:`, {
+            name: file.name,
+            hasUrl: !!file.url,
+            hasId: !!file.id,
+            properties: Object.keys(file)
+          });
+        });
+        
+        alert('No files are currently available for download. Please contact the site owner.');
+        return;
+      }
+
+      // For files with direct URLs, download them directly
+      const directUrlFiles = filesToDownload.filter(file => file.url && !file.id);
+      console.log('Direct URL files:', directUrlFiles.length);
+      directUrlFiles.forEach(file => {
+        const link = document.createElement('a');
+        link.href = file.url!;
+        link.download = file.name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+      // For files with IDs, use bulk download
+      const idFiles = filesToDownload.filter(file => file.id);
+      console.log('ID-based files:', idFiles.length);
+      if (idFiles.length > 0) {
+        try {
+          await downloadFiles(idFiles);
+        } catch (error) {
+          console.error('Bulk download failed, trying individual downloads:', error);
+          
+          // Fallback: download each file individually using direct URL construction
+          const WORKER_URL = 'https://lytsite-backend.yashwanthvarmamuthineni.workers.dev';
+          
+          idFiles.forEach(file => {
+            const downloadUrl = `${WORKER_URL}/api/files/${file.id}?mode=download`;
+            console.log('Downloading individually:', downloadUrl);
+            
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = file.name;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Bulk download failed:', error);
+    }
   };
 
   // Prepare metadata based on file type

@@ -4,6 +4,7 @@ import { Card, CardContent } from '../ui/card';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Download, AlertCircle, Loader2 } from 'lucide-react';
 import { CompactFeatures } from '../features/CompactFeatures';
 import { useEnhancedTheme } from '../../contexts/EnhancedThemeContext';
+import { trackFileView, trackEvent } from '../../utils/simpleAnalytics';
 
 // Global declarations for dynamically loaded PDF.js
 declare global {
@@ -255,6 +256,7 @@ export default function DynamicPDFBlock({ url, projectId, settings, onDownload }
   useEffect(() => {
     console.log('🔄 DynamicPDFBlock useEffect triggered with URL:', url);
     if (url) {
+      trackFileView('pdf', url.split('/').pop() || 'PDF Document');
       // Clean up previous PDF document before loading new one
       if (pdfDocument) {
         console.log('🧹 Cleaning up previous PDF document...');
@@ -301,12 +303,24 @@ export default function DynamicPDFBlock({ url, projectId, settings, onDownload }
   // Navigation functions
   const goToPreviousPage = () => {
     if (currentPage > 1) {
+      trackEvent('pdf_page_navigation', {
+        'direction': 'previous',
+        'from_page': currentPage,
+        'to_page': currentPage - 1,
+        'total_pages': numPages
+      });
       setCurrentPage(currentPage - 1);
     }
   };
 
   const goToNextPage = () => {
     if (currentPage < numPages) {
+      trackEvent('pdf_page_navigation', {
+        'direction': 'next',
+        'from_page': currentPage,
+        'to_page': currentPage + 1,
+        'total_pages': numPages
+      });
       setCurrentPage(currentPage + 1);
     }
   };

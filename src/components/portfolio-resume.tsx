@@ -81,7 +81,19 @@ export default function PortfolioResume() {
               <div className="h-6 w-px bg-slate-200" />
               <h1 className="text-lg font-semibold text-slate-900">Portfolio</h1>
             </div>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                // Create a sample PDF download for demo purposes
+                const link = document.createElement('a');
+                link.href = 'data:application/pdf;base64,'; // This would be actual PDF data
+                link.download = 'resume.pdf';
+                console.log('Resume download triggered');
+                // For now, just show an alert since we don't have actual PDF data
+                alert('Resume download would start here. In production, this would download the actual resume PDF.');
+              }}
+            >
               <Download className="w-4 h-4 mr-2" />
               Download Resume
             </Button>

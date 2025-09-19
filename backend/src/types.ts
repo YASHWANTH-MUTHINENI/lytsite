@@ -97,6 +97,10 @@ export interface Env {
   GOTENBERG_SERVICE_URL?: string;
   CLOUDMERSIVE_API_KEY?: string;
   ONLYOFFICE_SERVER_URL?: string;
+  // Razorpay payment gateway
+  RAZORPAY_KEY_ID: string;
+  RAZORPAY_KEY_SECRET: string;
+  RAZORPAY_WEBHOOK_SECRET: string;
 }
 
 export interface ProjectData {

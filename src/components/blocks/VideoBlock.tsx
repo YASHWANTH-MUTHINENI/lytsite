@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
+import { trackFileView, trackEvent } from "../../utils/simpleAnalytics";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -66,6 +67,11 @@ export default function VideoBlock({
   // Mock duration in seconds for demo
   const totalDuration = 180; // 3 minutes
 
+  // Track video view on component mount
+  useEffect(() => {
+    trackFileView('video', title);
+  }, [title]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -73,7 +79,14 @@ export default function VideoBlock({
   };
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    const newPlaying = !isPlaying;
+    setIsPlaying(newPlaying);
+    
+    trackEvent(newPlaying ? 'video_play' : 'video_pause', {
+      'video_title': title,
+      'current_time': currentTime,
+      'total_duration': totalDuration
+    });
   };
 
   const handleVolumeChange = (newVolume: number) => {
@@ -174,7 +187,13 @@ export default function VideoBlock({
 
             <Button
               size="sm"
-              onClick={onDownload}
+              onClick={() => {
+                trackEvent('video_download', {
+                  'video_title': title,
+                  'file_format': metadata?.format || 'unknown'
+                });
+                onDownload?.();
+              }}
               className="rounded-xl shadow-md transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
               style={{
                 backgroundColor: theme.colors.warning,

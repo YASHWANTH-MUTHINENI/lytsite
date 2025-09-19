@@ -21,6 +21,8 @@ interface CommentsSectionProps {
 
 export function CommentsSection({ projectId, fileId, className = '' }: CommentsSectionProps) {
   // Comments are visible to both creator and client - threaded discussion
+  console.log('🏗️ CommentsSection mounted with:', { projectId, fileId });
+  
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -38,19 +40,25 @@ export function CommentsSection({ projectId, fileId, className = '' }: CommentsS
     return sessionId;
   };
 
-  // Load comments on component mount
+  // Load comments on component mount and when expanded
+  useEffect(() => {
+    loadComments(); // Always load comments to get the count, regardless of expanded state
+  }, [projectId, fileId]);
+
+  // Reload comments when expanded (for real-time updates)
   useEffect(() => {
     if (isExpanded) {
       loadComments();
     }
-  }, [projectId, fileId, isExpanded]);
+  }, [isExpanded]);
 
   const loadComments = async () => {
     try {
-      const response = await fetch(`/api/comments?projectId=${projectId}&fileId=${fileId}`);
+      const response = await fetch(`https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/comments?projectId=${projectId}&fileId=${fileId}`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Loaded comments:', data);
         setComments(organizeComments(data.comments || []));
       }
     } catch (error) {
@@ -86,24 +94,39 @@ export function CommentsSection({ projectId, fileId, className = '' }: CommentsS
   };
 
   const submitComment = async () => {
-    if (!newComment.trim() || isLoading) return;
+    console.log('🚀 submitComment called with:', { newComment, isLoading });
+    
+    if (!newComment.trim() || isLoading) {
+      console.log('❌ Early return - empty comment or loading');
+      return;
+    }
 
+    console.log('✅ Proceeding with comment submission...');
     setIsLoading(true);
     const userSessionId = getUserSessionId();
+    console.log('👤 User session ID:', userSessionId);
 
     try {
-      const response = await fetch('/api/comments', {
+      const requestBody = {
+        projectId,
+        fileId,
+        threadId: null, // New thread
+        userEmail: userSessionId,
+        userName: `User ${userSessionId.slice(-4)}`,
+        commentText: newComment.trim()
+      };
+      
+      console.log('📤 Making fetch request to comments API with:', requestBody);
+      
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/comments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          projectId,
-          fileId,
-          content: newComment.trim(),
-          userSessionId
-        })
+        body: JSON.stringify(requestBody)
       });
+      
+      console.log('📥 Response status:', response.status, response.statusText);
 
       if (response.ok) {
         setNewComment('');
@@ -125,7 +148,7 @@ export function CommentsSection({ projectId, fileId, className = '' }: CommentsS
     const userSessionId = getUserSessionId();
 
     try {
-      const response = await fetch('/api/comments', {
+      const response = await fetch('https://lytsite-backend.yashwanthvarmamuthineni.workers.dev/api/comments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,9 +156,10 @@ export function CommentsSection({ projectId, fileId, className = '' }: CommentsS
         body: JSON.stringify({
           projectId,
           fileId,
-          content: replyContent.trim(),
-          userSessionId,
-          parentId
+          threadId: parentId, // Reply to existing thread
+          userEmail: userSessionId,
+          userName: `User ${userSessionId.slice(-4)}`,
+          commentText: replyContent.trim()
         })
       });
 
@@ -267,7 +291,12 @@ export function CommentsSection({ projectId, fileId, className = '' }: CommentsS
           className="mb-2"
         />
         <Button
-          onClick={submitComment}
+          onClick={() => {
+            console.log('🔥 BUTTON CLICKED! newComment:', newComment);
+            console.log('🔥 isLoading:', isLoading);
+            console.log('🔥 Button disabled?', isLoading || !newComment.trim());
+            submitComment();
+          }}
           disabled={isLoading || !newComment.trim()}
           size="sm"
         >

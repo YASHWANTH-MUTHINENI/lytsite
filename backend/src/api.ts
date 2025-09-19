@@ -7,6 +7,8 @@ export class AdvancedFeaturesAPI {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+    
+    console.log('🔥 AdvancedFeaturesAPI.handleRequest called:', { method, path, url: request.url });
 
     // CORS headers
     const corsHeaders = {
@@ -24,6 +26,7 @@ export class AdvancedFeaturesAPI {
       if (path.startsWith('/api/favorites')) {
         return this.handleFavorites(request, corsHeaders);
       } else if (path.startsWith('/api/comments')) {
+        console.log('🚀 Routing to handleComments method');
         return this.handleComments(request, corsHeaders);
       } else if (path.startsWith('/api/approvals')) {
         return this.handleApprovals(request, corsHeaders);
@@ -112,6 +115,19 @@ export class AdvancedFeaturesAPI {
       // Add favorite
       const { projectId, fileId, userEmail, userName } = await request.json();
       
+      console.log('🔍 Favorites: Received data:', { projectId, fileId, userEmail, userName });
+      
+      // Validate required fields
+      if (!projectId || !fileId || !userEmail) {
+        return new Response(JSON.stringify({ 
+          error: 'Missing required fields',
+          details: 'projectId, fileId, and userEmail are required'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
       // Check if database exists
       if (!this.env.LYTSITE_DB) {
         return new Response(JSON.stringify({ 
@@ -124,11 +140,82 @@ export class AdvancedFeaturesAPI {
       
       const favoriteId = crypto.randomUUID();
       
+      console.log('🔍 Generated favoriteId:', favoriteId);
+      
+      if (!favoriteId) {
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate favorite ID'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
       try {
-        await this.env.LYTSITE_DB.prepare(`
-          INSERT OR REPLACE INTO favorites (id, project_id, file_id, user_email, user_name)
-          VALUES (?, ?, ?, ?, ?)
-        `).bind(favoriteId, projectId, fileId, userEmail, userName).run();
+        console.log('🔍 Database: Binding values:', {
+          favoriteId,
+          projectId,
+          fileId,
+          userEmail,
+          userName: userName || 'Anonymous'
+        });
+        
+        const stmt = this.env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO favorites (id, project_id, file_id, user_email, user_name, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        
+        console.log('🔍 Database: About to bind and run query...');
+        
+        // First, let's check if the table exists
+        try {
+          const tableCheck = await this.env.LYTSITE_DB.prepare(`
+            SELECT name FROM sqlite_master WHERE type='table' AND name='favorites'
+          `).first();
+          console.log('🔍 Table check result:', tableCheck);
+          
+          // Let's also check the table schema
+          const schemaCheck = await this.env.LYTSITE_DB.prepare(`
+            PRAGMA table_info(favorites)
+          `).all();
+          console.log('🔍 Favorites table schema:', schemaCheck);
+          
+          if (!tableCheck) {
+            console.log('🔍 Favorites table does not exist! Creating it...');
+            // Create the table if it doesn't exist
+            await this.env.LYTSITE_DB.prepare(`
+              CREATE TABLE IF NOT EXISTS favorites (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                file_id TEXT NOT NULL,
+                user_email TEXT NOT NULL,
+                user_name TEXT,
+                created_at INTEGER DEFAULT (unixepoch()),
+                UNIQUE(project_id, file_id, user_email)
+              )
+            `).run();
+            console.log('🔍 Favorites table created successfully');
+          }
+        } catch (tableError) {
+          console.error('🔍 Table check/creation error:', tableError);
+        }
+        
+        // Try with explicit null handling and timestamp
+        const timestamp = Math.floor(Date.now() / 1000);
+        const safeUserName = userName || 'Anonymous';
+        
+        console.log('🔍 About to bind with timestamp:', timestamp);
+        
+        const result = await stmt.bind(
+          favoriteId, 
+          projectId, 
+          fileId, 
+          userEmail, 
+          safeUserName,
+          timestamp
+        ).run();
+        
+        console.log('🔍 Database insert result:', result);
       } catch (dbError) {
         console.error('Database error in favorites:', dbError);
         return new Response(JSON.stringify({ 
@@ -159,6 +246,7 @@ export class AdvancedFeaturesAPI {
       // Get favorites for project
       const projectId = url.searchParams.get('projectId');
       const fileId = url.searchParams.get('fileId');
+      const userEmail = url.searchParams.get('userEmail'); // Get user session ID from query params
 
       let query = 'SELECT * FROM favorites WHERE project_id = ?';
       let params: any[] = [projectId];
@@ -169,8 +257,19 @@ export class AdvancedFeaturesAPI {
       }
 
       const result = await this.env.LYTSITE_DB.prepare(query).bind(...params).all();
+      const favorites = result.results || [];
       
-      return new Response(JSON.stringify(result.results), {
+      // Check if current user has favorited this file
+      const isFavorited = userEmail ? favorites.some((fav: any) => fav.user_email === userEmail) : false;
+      const count = favorites.length;
+      
+      console.log('🔍 Favorites GET response:', { projectId, fileId, userEmail, isFavorited, count, favorites });
+      
+      return new Response(JSON.stringify({ 
+        isFavorited, 
+        count, 
+        favorites 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -199,11 +298,58 @@ export class AdvancedFeaturesAPI {
       // Add comment
       const { projectId, fileId, threadId, userEmail, userName, commentText } = await request.json();
       
+      console.log('🔍 Comments: Received data:', { projectId, fileId, threadId, userEmail, userName, commentText });
+      
+      // Validate required fields
+      if (!projectId || !fileId || !userEmail || !commentText) {
+        return new Response(JSON.stringify({ 
+          error: 'Missing required fields',
+          details: 'projectId, fileId, userEmail, and commentText are required'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
       const commentId = crypto.randomUUID();
-      await this.env.LYTSITE_DB.prepare(`
-        INSERT INTO comments (id, project_id, file_id, thread_id, user_email, user_name, comment_text)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).bind(commentId, projectId, fileId, threadId, userEmail, userName, commentText).run();
+      const timestamp = Math.floor(Date.now() / 1000);
+      const safeUserName = userName || 'Anonymous';
+      const safeThreadId = threadId || commentId; // Use comment ID as thread ID if not provided
+      
+      console.log('🔍 Comments: Binding values:', {
+        commentId,
+        projectId,
+        fileId,
+        threadId: safeThreadId,
+        userEmail,
+        userName: safeUserName,
+        commentText,
+        timestamp
+      });
+
+      try {
+        // Check comments table schema first
+        const schemaCheck = await this.env.LYTSITE_DB.prepare(`
+          PRAGMA table_info(comments)
+        `).all();
+        console.log('🔍 Comments table schema:', schemaCheck);
+
+        const result = await this.env.LYTSITE_DB.prepare(`
+          INSERT INTO comments (id, project_id, file_id, thread_id, user_email, user_name, comment_text, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(commentId, projectId, fileId, safeThreadId, userEmail, safeUserName, commentText, timestamp).run();
+        
+        console.log('🔍 Comments: Database insert result:', result);
+      } catch (dbError) {
+        console.error('🔍 Comments: Database error:', dbError);
+        return new Response(JSON.stringify({ 
+          error: 'Database operation failed',
+          details: String(dbError) 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       // Track analytics
       await this.trackEvent(projectId, fileId, userEmail, 'comment');
@@ -226,19 +372,19 @@ export class AdvancedFeaturesAPI {
       const url = new URL(request.url);
       const projectId = url.searchParams.get('projectId');
       const fileId = url.searchParams.get('fileId');
-
+      
       // Get all comments and organize by thread
       const result = await this.env.LYTSITE_DB.prepare(`
         SELECT * FROM comments 
         WHERE project_id = ? AND file_id = ?
         ORDER BY created_at ASC
       `).bind(projectId, fileId).all();
-
+      
       // Organize into threaded structure
       const comments = result.results as any[];
       const threaded = this.organizeComments(comments);
 
-      return new Response(JSON.stringify(threaded), {
+      return new Response(JSON.stringify({ comments: threaded }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -254,11 +400,58 @@ export class AdvancedFeaturesAPI {
       // Add/update approval
       const { projectId, fileId, userEmail, userName, status, notes } = await request.json();
       
+      console.log('🔍 Approvals: Received data:', { projectId, fileId, userEmail, userName, status, notes });
+      
+      // Validate required fields
+      if (!projectId || !fileId || !userEmail || !status) {
+        return new Response(JSON.stringify({ 
+          error: 'Missing required fields',
+          details: 'projectId, fileId, userEmail, and status are required'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
       const approvalId = crypto.randomUUID();
-      await this.env.LYTSITE_DB.prepare(`
-        INSERT OR REPLACE INTO approvals (id, project_id, file_id, user_email, user_name, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).bind(approvalId, projectId, fileId, userEmail, userName, status, notes).run();
+      const timestamp = Math.floor(Date.now() / 1000);
+      const safeUserName = userName || 'Anonymous';
+      const safeNotes = notes || '';
+      
+      console.log('🔍 Approvals: Binding values:', {
+        approvalId,
+        projectId,
+        fileId,
+        userEmail,
+        userName: safeUserName,
+        status,
+        notes: safeNotes,
+        timestamp
+      });
+
+      try {
+        // Check approvals table schema first
+        const schemaCheck = await this.env.LYTSITE_DB.prepare(`
+          PRAGMA table_info(approvals)
+        `).all();
+        console.log('🔍 Approvals table schema:', schemaCheck);
+
+        const result = await this.env.LYTSITE_DB.prepare(`
+          INSERT OR REPLACE INTO approvals (id, project_id, file_id, user_email, user_name, status, notes, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(approvalId, projectId, fileId, userEmail, safeUserName, status, safeNotes, timestamp).run();
+        
+        console.log('🔍 Approvals: Database insert result:', result);
+      } catch (dbError) {
+        console.error('🔍 Approvals: Database error:', dbError);
+        return new Response(JSON.stringify({ 
+          error: 'Database operation failed',
+          details: String(dbError) 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       // Track analytics
       await this.trackEvent(projectId, fileId, userEmail, 'approve', { status, notes });
@@ -348,18 +541,121 @@ export class AdvancedFeaturesAPI {
       // Get analytics for project
       const url = new URL(request.url);
       const projectId = url.searchParams.get('projectId');
+      const fileId = url.searchParams.get('fileId');
+      const detailed = url.searchParams.get('detailed') === 'true';
 
-      const result = await this.env.LYTSITE_DB.prepare(`
-        SELECT event_type, COUNT(*) as count, file_id
-        FROM analytics 
-        WHERE project_id = ? 
-        GROUP BY event_type, file_id
-        ORDER BY count DESC
-      `).bind(projectId).all();
+      try {
+        console.log('🔍 Analytics: Loading for project:', projectId, 'detailed:', detailed);
 
-      return new Response(JSON.stringify(result.results), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+        // Get favorites count
+        let favoritesQuery = 'SELECT COUNT(*) as count FROM favorites WHERE project_id = ?';
+        let favoritesParams = [projectId];
+        if (fileId) {
+          favoritesQuery += ' AND file_id = ?';
+          favoritesParams.push(fileId);
+        }
+        
+        const favoritesResult = await this.env.LYTSITE_DB.prepare(favoritesQuery).bind(...favoritesParams).first() as any;
+        const favoritesCount = favoritesResult?.count || 0;
+
+        // Get comments count
+        let commentsQuery = 'SELECT COUNT(*) as count FROM comments WHERE project_id = ?';
+        let commentsParams = [projectId];
+        if (fileId) {
+          commentsQuery += ' AND file_id = ?';
+          commentsParams.push(fileId);
+        }
+        
+        console.log('🔍 Analytics: Comments query:', commentsQuery, 'params:', commentsParams);
+        
+        let commentsCount = 0;
+        try {
+          const commentsResult = await this.env.LYTSITE_DB.prepare(commentsQuery).bind(...commentsParams).first() as any;
+          commentsCount = commentsResult?.count || 0;
+          console.log('🔍 Analytics: Comments result:', commentsResult, 'count:', commentsCount);
+        } catch (commentsError) {
+          console.error('🔍 Analytics: Comments query failed:', commentsError);
+          // Check if comments table exists
+          try {
+            const tableCheck = await this.env.LYTSITE_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='comments'").first();
+            console.log('🔍 Analytics: Comments table exists:', tableCheck);
+          } catch (tableCheckError) {
+            console.error('🔍 Analytics: Table check failed:', tableCheckError);
+          }
+        }
+
+        // Get approvals count
+        let approvalsQuery = 'SELECT status, COUNT(*) as count FROM approvals WHERE project_id = ?';
+        let approvalsParams = [projectId];
+        if (fileId) {
+          approvalsQuery += ' AND file_id = ?';
+          approvalsParams.push(fileId);
+        }
+        approvalsQuery += ' GROUP BY status';
+        
+        const approvalsResult = await this.env.LYTSITE_DB.prepare(approvalsQuery).bind(...approvalsParams).all();
+        const approvals = {
+          approved: 0,
+          rejected: 0,
+          pending: 0
+        };
+        
+        (approvalsResult.results || []).forEach((row: any) => {
+          if (row.status === 'approved') approvals.approved = row.count;
+          else if (row.status === 'rejected') approvals.rejected = row.count;
+          else if (row.status === 'pending') approvals.pending = row.count;
+        });
+
+        // Get views count from analytics table (if it exists)
+        let viewsCount = 0;
+        try {
+          let viewsQuery = "SELECT COUNT(*) as count FROM analytics WHERE project_id = ? AND event_type = 'view'";
+          let viewsParams = [projectId];
+          if (fileId) {
+            viewsQuery += ' AND file_id = ?';
+            viewsParams.push(fileId);
+          }
+          
+          const viewsResult = await this.env.LYTSITE_DB.prepare(viewsQuery).bind(...viewsParams).first() as any;
+          viewsCount = viewsResult?.count || 0;
+        } catch (error) {
+          console.log('🔍 Analytics table may not exist yet, defaulting views to 0');
+        }
+
+        const analytics = {
+          views: viewsCount,
+          downloads: 0, // Could be tracked similarly if needed
+          favorites: favoritesCount,
+          comments: commentsCount,
+          approvals
+        };
+
+        console.log('🔍 Analytics result:', { projectId, fileId, analytics });
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          analytics 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        console.error('🔍 Analytics error:', error);
+        
+        // Return default analytics on error
+        return new Response(JSON.stringify({ 
+          success: false,
+          analytics: {
+            views: 0,
+            downloads: 0,
+            favorites: 0,
+            comments: 0,
+            approvals: { approved: 0, rejected: 0, pending: 0 }
+          },
+          error: String(error)
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
@@ -374,34 +670,63 @@ export class AdvancedFeaturesAPI {
 
   // Helper methods
   async trackEvent(projectId: string, fileId: string | null, userEmail: string | null, eventType: string, metadata?: any): Promise<void> {
-    const eventId = crypto.randomUUID();
-    await this.env.LYTSITE_DB.prepare(`
-      INSERT INTO analytics (id, project_id, file_id, user_email, event_type, metadata)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(eventId, projectId, fileId, userEmail, eventType, JSON.stringify(metadata)).run();
+    try {
+      console.log('🔍 TrackEvent: Starting analytics insert for:', { projectId, fileId, userEmail, eventType });
+      
+      const eventId = crypto.randomUUID();
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      const result = await this.env.LYTSITE_DB.prepare(`
+        INSERT INTO analytics (id, project_id, file_id, user_email, event_type, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(eventId, projectId, fileId, userEmail, eventType, JSON.stringify(metadata), timestamp).run();
+      
+      console.log('🔍 TrackEvent: Analytics insert successful:', result);
+    } catch (error) {
+      console.error('🔍 TrackEvent: Analytics insert failed:', error);
+      // Don't throw - analytics should not break the main functionality
+    }
   }
 
   async triggerNotification(projectId: string, type: string, data: any): Promise<void> {
-    // Get project settings to check if notifications are enabled
-    const project = await this.env.LYTSITE_KV.get(`project:${projectId}`);
-    if (!project) return;
+    try {
+      console.log('🔍 TriggerNotification: Starting for:', { projectId, type });
+      
+      // Get project settings to check if notifications are enabled
+      const project = await this.env.LYTSITE_KV.get(`project:${projectId}`);
+      if (!project) {
+        console.log('🔍 TriggerNotification: No project found, skipping');
+        return;
+      }
 
-    const projectData = JSON.parse(project);
-    if (!projectData.settings?.enableNotifications) return;
+      const projectData = JSON.parse(project);
+      if (!projectData.settings?.enableNotifications) {
+        console.log('🔍 TriggerNotification: Notifications disabled, skipping');
+        return;
+      }
 
-    const notificationId = crypto.randomUUID();
-    await this.env.LYTSITE_DB.prepare(`
-      INSERT INTO notifications (id, project_id, recipient_email, notification_type, title, message, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      notificationId,
-      projectId,
-      projectData.authorEmail,
-      type,
-      this.getNotificationTitle(type, data),
-      this.getNotificationMessage(type, data),
-      JSON.stringify(data)
-    ).run();
+      const notificationId = crypto.randomUUID();
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      const result = await this.env.LYTSITE_DB.prepare(`
+        INSERT INTO notifications (id, project_id, recipient_email, notification_type, title, message, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        notificationId,
+        projectId,
+        projectData.authorEmail,
+        type,
+        this.getNotificationTitle(type, data),
+        this.getNotificationMessage(type, data),
+        JSON.stringify(data),
+        timestamp
+      ).run();
+      
+      console.log('🔍 TriggerNotification: Success:', result);
+    } catch (error) {
+      console.error('🔍 TriggerNotification: Failed:', error);
+      // Don't throw - notifications should not break the main functionality
+    }
   }
 
   private getNotificationTitle(type: string, data: any): string {
@@ -442,12 +767,14 @@ export class AdvancedFeaturesAPI {
 
     // Second pass: organize into threads
     comments.forEach(comment => {
-      if (comment.thread_id) {
+      if (comment.thread_id && comment.thread_id !== comment.id) {
+        // This is a reply - find its parent thread
         const parent = commentMap.get(comment.thread_id);
         if (parent) {
           parent.replies.push(comment);
         }
       } else {
+        // This is a root comment (no thread_id or thread_id equals own id)
         rootComments.push(comment);
       }
     });

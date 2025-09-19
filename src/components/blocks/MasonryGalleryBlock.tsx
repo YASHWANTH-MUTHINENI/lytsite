@@ -296,6 +296,19 @@ export default function MasonryGalleryBlock({
           ))}
         </div>
 
+        {/* Main Gallery Features - Below Masonry Grid */}
+        {projectId && settings && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <CompactFeatures
+              fileId={`${projectId}-masonry`}
+              projectId={projectId}
+              settings={settings}
+              onDownload={onDownload}
+              className="mt-6"
+            />
+          </div>
+        )}
+
         {/* Lightbox */}
         {selectedImage !== null && (
           <div 

@@ -70,7 +70,8 @@ export function ApprovalButtons({ projectId, fileId, className = '' }: ApprovalB
           fileId,
           userEmail: userSessionId,
           userName: `User ${userSessionId.slice(-4)}`,
-          status
+          status,
+          notes: status === 'rejected' ? 'User rejected the file' : 'User approved the file'
         })
       });
 

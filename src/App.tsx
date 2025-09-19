@@ -29,6 +29,7 @@ import Payment from './components/Payment';
 import { CreatorDashboard } from './components/CreatorDashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EngagementProvider } from './providers/EngagementProvider';
+import BillingDashboard from './components/billing/BillingDashboard';
 
 // Import the publishable key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -71,10 +72,15 @@ export default function App() {
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/payment" element={<Payment />} />
             
-            {/* Dashboard Route */}
+            {/* Dashboard Routes */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <CreatorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/billing" element={
+              <ProtectedRoute>
+                <BillingDashboard />
               </ProtectedRoute>
             } />
           </Routes>

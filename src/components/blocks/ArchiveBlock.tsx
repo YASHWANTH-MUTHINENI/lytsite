@@ -593,6 +593,18 @@ export default function ArchiveBlock({
         </div>
       </div>
 
+      {/* Main Archive Features */}
+      {projectId && settings && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <CompactFeatures
+            fileId={`${projectId}-archive`}
+            projectId={projectId}
+            settings={settings}
+            onDownload={onDownload}
+            className="mt-6"
+          />
+        </div>
+      )}
 
     </section>
   );

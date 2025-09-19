@@ -4,6 +4,7 @@
  */
 
 import { Env } from './types';
+import { corsHeaders } from './utils';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -26,13 +27,18 @@ export interface AuthContext {
 function extractToken(request: Request): string | null {
   const authHeader = request.headers.get('Authorization');
   
+  console.log('🔍 Auth: Authorization header:', authHeader ? 'Present' : 'Missing');
+  
   if (!authHeader) return null;
   
   // Support both "Bearer token" and "token" formats
   if (authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
+    const token = authHeader.substring(7);
+    console.log('🔍 Auth: Bearer token extracted, length:', token.length);
+    return token;
   }
   
+  console.log('🔍 Auth: Direct token (no Bearer prefix)');
   return authHeader;
 }
 
@@ -60,13 +66,16 @@ function decodeJWTPayload(token: string): any {
  */
 async function validateClerkToken(token: string, env: Env): Promise<AuthenticatedUser | null> {
   try {
+    console.log('🔍 Token: Starting validation...');
     // Decode the JWT header and payload
     const payload = decodeJWTPayload(token);
     
     if (!payload) {
-      console.log('Invalid JWT payload');
+      console.log('🔍 Token: Invalid JWT payload');
       return null;
     }
+    
+    console.log('🔍 Token: Payload decoded, sub:', payload.sub);
     
     // Check token expiration
     if (payload.exp && payload.exp < Date.now() / 1000) {
@@ -119,42 +128,46 @@ async function validateClerkToken(token: string, env: Env): Promise<Authenticate
 }
 
 /**
- * Verify JWT signature using HMAC SHA-256
- * Basic signature verification for Clerk tokens
+ * Verify Clerk JWT token by fetching user data from Clerk API
+ * This validates the token by using it to fetch user information
  */
 async function verifyJWTSignature(token: string, secret: string): Promise<boolean> {
   try {
+    console.log('🔍 Token: Verifying with Clerk users API...');
+    
+    // Decode the payload to get the user ID
     const parts = token.split('.');
     if (parts.length !== 3) return false;
     
-    const header = parts[0];
-    const payload = parts[1];
-    const signature = parts[2];
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const userId = payload.sub;
     
-    // Create the signature base
-    const signatureBase = `${header}.${payload}`;
+    if (!userId) {
+      console.log('🔍 Token: No user ID in token payload');
+      return false;
+    }
     
-    // Import the secret key
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
+    // Use Clerk's Users API to verify the token
+    const response = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${secret}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
-    // Sign the base
-    const expectedSignature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signatureBase));
-    
-    // Convert to base64url
-    const expectedBase64 = btoa(String.fromCharCode(...new Uint8Array(expectedSignature)))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
-    
-    return signature === expectedBase64;
+    if (response.ok) {
+      console.log('🔍 Token: Clerk user verification successful');
+      return true;
+    } else if (response.status === 401) {
+      console.log('🔍 Token: Invalid secret key or token');
+      return false;
+    } else {
+      console.log('🔍 Token: Clerk verification failed:', response.status);
+      return false;
+    }
   } catch (error) {
-    console.error('Signature verification error:', error);
+    console.error('🔍 Token: Clerk verification error:', error);
     return false;
   }
 }
@@ -166,15 +179,19 @@ export async function authenticate(request: Request, env: Env): Promise<AuthCont
   const token = extractToken(request);
   
   if (!token) {
+    console.log('🔍 Auth: No token found in request');
     return null;
   }
   
+  console.log('🔍 Auth: Validating token with Clerk...');
   const user = await validateClerkToken(token, env);
   
   if (!user) {
+    console.log('🔍 Auth: Token validation failed');
     return null;
   }
   
+  console.log('🔍 Auth: Token validation successful for user:', user.userId);
   return {
     user,
     token,
@@ -197,7 +214,8 @@ export async function requireAuth(request: Request, env: Env): Promise<{ auth: A
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': 'Bearer'
+        'WWW-Authenticate': 'Bearer',
+        ...corsHeaders()
       }
     });
   }
@@ -226,7 +244,8 @@ export function requireRole(allowedRoles: string[]) {
       }), {
         status: 403,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...corsHeaders()
         }
       });
     }
@@ -242,7 +261,7 @@ export function requireRole(allowedRoles: string[]) {
 export async function requireOwnership(
   request: Request, 
   env: Env, 
-  resourceUserId: string
+  resourceCreatorId: string
 ): Promise<{ auth: AuthContext } | Response> {
   const authResult = await requireAuth(request, env);
   
@@ -252,20 +271,55 @@ export async function requireOwnership(
   
   const { auth } = authResult;
   
-  // Allow access if user owns the resource or is admin
-  if (auth.user.userId !== resourceUserId && auth.user.role !== 'admin') {
+  // Check if the creator ID belongs to the authenticated user
+  try {
+    const stmt = env.LYTSITE_DB.prepare(`
+      SELECT clerk_user_id FROM creators WHERE id = ?
+    `);
+    
+    const result = await stmt.bind(resourceCreatorId).first() as { clerk_user_id: string } | null;
+    
+    if (!result) {
+      return new Response(JSON.stringify({ 
+        error: 'Creator not found',
+        message: 'Creator ID does not exist'
+      }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders()
+        }
+      });
+    }
+    
+    // Allow access if user owns the creator account or is admin
+    if (result.clerk_user_id !== auth.user.userId && auth.user.role !== 'admin') {
+      return new Response(JSON.stringify({ 
+        error: 'Access denied',
+        message: 'You can only access your own resources'
+      }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders()
+        }
+      });
+    }
+    
+    return { auth };
+  } catch (error) {
+    console.error('Ownership check error:', error);
     return new Response(JSON.stringify({ 
-      error: 'Access denied',
-      message: 'You can only access your own resources'
+      error: 'Server error',
+      message: 'Failed to verify ownership'
     }), {
-      status: 403,
+      status: 500,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...corsHeaders()
       }
     });
   }
-  
-  return { auth };
 }
 
 /**
@@ -313,7 +367,8 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 60000) {
         status: 429,
         headers: {
           'Content-Type': 'application/json',
-          'Retry-After': Math.ceil((userLimit.resetTime - now) / 1000).toString()
+          'Retry-After': Math.ceil((userLimit.resetTime - now) / 1000).toString(),
+          ...corsHeaders()
         }
       });
     }

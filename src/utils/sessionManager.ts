@@ -71,7 +71,7 @@ export async function getAnonymousProjects(): Promise<any[]> {
 /**
  * Claim all anonymous projects for a newly authenticated creator
  */
-export async function claimAnonymousProjects(creatorId: string): Promise<boolean> {
+export async function claimAnonymousProjects(creatorId: string, authToken?: string): Promise<boolean> {
   const sessionId = localStorage.getItem(ANONYMOUS_SESSION_KEY);
   
   if (!sessionId) {
@@ -79,16 +79,32 @@ export async function claimAnonymousProjects(creatorId: string): Promise<boolean
   }
   
   try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add authorization header if token is provided
+    console.log('🔑 Claim: Token provided:', authToken ? 'Yes (length: ' + authToken.length + ')' : 'No');
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+      console.log('🔑 Claim: Authorization header set');
+    } else {
+      console.error('❌ Claim: No auth token provided to claimAnonymousProjects');
+    }
+    
+    console.log('📤 Claim: Making request with headers:', Object.keys(headers));
+    
     const response = await fetch(`${API_BASE}/api/creators/claim`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         anonymousSessionId: sessionId,
         creatorId: creatorId,
       }),
     });
+    
+    console.log('📥 Claim: Response status:', response.status);
     
     if (response.ok) {
       // Clear the anonymous session after successful claiming

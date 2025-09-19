@@ -9,6 +9,9 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { CompactFeatures } from "../features/CompactFeatures";
+import { AdvancedSelectionBar } from "../features/AdvancedSelectionBar";
+import { SelectionCheckbox } from "../features/SelectionCheckbox";
+import { trackFileView, trackFileDownload, trackEvent } from "../../utils/simpleAnalytics";
 import { 
   Download, 
   ZoomIn,
@@ -18,7 +21,9 @@ import {
   Heart,
   Image as ImageIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  Layers
 } from "lucide-react";
 
 interface ProjectSettings {
@@ -55,6 +60,15 @@ export default function GridGalleryBlock({
   const [isLiked, setIsLiked] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  
+  // Advanced Selection System
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
+  // Track gallery view on component mount
+  React.useEffect(() => {
+    trackFileView('gallery', projectId);
+  }, [projectId]);
 
   // Phase 1 Dual-Quality System - Get optimized preview and original download URLs
   const fileUrls = useFileUrls(files);
@@ -85,6 +99,11 @@ export default function GridGalleryBlock({
 
   // Enhanced download handler using Phase 1 system
   const handleDownloadAll = async () => {
+    trackEvent('gallery_download_all_started', {
+      'total_files': files.length,
+      'file_types': files.map(f => f.type).join(',')
+    });
+    
     setIsDownloading(true);
     setDownloadProgress(0);
     
@@ -107,6 +126,13 @@ export default function GridGalleryBlock({
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            
+            // Track file download
+            trackEvent('file_download', {
+              'file_name': file.name,
+              'file_type': file.type,
+              'download_method': 'batch'
+            });
           }
         } catch (error) {
           console.error(`Failed to download ${file.name}:`, error);
@@ -118,8 +144,17 @@ export default function GridGalleryBlock({
       });
 
       await Promise.all(downloadPromises);
+      
+      trackEvent('gallery_download_all_completed', {
+        'total_files': files.length,
+        'download_success': true
+      });
     } catch (error) {
       console.error('Download failed:', error);
+      trackEvent('gallery_download_all_failed', {
+        'total_files': files.length,
+        'error_message': error instanceof Error ? error.message : 'Unknown error'
+      });
     } finally {
       setIsDownloading(false);
       setDownloadProgress(0);
@@ -130,9 +165,20 @@ export default function GridGalleryBlock({
   const openLightbox = (index: number) => {
     setSelectedImage(index);
     document.body.style.overflow = 'hidden';
+    
+    // Track image view in lightbox
+    trackEvent('image_lightbox_view', {
+      image_index: index,
+      total_images: files.length,
+      project_id: projectId
+    });
   };
 
   const closeLightbox = () => {
+    trackEvent('image_lightbox_close', {
+      'image_index': selectedImage ? selectedImage + 1 : 0,
+      'total_images': files.length
+    });
     setSelectedImage(null);
     document.body.style.overflow = 'auto';
   };
@@ -144,6 +190,13 @@ export default function GridGalleryBlock({
       ? (selectedImage - 1 + files.length) % files.length
       : (selectedImage + 1) % files.length;
     
+    trackEvent('image_lightbox_navigate', {
+      'direction': direction,
+      'from_index': selectedImage + 1,
+      'to_index': newIndex + 1,
+      'total_images': files.length
+    });
+    
     setSelectedImage(newIndex);
   };
 
@@ -151,6 +204,58 @@ export default function GridGalleryBlock({
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') navigateImage('prev');
     if (e.key === 'ArrowRight') navigateImage('next');
+  };
+
+  // Advanced Selection Handlers
+  const toggleItemSelection = (index: number) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+      trackEvent('image_deselected', { index, total_selected: newSelected.size, project_id: projectId });
+    } else {
+      newSelected.add(index);
+      trackEvent('image_selected', { index, total_selected: newSelected.size + 1, project_id: projectId });
+    }
+    setSelectedItems(newSelected);
+    
+    // Auto-enable selection mode when items are selected
+    if (newSelected.size > 0 && !isSelectionMode) {
+      setIsSelectionMode(true);
+      trackEvent('gallery_selection_mode_entered', { trigger: 'auto_image_selection', project_id: projectId });
+    }
+  };
+
+  const selectAll = () => {
+    const allIndices = new Set(files.map((_, index) => index));
+    setSelectedItems(allIndices);
+    setIsSelectionMode(true);
+    
+    // Track select all action
+    trackEvent('gallery_select_all', { 
+      total_images: files.length,
+      project_id: projectId
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedItems(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const downloadSelected = async () => {
+    const selectedFiles = Array.from(selectedItems).map(index => files[index]);
+    console.log('Downloading selected files:', selectedFiles);
+    // Implement batch download logic here
+  };
+
+  const addSelectedToFavorites = async () => {
+    console.log('Adding selected items to favorites:', Array.from(selectedItems));
+    // Implement batch favorites logic here  
+  };
+
+  const createPackage = async () => {
+    console.log('Creating package with selected items:', Array.from(selectedItems));
+    // Implement package creation logic here
   };
 
   // Determine grid layout based on image count
@@ -167,7 +272,7 @@ export default function GridGalleryBlock({
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8">
           <div className="mb-6 lg:mb-0">
             <div className="flex items-center space-x-3 mb-3">
               <div 
@@ -210,7 +315,28 @@ export default function GridGalleryBlock({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Selection Mode Toggle */}
+            <Button
+              variant={isSelectionMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => isSelectionMode ? clearSelection() : setIsSelectionMode(true)}
+              className="flex items-center gap-2 rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+            >
+              <Layers className="w-4 h-4" />
+              {isSelectionMode ? 'Exit Selection' : 'Select Items'}
+            </Button>
+
+            {/* Preview Mode */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 rounded-xl shadow-md transition-all duration-300 hover:scale-105"
+            >
+              <Eye className="w-4 h-4" />
+              Preview
+            </Button>
+            
             <Button
               variant="outline"
               size="sm"
@@ -259,15 +385,52 @@ export default function GridGalleryBlock({
           </div>
         </div>
 
+        {/* Advanced Selection Bar */}
+        {isSelectionMode && (
+          <div className="mb-6">
+            <AdvancedSelectionBar
+              selectedCount={selectedItems.size}
+              totalCount={files.length}
+              onSelectAll={selectAll}
+              onClearSelection={clearSelection}
+              onDownloadSelected={downloadSelected}
+              onAddToFavorites={addSelectedToFavorites}
+              onCreatePackage={createPackage}
+              isAllSelected={selectedItems.size === files.length}
+            />
+          </div>
+        )}
+
         {/* Grid Gallery */}
         <div className={`grid ${getGridColumns(files.length)} gap-6`}>
           {files.map((file, index) => (
             <div
               key={index}
-              className="cursor-pointer overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group aspect-square"
-              onClick={() => openLightbox(index)}
+              className="cursor-pointer overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group aspect-square relative"
+              onClick={() => {
+                if (isSelectionMode) {
+                  toggleItemSelection(index);
+                } else {
+                  trackEvent('image_lightbox_open', {
+                    'image_index': index + 1,
+                    'total_images': files.length
+                  });
+                  openLightbox(index);
+                }
+              }}
               style={{ backgroundColor: theme.colors.surface }}
             >
+              {/* Selection Checkbox */}
+              {isSelectionMode && (
+                <div className="absolute top-3 left-3 z-10">
+                  <SelectionCheckbox
+                    isSelected={selectedItems.has(index)}
+                    onToggle={() => toggleItemSelection(index)}
+                    size="md"
+                  />
+                </div>
+              )}
+              
               <div className="relative h-full">
                 <ImageWithFallback
                   src={getPreviewUrl(file)}
@@ -319,6 +482,19 @@ export default function GridGalleryBlock({
             </div>
           ))}
         </div>
+
+        {/* Main Gallery Features - Below Grid */}
+        {projectId && settings && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <CompactFeatures
+              fileId={`${projectId}-gallery`}
+              projectId={projectId}
+              settings={settings}
+              onDownload={onDownload}
+              className="mt-6"
+            />
+          </div>
+        )}
 
         {/* Lightbox */}
         {selectedImage !== null && (

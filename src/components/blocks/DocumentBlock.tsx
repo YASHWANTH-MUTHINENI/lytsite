@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useEnhancedTheme } from "../../contexts/EnhancedThemeContext";
+import { trackFileView, trackEvent } from "../../utils/simpleAnalytics";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -63,6 +64,11 @@ export default function DocumentBlock({
   const [highlightSearch, setHighlightSearch] = useState(true);
   const [viewMode, setViewMode] = useState<'raw' | 'preview'>('preview');
   const [showInlinePreview, setShowInlinePreview] = useState(false);
+
+  // Track document view on component mount
+  useEffect(() => {
+    trackFileView('document', title);
+  }, [title]);
 
   const lines = content.split('\n');
   const searchMatches = searchQuery ? 
@@ -200,7 +206,14 @@ export default function DocumentBlock({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={onDownload}
+                        onClick={() => {
+                          trackEvent('document_download', {
+                            'document_title': title,
+                            'file_format': metadata?.format || 'unknown',
+                            'word_count': metadata?.words || 0
+                          });
+                          onDownload?.();
+                        }}
                         className="rounded-lg px-2 sm:px-3 h-8"
                         style={{ 
                           borderColor: theme.colors.info,

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "razorpay": "^2.9.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250919.0"
+  }
+}

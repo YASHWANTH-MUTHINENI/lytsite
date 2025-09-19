@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -26,6 +27,7 @@ interface ProjectClaimBannerProps {
 }
 
 export function ProjectClaimBanner({ creatorId, onClaimComplete }: ProjectClaimBannerProps) {
+  const { getToken } = useAuth();
   const { hasSession, claimProjects, getProjects } = useAnonymousSession();
   const [anonymousProjects, setAnonymousProjects] = useState<AnonymousProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +56,14 @@ export function ProjectClaimBanner({ creatorId, onClaimComplete }: ProjectClaimB
   const handleClaimProjects = async () => {
     setIsClaiming(true);
     try {
-      const success = await claimProjects(creatorId);
+      // Get the authentication token from Clerk
+      const token = await getToken();
+      if (!token) {
+        alert('Authentication required. Please sign in and try again.');
+        return;
+      }
+      
+      const success = await claimProjects(creatorId, token);
       if (success) {
         setIsVisible(false);
         onClaimComplete();
